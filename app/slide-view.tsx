@@ -100,7 +100,7 @@ export function SlideView({
         ) : print ? (
           preview ? <a href={slide.src} className="capture-slide"><img draggable={false} src={preview} alt={slide.title}/></a> : <div className="embed-placeholder">미리보기 캡처가 필요합니다.</div>
         ) : live && slide.kind === 'video' ? (
-          <video className="local-video" key={slide.id} src={slide.src} poster={preview} autoPlay={playing && slide.autoplay !== false} muted={slide.muted !== false} controls playsInline preload="metadata" aria-label={slide.title}/>
+          <LocalVideo key={slide.id} slide={slide} src={assets[slide.src] || slide.src} preview={preview} playing={playing}/>
         ) : live ? (
           <>
             <iframe
@@ -133,4 +133,12 @@ export function SlideView({
       </div>
     </div>
   );
+}
+
+function LocalVideo({ slide, src, preview, playing }: { slide: Slide; src: string; preview: string; playing: boolean }) {
+  // Finishing a background download must never restart an already playing video.
+  const [playbackSource] = useState(src);
+  return <video className="local-video" src={playbackSource} poster={preview}
+    autoPlay={playing && slide.autoplay !== false} muted={slide.muted !== false}
+    controls playsInline preload="auto" aria-label={slide.title}/>;
 }

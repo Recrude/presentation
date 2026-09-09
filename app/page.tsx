@@ -17,6 +17,7 @@ import {
 import { readDeck, saveDeck, readImage, readImages, saveImages } from './storage';
 import { SlideView } from './slide-view';
 import { PresentationStage } from './presentation-stage';
+import { exhibitionVideo, prepareVideo } from './video-cache';
 import { previewSource } from './previews';
 import { originalSource, warmSlides } from './slide-assets';
 import { sortOriginalSlides, projectForPage } from './chronology';
@@ -47,6 +48,8 @@ export default function Home() {
     [url, setUrl] = useState(''),
     [title, setTitle] = useState('');
   const [cacheStatus, setCacheStatus] = useState('');
+  const [videoStatus, setVideoStatus] = useState('');
+  const [videoRetry, setVideoRetry] = useState(0);
   const [busy, setBusy] = useState(false),
     [group, setGroup] = useState(true),
     [live, setLive] = useState(false);
@@ -386,6 +389,30 @@ export default function Home() {
     }, 1500);
     return () => { clearTimeout(timer); controller.abort(); };
   }, [ready, preloadSources]);
+  useEffect(() => {
+    if (!ready) return;
+    const controller = new AbortController();
+    let objectUrl = '';
+    setVideoStatus('영상 준비 중');
+    const timeout = setTimeout(() => controller.abort(), 300000);
+    let cancelled = false;
+    void prepareVideo(controller.signal, percent => {
+      if (!cancelled) setVideoStatus(`영상 다운로드 ${percent}%`);
+    }).then(({ blob, persistent }) => {
+      if (cancelled) return;
+      objectUrl = URL.createObjectURL(blob);
+      setAssets(previous => ({ ...previous, [exhibitionVideo]: objectUrl }));
+      setVideoStatus(persistent ? '영상 준비 완료' : '영상 준비 완료 · 이번 탭에서 사용');
+    }).catch(() => {
+      if (!cancelled) setVideoStatus('영상 다운로드 재시도');
+    }).finally(() => clearTimeout(timeout));
+    return () => {
+      cancelled = true;
+      controller.abort();
+      clearTimeout(timeout);
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [ready, videoRetry]);
   async function save() {
     const snapshot = stateRef.current;
     setBusy(true);
@@ -623,6 +650,9 @@ export default function Home() {
           <span className="status" role="status">
             {status || cacheStatus}
           </span>
+          {videoStatus === '영상 다운로드 재시도'
+            ? <button onClick={() => setVideoRetry(value => value + 1)}>{videoStatus}</button>
+            : <span className="status" role="status">{videoStatus}</span>}
           <button disabled={!ready || busy} onClick={save}>
             저장{dirty ? ' *' : ''}
           </button>

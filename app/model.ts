@@ -3,7 +3,7 @@ export type Photo = { id: string; name: string; width: number; height: number };
 export type Slide = {
   id: string;
   title: string;
-  kind: 'image' | 'web' | 'youtube' | 'gallery' | 'folio';
+  kind: 'image' | 'web' | 'youtube' | 'gallery' | 'folio' | 'video';
   src: string;
   hidden: boolean;
   photos?: Photo[];
@@ -152,6 +152,7 @@ export function validDeck(value: unknown): value is Slide[] {
               p.height > 0,
           )
         );
+      if (s.kind === 'video') return s.src === '/media/audio-morphology.mp4';
       if (s.kind === 'web' || s.kind === 'youtube') {
         try {
           const e = embed(s.src);

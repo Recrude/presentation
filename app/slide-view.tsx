@@ -96,6 +96,8 @@ export function SlideView({
           </>
         ) : print ? (
           preview ? <a href={slide.src} className="capture-slide"><img draggable={false} src={preview} alt={slide.title}/><span className="new-folio">{number}</span></a> : <div className="embed-placeholder">미리보기 캡처가 필요합니다.</div>
+        ) : live && slide.kind === 'video' ? (
+          <video className="local-video" key={slide.id} src={slide.src} poster={preview} autoPlay={playing && slide.autoplay !== false} muted={slide.muted !== false} controls={!playing || slide.controls === true} playsInline preload="metadata" aria-label={slide.title}/>
         ) : live ? (
           <>
             <iframe

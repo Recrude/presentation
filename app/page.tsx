@@ -632,6 +632,7 @@ export default function Home() {
               </button>
             </div>
             <div className="row presets">
+              <button disabled={busy} onClick={() => insert([{id:crypto.randomUUID(),title:'음향형태론 전시 영상',kind:'video',src:'/media/audio-morphology.mp4',hidden:false,autoplay:true,muted:true,controls:false}])}>음향형태론 전시 영상</button>
               {presets.map(([n, u]) => (
                 <button disabled={busy} key={u} onClick={() => addLink(u, n)}>
                   {n}
@@ -801,19 +802,19 @@ export default function Home() {
                       →
                     </button>
                   </div>
-                  {['web', 'youtube'].includes(active.kind) && (
+                  {['web', 'youtube', 'video'].includes(active.kind) && (
                     <div className="row">
                       <button onClick={() => setLive((v) => !v)}>
                         {live ? '미리보기 닫기' : '미리보기'}
                       </button>
-                      <a href={active.src} target="_blank" rel="noreferrer">
+                      <a href={active.kind === 'video' ? '/audio-morphology.html' : active.src} target="_blank" rel="noreferrer">
                         새 탭 ↗
                       </a>
-                      <button disabled={busy} onClick={() => void captureSelected()}>캡처 갱신</button>
+                      {active.kind !== 'video' && <button disabled={busy} onClick={() => void captureSelected()}>캡처 갱신</button>}
                       <button disabled={busy} onClick={() => previewFileRef.current?.click()}>캡처 이미지 지정</button>
                     </div>
                   )}
-                  {active.kind === 'youtube' && (
+                  {(active.kind === 'youtube' || active.kind === 'video') && (
                     <div className="video-settings">
                       {(
                         [
@@ -926,7 +927,7 @@ export default function Home() {
             >
               →
             </button>
-            {current.kind === 'youtube' && (
+            {(current.kind === 'youtube' || current.kind === 'video') && (
               <button
                 onClick={() =>
                   patch(current.id, { controls: !current.controls })

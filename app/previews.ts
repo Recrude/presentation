@@ -1,5 +1,6 @@
 import type { Slide } from './model';
 export function builtInPreview(src: string) {
+  if (src === '/media/audio-morphology.mp4') return '/media/audio-morphology.jpg';
   try {
     const u = new URL(src);
     if (u.hostname === 'www.youtube-nocookie.com' && u.pathname === '/embed/QIAcSGkOLDk') return '/previews/youtube-QIAcSGkOLDk.jpg';

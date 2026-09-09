@@ -5,7 +5,7 @@ import { layoutPhotos, youtubeUrl } from './model';
 import colors from './number-colors.json';
 import { FolioNumber } from './folio';
 import { previewSource } from './previews';
-import { originalSource } from './slide-assets';
+import { originalSource, thumbnailSource } from './slide-assets';
 export function SlideView({
   slide,
   number,
@@ -13,6 +13,7 @@ export function SlideView({
   live = false,
   playing = false,
   print = false,
+  thumbnail = false,
 }: {
   slide: Slide;
   number: number | null;
@@ -20,13 +21,14 @@ export function SlideView({
   live?: boolean;
   playing?: boolean;
   print?: boolean;
+  thumbnail?: boolean;
 }) {
   const preview = previewSource(slide, assets);
   const [failed, setFailed] = useState(false);
   const original = slide.kind === 'image';
   const uploadedFolio = slide.kind === 'folio';
   const photo = uploadedFolio ? slide.photos?.[0] : undefined;
-  const imageSrc = original ? originalSource(slide.src) : photo ? assets[photo.id] : undefined;
+  const imageSrc = original ? (thumbnail ? thumbnailSource(slide.src) : originalSource(slide.src)) : photo ? assets[photo.id] : undefined;
   const index = original ? Number(slide.src.match(/page-(\d+)/)?.[1]) : -1;
   const palette = uploadedFolio ? slide.folioPalette : (
     colors as Record<string, { background: string; foreground: string }>
@@ -43,6 +45,7 @@ export function SlideView({
         {original || uploadedFolio ? (
           <>
             <img
+              decoding="async"
               draggable={false}
               className="original"
               src={imageSrc}

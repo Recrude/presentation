@@ -46,3 +46,11 @@ macOS에서는 설치된 Google Chrome으로 캡처합니다. 다른 환경의 �
 `/audio-morphology.html`은 영상만 보여주는 전용 페이지입니다. 검정 배경에서 화면 비율을 유지하며, 음소거 자동 재생으로 시작합니다. 기본 플레이어에서 소리를 켜거나 전체화면으로 전환할 수 있습니다.
 
 발표 편집기에서는 **추가 → 음향형태론 전시 영상**으로 선택한 장 다음에 넣습니다. PDF에는 영상의 미리보기 프레임이 들어갑니다. YouTube나 외부 영상 서비스는 사용하지 않습니다.
+
+### Image loading and cache
+
+The editor uses 640px WebP thumbnails (1.52 MB total instead of 28.50 MB of original images). Presentation and PDF keep the full-resolution sources. The PDF image tree is mounted only during export. After opening the editor, two background requests at a time warm the visible original slides; the status shows progress and failures without blocking editing. Embedded websites and YouTube remain subject to their own network loading.
+
+Vercel caches original images and local media for seven days, and content-hashed thumbnails for one year. Original image URLs carry a content hash so replacements bypass stale cached versions. After changing original assets, run `python3 scripts/prepare-slide-assets.py` (requires Pillow) to regenerate thumbnails and the source manifest. Saved deck IDs and source keys remain unchanged. Uploaded images are read in one IndexedDB transaction.
+
+Run `node scripts/verify-loading.mjs` with the dev server on port 3100 to verify thumbnail selection, deferred PDF rendering, background warmup, and full-resolution PDF sources.

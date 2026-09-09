@@ -55,3 +55,18 @@ export const saveDeck = (slides: Slide[]) =>
 export const readImage = (id: string) => read<Blob>('images', id);
 export const saveImages = (entries: [string, Blob][]) =>
   write('images', entries);
+
+export async function readImages(ids: string[]): Promise<Record<string, Blob>> {
+  if (!ids.length) return {};
+  const db = await database();
+  return new Promise((resolve, reject) => {
+    const result: Record<string, Blob> = {};
+    const tx = db.transaction('images', 'readonly');
+    for (const id of ids) {
+      const request = tx.objectStore('images').get(id);
+      request.onsuccess = () => { if (request.result) result[id] = request.result; };
+    }
+    tx.oncomplete = () => { db.close(); resolve(result); };
+    tx.onerror = tx.onabort = () => { db.close(); reject(tx.error); };
+  });
+}

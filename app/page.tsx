@@ -14,10 +14,10 @@ import {
   type Slide,
   type Photo,
 } from './model';
-import { readDeck, saveDeck, readImage, saveImages } from './storage';
+import { readDeck, saveDeck, readImage, readImages, saveImages } from './storage';
 import { SlideView } from './slide-view';
 import { previewSource } from './previews';
-import { originalSource } from './slide-assets';
+import { originalSource, warmSlides } from './slide-assets';
 import { sortOriginalSlides, projectForPage } from './chronology';
 import { detectFolioPalette, type FolioPalette } from './folio-palette';
 const presets = [
@@ -45,6 +45,7 @@ export default function Home() {
     [adding, setAdding] = useState(false),
     [url, setUrl] = useState(''),
     [title, setTitle] = useState('');
+  const [cacheStatus, setCacheStatus] = useState('');
   const [busy, setBusy] = useState(false),
     [group, setGroup] = useState(true),
     [live, setLive] = useState(false);
@@ -114,8 +115,9 @@ export default function Home() {
         ];
         let missing = 0;
         const loaded: Record<string, string> = {};
+        const blobs = await readImages(ids);
         for (const id of ids) {
-          const blob = await readImage(id);
+          const blob = blobs[id];
           if (!blob) {
             missing++;
             continue;
@@ -360,6 +362,21 @@ export default function Home() {
         img.src = originalSource(s.src);
       });
   }, [position, present]);
+  const preloadSources = JSON.stringify(visible.filter(s => s.kind === 'image').map(s => originalSource(s.src)));
+  useEffect(() => {
+    if (!ready) return;
+    const controller = new AbortController();
+    const sources: string[] = JSON.parse(preloadSources);
+    const timer = setTimeout(() => {
+      setCacheStatus(`원본 준비 0/${sources.length}`);
+      void warmSlides(sources, controller.signal, (done, failed) => {
+        setCacheStatus(done === sources.length
+          ? failed ? `원본 ${failed}장 재시도 필요` : '원본 준비 완료'
+          : `원본 준비 ${done}/${sources.length}`);
+      });
+    }, 1500);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [ready, preloadSources]);
   async function save() {
     const snapshot = stateRef.current;
     setBusy(true);
@@ -595,7 +612,7 @@ export default function Home() {
           </button>
           <span className="spacer" />
           <span className="status" role="status">
-            {status}
+            {status || cacheStatus}
           </span>
           <button disabled={!ready || busy} onClick={save}>
             저장{dirty ? ' *' : ''}
@@ -683,6 +700,7 @@ export default function Home() {
                 >
                   <SlideView
                     key={s.id}
+                    thumbnail
                     slide={s}
                     number={numberOf(slides, s.id)}
                     assets={assets}
@@ -948,13 +966,13 @@ export default function Home() {
           </nav>
         </div>
       )}
-      <div className="print-deck">
+      {printing && <div className="print-deck">
         {visible.map((s, i) => (
           <section key={s.id} className="print-slide">
             <SlideView slide={s} number={i + 1} assets={assets} print />
           </section>
         ))}
-      </div>
+      </div>}
     </>
   );
 }

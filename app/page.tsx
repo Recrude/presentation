@@ -53,6 +53,7 @@ export default function Home() {
   const [busy, setBusy] = useState(false),
     [group, setGroup] = useState(true),
     [live, setLive] = useState(false);
+  const [navigationVisible, setNavigationVisible] = useState(true);
   const [present, setPresent] = useState(false),
     [position, setPosition] = useState(0),
     [printing, setPrinting] = useState(false);
@@ -374,6 +375,25 @@ export default function Home() {
     // Keep decoded adjacent images alive only for this small navigation window.
     return () => { decoded.length = 0; };
   }, [position, present, slides, assets]);
+  useEffect(() => {
+    if (!present) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const reveal = () => {
+      setNavigationVisible(true);
+      clearTimeout(timer);
+      timer = setTimeout(() => setNavigationVisible(false), 1800);
+    };
+    reveal();
+    window.addEventListener('pointermove', reveal, { passive: true });
+    window.addEventListener('pointerdown', reveal, { passive: true });
+    window.addEventListener('keydown', reveal);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('pointermove', reveal);
+      window.removeEventListener('pointerdown', reveal);
+      window.removeEventListener('keydown', reveal);
+    };
+  }, [present]);
   const preloadSources = JSON.stringify(visible.filter(s => s.kind === 'image').map(s => originalSource(s.src)));
   useEffect(() => {
     if (!ready) return;
@@ -963,7 +983,7 @@ export default function Home() {
             number={position + 1}
             assets={assets}
           />
-          <nav className="present-controls" aria-label="발표 이동">
+          <nav className={`present-controls${navigationVisible ? ' is-visible' : ''}`} aria-label="발표 이동">
             <button
               disabled={position === 0}
               onClick={() => setPosition((p) => Math.max(0, p - 1))}

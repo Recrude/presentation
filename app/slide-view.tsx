@@ -53,7 +53,7 @@ export function SlideView({
               loading={live || print ? 'eager' : 'lazy'}
               onError={() => setFailed(true)}
             />
-            {palette && (
+            {original && palette && (
               <svg
                 className="folio"
                 viewBox={`0 0 3840 ${3840 / ratio}`}
@@ -96,10 +96,9 @@ export function SlideView({
                 )}
               </div>
             ))}
-            <span className="new-folio">{number ?? '—'}</span>
           </>
         ) : print ? (
-          preview ? <a href={slide.src} className="capture-slide"><img draggable={false} src={preview} alt={slide.title}/><span className="new-folio">{number}</span></a> : <div className="embed-placeholder">미리보기 캡처가 필요합니다.</div>
+          preview ? <a href={slide.src} className="capture-slide"><img draggable={false} src={preview} alt={slide.title}/></a> : <div className="embed-placeholder">미리보기 캡처가 필요합니다.</div>
         ) : live && slide.kind === 'video' ? (
           <video className="local-video" key={slide.id} src={slide.src} poster={preview} autoPlay={playing && slide.autoplay !== false} muted={slide.muted !== false} controls={!playing || slide.controls === true} playsInline preload="metadata" aria-label={slide.title}/>
         ) : live ? (

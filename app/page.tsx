@@ -332,7 +332,9 @@ export default function Home() {
   useEffect(() => {
     if (!present) return;
     const key = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' && e.target instanceof HTMLElement && e.target.closest('video, input, button, select, textarea, [contenteditable]')) return;
+      const arrow = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(e.key);
+      if (arrow) { e.preventDefault(); e.stopImmediatePropagation(); }
+      if (!arrow && e.key !== 'Escape' && e.target instanceof HTMLElement && e.target.closest('video, input, button, select, textarea, [contenteditable]')) return;
       if (e.key === 'Escape') {
         setPresent(false);
         return;
@@ -348,8 +350,8 @@ export default function Home() {
       if (e.key === 'Home') setPosition(0);
       if (e.key === 'End') setPosition(visible.length - 1);
     };
-    window.addEventListener('keydown', key);
-    return () => window.removeEventListener('keydown', key);
+    window.addEventListener('keydown', key, true);
+    return () => window.removeEventListener('keydown', key, true);
   }, [present, visible.length]);
   useEffect(() => {
     const exit = () => {
@@ -393,6 +395,24 @@ export default function Home() {
       window.removeEventListener('pointerdown', reveal);
       window.removeEventListener('keydown', reveal);
     };
+  }, [present]);
+  useEffect(() => {
+    if (!present) return;
+    let timer: ReturnType<typeof setTimeout>;
+    const restore = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const focused = document.activeElement;
+        if (focused instanceof HTMLIFrameElement && focused.closest('.presentation')) {
+          focused.blur();
+          window.focus();
+          document.querySelector<HTMLElement>('.presentation')?.focus({ preventScroll: true });
+          setNavigationVisible(true);
+        }
+      }, 0);
+    };
+    window.addEventListener('blur', restore);
+    return () => { clearTimeout(timer); window.removeEventListener('blur', restore); };
   }, [present]);
   const preloadSources = JSON.stringify(visible.filter(s => s.kind === 'image').map(s => originalSource(s.src)));
   useEffect(() => {
@@ -977,13 +997,13 @@ export default function Home() {
         </main>
       </div>
       {present && current && (
-        <div className={`presentation${current.kind === 'youtube' || current.kind === 'video' ? ' presentation-media' : ''}`}>
+        <div tabIndex={-1} className={`presentation${current.kind === 'youtube' || current.kind === 'video' ? ' presentation-media' : ''}`}>
           <PresentationStage
             slide={current}
             number={position + 1}
             assets={assets}
           />
-          <nav className={`present-controls${navigationVisible ? ' is-visible' : ''}`} aria-label="발표 이동">
+          <nav className={`present-controls${navigationVisible || current.kind === 'web' || current.kind === 'youtube' ? ' is-visible' : ''}`} aria-label="발표 이동">
             <button
               disabled={position === 0}
               onClick={() => setPosition((p) => Math.max(0, p - 1))}

@@ -17,6 +17,7 @@ import {
 import { readDeck, saveDeck, readImage, saveImages } from './storage';
 import { SlideView } from './slide-view';
 import { previewSource } from './previews';
+import { originalSource } from './slide-assets';
 import { sortOriginalSlides, projectForPage } from './chronology';
 import { detectFolioPalette, type FolioPalette } from './folio-palette';
 const presets = [
@@ -356,7 +357,7 @@ export default function Home() {
       .filter((s) => s.kind === 'image')
       .forEach((s) => {
         const img = new Image();
-        img.src = s.src;
+        img.src = originalSource(s.src);
       });
   }, [position, present]);
   async function save() {
@@ -534,7 +535,7 @@ export default function Home() {
       const preparedAssets = Object.fromEntries(objectUrls.current);
       const sources = stateRef.current.filter(s => !s.hidden).flatMap((s) =>
         s.kind === 'image'
-          ? [s.src]
+          ? [originalSource(s.src)]
           : s.kind === 'gallery' || s.kind === 'folio'
             ? (s.photos || []).map((p) => preparedAssets[p.id])
             : [previewSource(s, preparedAssets)],

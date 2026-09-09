@@ -131,3 +131,28 @@ test('previous decks including empty decks restore; malformed or duplicate slide
     true,
   );
 });
+
+test('chronological default includes all 79 original pages exactly once', async () => {
+  const { chronologicalPages, projects, sortOriginalSlides } = await import('../app/chronology.ts');
+  assert.deepEqual([...chronologicalPages].sort((a,b)=>a-b),Array.from({length:79},(_,i)=>i));
+  assert.deepEqual(chronologicalPages.slice(0,4),[0,1,74,75]);
+  assert.equal(chronologicalPages.at(-1),78);
+  assert.deepEqual(projects.map(p=>p.start),projects.map(p=>p.start).sort());
+  for(const p of projects) {
+    const pos=chronologicalPages.indexOf(p.first);
+    assert.deepEqual(chronologicalPages.slice(pos,pos+p.last-p.first+1),Array.from({length:p.last-p.first+1},(_,i)=>p.first+i));
+  }
+  const custom={id:'custom',kind:'web',src:'https://ved.kr/',title:'x',hidden:false};
+  const mixed=[initial.at(-2),custom,initial[2]];
+  const sorted=sortOriginalSlides(mixed);assert.equal(sorted[1],custom);assert.equal(sorted[0],initial[2]);
+});
+
+test('uploaded folios require exactly one valid image and a readable palette', async()=>{
+  const { contrastingInk } = await import('../app/folio-palette.ts');
+  const s={id:'folio',title:'New',kind:'folio',src:'',hidden:false,photos:[{id:'asset',name:'x.jpg',width:3840,height:2716}],folioPalette:{background:'#ffffff',foreground:'#000000'}};
+  assert.equal(validDeck([s]),true);
+  assert.equal(validDeck([{...s,photos:[]}]),false);
+  assert.equal(validDeck([{...s,photos:[...s.photos,...s.photos]}]),false);
+  assert.equal(validDeck([{...s,folioPalette:{background:'url(x)',foreground:'red'}}]),false);
+  assert.equal(contrastingInk(255,255,255),'#000000');assert.equal(contrastingInk(0,0,0),'#ffffff');
+});

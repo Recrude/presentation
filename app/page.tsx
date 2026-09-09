@@ -17,6 +17,8 @@ import {
 import { readDeck, saveDeck, readImage, saveImages } from './storage';
 import { SlideView } from './slide-view';
 import { previewSource } from './previews';
+import { sortOriginalSlides, projectForPage } from './chronology';
+import { detectFolioPalette, type FolioPalette } from './folio-palette';
 const presets = [
   ['VED', 'https://ved.kr/'],
   ['What are you doing now?', 'https://whatareyoudoingnow.vercel.app/'],
@@ -60,7 +62,8 @@ export default function Home() {
     suppressClick = useRef(false),
     fileRef = useRef<HTMLInputElement>(null),
     previewFileRef = useRef<HTMLInputElement>(null),
-    photoTarget = useRef<string | null>(null);
+    photoTarget = useRef<string | null>(null),
+    importMode = useRef<'gallery' | 'folio'>('gallery');
   stateRef.current = slides;
   const visible = slides.filter((s) => !s.hidden),
     active = slides.find((s) => s.id === selected),
@@ -400,14 +403,20 @@ export default function Home() {
     }
   }
   function chooseFiles(target: string | null = null) {
+    importMode.current = 'gallery';
     photoTarget.current = target;
     fileRef.current?.click();
   }
+  function chooseFolioFiles(target: string | null = null) {
+    importMode.current = 'folio'; photoTarget.current = target; fileRef.current?.click();
+  }
   async function importPhotos(files: File[]) {
     if (!files.length) return;
+    const mode = importMode.current;
     const target = photoTarget.current,
       after = selected,
       grouped = group;
+    if (mode === 'folio' && target && files.length !== 1) { setStatus('교체할 이미지 한 장을 선택하세요.'); return; }
     const existing = target
       ? stateRef.current.find((s) => s.id === target)?.photos || []
       : [];
@@ -417,6 +426,7 @@ export default function Home() {
     }
     setBusy(true);
     setStatus('이미지 불러오는 중');
+    const palettes: Record<string, FolioPalette> = {};
     const photos: Photo[] = [],
       entries: [string, Blob][] = [],
       newUrls: Record<string, string> = {};
@@ -434,6 +444,7 @@ export default function Home() {
         await img.decode();
         if (!img.naturalWidth || !img.naturalHeight)
           throw Error(`${file.name} · 이미지 크기를 읽지 못했습니다.`);
+        if (mode === 'folio') palettes[id] = detectFolioPalette(img);
         photos.push({
           id,
           name: file.name,
@@ -448,14 +459,15 @@ export default function Home() {
       );
       setAssets((a) => ({ ...a, ...newUrls }));
       if (target && stateRef.current.some((s) => s.id === target))
-        patch(target, { photos: [...existing, ...photos] });
+        patch(target, mode === 'folio' ? { photos, folioPalette: palettes[photos[0].id] } : { photos: [...existing, ...photos] });
       else {
-        const groups = grouped ? [photos] : photos.map((p) => [p]);
+        const groups = mode === 'folio' ? photos.map(p => [p]) : grouped ? [photos] : photos.map((p) => [p]);
         insert(
           groups.map((ps) => ({
             id: crypto.randomUUID(),
             title: ps[0].name.replace(/\.[^.]+$/, ''),
-            kind: 'gallery' as const,
+            kind: mode,
+            ...(mode === 'folio' ? { folioPalette: palettes[ps[0].id] } : {}),
             src: '',
             hidden: false,
             photos: ps,
@@ -523,7 +535,7 @@ export default function Home() {
       const sources = stateRef.current.filter(s => !s.hidden).flatMap((s) =>
         s.kind === 'image'
           ? [s.src]
-          : s.kind === 'gallery'
+          : s.kind === 'gallery' || s.kind === 'folio'
             ? (s.photos || []).map((p) => preparedAssets[p.id])
             : [previewSource(s, preparedAssets)],
       );
@@ -576,6 +588,7 @@ export default function Home() {
           >
             추가
           </button>
+          <button disabled={!ready || busy} title="원본 작업을 시작 시기순으로 정렬합니다. 추가 슬라이드의 자리는 유지합니다." onClick={() => change(sortOriginalSlides(slides))}>시기순</button>
           <button disabled={!historyCount || busy} onClick={undo}>
             되돌리기
           </button>
@@ -626,6 +639,7 @@ export default function Home() {
               ))}
             </div>
             <div className="row">
+              <button disabled={busy} onClick={() => chooseFolioFiles()}>포트폴리오 조판면 추가</button>
               <button disabled={busy} onClick={() => chooseFiles()}>
                 이미지 선택
               </button>
@@ -824,6 +838,8 @@ export default function Home() {
                       </span>
                     </div>
                   )}
+                  {active.kind === 'image' && <div className="note">{projectForPage(Number(active.src.match(/page-(\d+)/)?.[1]))?.period}</div>}
+                  {active.kind === 'folio' && <div className="row"><button disabled={busy} onClick={() => chooseFolioFiles(active.id)}>조판면 이미지 교체</button></div>}
                   {active.kind === 'gallery' && (
                     <div className="photo-list">
                       <button

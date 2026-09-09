@@ -1,23 +1,22 @@
+import { chronologicalPages, projectForPage } from './chronology.ts';
 export type Photo = { id: string; name: string; width: number; height: number };
 export type Slide = {
   id: string;
   title: string;
-  kind: 'image' | 'web' | 'youtube' | 'gallery';
+  kind: 'image' | 'web' | 'youtube' | 'gallery' | 'folio';
   src: string;
   hidden: boolean;
   photos?: Photo[];
   previewId?: string;
+  folioPalette?: { background: string; foreground: string };
   autoplay?: boolean;
   controls?: boolean;
   muted?: boolean;
 };
-export const initial: Slide[] = Array.from({ length: 79 }, (_, i) => ({
-  id: `original-${i}`,
-  title: `포트폴리오 ${i + 1}`,
-  kind: 'image',
-  src: `/slides/page-${String(i).padStart(2, '0')}.webp`,
-  hidden: false,
-}));
+export const initial: Slide[] = chronologicalPages.map(i => {
+  const project = projectForPage(i);
+  return { id: `original-${i}`, title: project ? `${project.start} · ${project.title} · ${i - project.first + 1}` : i === 0 ? '표지' : i === 1 ? '원본 목차' : '마지막 장', kind: 'image', src: `/slides/page-${String(i).padStart(2, '0')}.webp`, hidden: false };
+});
 export function reorder(
   slides: Slide[],
   id: string,
@@ -136,8 +135,9 @@ export function validDeck(value: unknown): value is Slide[] {
         return false;
       if (s.kind === 'image')
         return /^\/slides\/page-(?:[0-6]\d|7[0-8])\.webp$/.test(s.src);
-      if (s.kind === 'gallery')
+      if (s.kind === 'gallery' || s.kind === 'folio')
         return (
+          (s.kind !== 'folio' || (s.photos?.length === 1 && /^#[0-9a-fA-F]{6}$/.test(s.folioPalette?.background || '') && /^#[0-9a-fA-F]{6}$/.test(s.folioPalette?.foreground || ''))) &&
           Array.isArray(s.photos) &&
           s.photos.length > 0 &&
           s.photos.length <= 60 &&

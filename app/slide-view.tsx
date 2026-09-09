@@ -23,11 +23,14 @@ export function SlideView({
   const preview = previewSource(slide, assets);
   const [failed, setFailed] = useState(false);
   const original = slide.kind === 'image';
+  const uploadedFolio = slide.kind === 'folio';
+  const photo = uploadedFolio ? slide.photos?.[0] : undefined;
+  const imageSrc = original ? slide.src : photo ? assets[photo.id] : undefined;
   const index = original ? Number(slide.src.match(/page-(\d+)/)?.[1]) : -1;
-  const palette = (
+  const palette = uploadedFolio ? slide.folioPalette : (
     colors as Record<string, { background: string; foreground: string }>
   )[index];
-  const ratio = original ? 3840 / 2716 : 16 / 9;
+  const ratio = original ? 3840 / 2716 : photo ? photo.width / photo.height : 16 / 9;
   const boxes =
     slide.kind === 'gallery' ? layoutPhotos(slide.photos || []) : [];
   return (
@@ -36,12 +39,12 @@ export function SlideView({
         className="slide-sheet"
         style={{ '--ratio': ratio } as CSSProperties}
       >
-        {original ? (
+        {original || uploadedFolio ? (
           <>
             <img
               draggable={false}
               className="original"
-              src={slide.src}
+              src={imageSrc}
               alt={slide.title}
               loading={live || print ? 'eager' : 'lazy'}
               onError={() => setFailed(true)}
@@ -49,7 +52,7 @@ export function SlideView({
             {palette && (
               <svg
                 className="folio"
-                viewBox="0 0 3840 2716"
+                viewBox={`0 0 3840 ${3840 / ratio}`}
                 aria-label={number === null ? '숨긴 슬라이드' : `${number}쪽`}
               >
                 <rect

@@ -533,3 +533,8 @@ aside {
 }
 .capture-slide{display:block;position:relative;width:100%;height:100%;background:#000}.capture-slide img,.capture-preview{width:100%;height:100%;object-fit:contain;display:block}.capture-slide .new-folio{background:#000;color:#e0e0e0;padding:0 4px}
 .local-video{display:block;width:100%;height:100%;object-fit:contain;background:#000}
+
+.presentation-stage, .presentation-layer {
+  position: absolute;
+  inset: 0;
+}

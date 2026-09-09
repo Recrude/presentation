@@ -16,6 +16,7 @@ import {
 } from './model';
 import { readDeck, saveDeck, readImage, readImages, saveImages } from './storage';
 import { SlideView } from './slide-view';
+import { PresentationStage } from './presentation-stage';
 import { previewSource } from './previews';
 import { originalSource, warmSlides } from './slide-assets';
 import { sortOriginalSlides, projectForPage } from './chronology';
@@ -354,14 +355,21 @@ export default function Home() {
   }, []);
   useEffect(() => {
     if (!present) return;
-    visible
-      .slice(Math.max(0, position - 1), position + 3)
-      .filter((s) => s.kind === 'image')
-      .forEach((s) => {
-        const img = new Image();
-        img.src = originalSource(s.src);
+    const decoded: HTMLImageElement[] = [];
+    visible.slice(Math.max(0, position - 1), position + 3).forEach(slide => {
+      const sources = slide.kind === 'image' ? [originalSource(slide.src)]
+        : slide.kind === 'gallery' || slide.kind === 'folio'
+          ? (slide.photos || []).map(photo => assets[photo.id]).filter(Boolean) : [];
+      sources.forEach(src => {
+        const image = new Image();
+        image.src = src;
+        decoded.push(image);
+        void image.decode().catch(() => undefined);
       });
-  }, [position, present]);
+    });
+    // Keep decoded adjacent images alive only for this small navigation window.
+    return () => { decoded.length = 0; };
+  }, [position, present, slides, assets]);
   const preloadSources = JSON.stringify(visible.filter(s => s.kind === 'image').map(s => originalSource(s.src)));
   useEffect(() => {
     if (!ready) return;
@@ -920,13 +928,10 @@ export default function Home() {
       </div>
       {present && current && (
         <div className="presentation">
-          <SlideView
-            key={current.id}
+          <PresentationStage
             slide={current}
             number={position + 1}
             assets={assets}
-            live
-            playing
           />
           <nav className="present-controls" aria-label="발표 이동">
             <button

@@ -1,0 +1,318 @@
+{
+  "0": {
+    "background": "#000000",
+    "foreground": "#ffffff"
+  },
+  "1": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "2": {
+    "background": "#5bab73",
+    "foreground": "#000000"
+  },
+  "3": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "4": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "5": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "6": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "7": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "8": {
+    "background": "#83d6dc",
+    "foreground": "#000000"
+  },
+  "9": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "10": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "11": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "12": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "13": {
+    "background": "#100c09",
+    "foreground": "#ffffff"
+  },
+  "14": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "15": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "16": {
+    "background": "#100c09",
+    "foreground": "#ffffff"
+  },
+  "17": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "18": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "19": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "20": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "21": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "22": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "23": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "24": {
+    "background": "#454545",
+    "foreground": "#ffffff"
+  },
+  "25": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "26": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "27": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "28": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "29": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "30": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "31": {
+    "background": "#100c09",
+    "foreground": "#ffffff"
+  },
+  "32": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "33": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "34": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "35": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "36": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "37": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "38": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "39": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "40": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "41": {
+    "background": "#5d5d5f",
+    "foreground": "#ffffff"
+  },
+  "42": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "43": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "44": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "45": {
+    "background": "#2d2d31",
+    "foreground": "#ffffff"
+  },
+  "46": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "47": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "48": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "49": {
+    "background": "#111111",
+    "foreground": "#ffffff"
+  },
+  "50": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "51": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "52": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "53": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "54": {
+    "background": "#fd5f00",
+    "foreground": "#000000"
+  },
+  "55": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "56": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "57": {
+    "background": "#ffff00",
+    "foreground": "#000000"
+  },
+  "58": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "59": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "60": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "61": {
+    "background": "#4aa35a",
+    "foreground": "#000000"
+  },
+  "62": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "63": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "64": {
+    "background": "#03163f",
+    "foreground": "#ffffff"
+  },
+  "65": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "66": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "67": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "68": {
+    "background": "#000000",
+    "foreground": "#ffffff"
+  },
+  "69": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "70": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "71": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "72": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "73": {
+    "background": "#ffffff",
+    "foreground": "#000000"
+  },
+  "74": {
+    "background": "#4d4141",
+    "foreground": "#ffffff"
+  },
+  "75": {
+    "background": "#4d4141",
+    "foreground": "#ffffff"
+  },
+  "76": {
+    "background": "#4d4141",
+    "foreground": "#ffffff"
+  },
+  "77": {
+    "background": "#4d4141",
+    "foreground": "#ffffff"
+  },
+  "78": {
+    "background": "#000000",
+    "foreground": "#ffffff"
+  }
+}

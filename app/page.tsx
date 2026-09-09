@@ -981,14 +981,6 @@ export default function Home() {
             >
               →
             </button>
-            <button
-              onClick={() => {
-                setPresent(false);
-                if (document.fullscreenElement) void document.exitFullscreen();
-              }}
-            >
-              종료
-            </button>
           </nav>
         </div>
       )}

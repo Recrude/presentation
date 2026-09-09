@@ -75,7 +75,7 @@ export function embed(raw: string) {
 export function youtubeUrl(s: Slide, playing: boolean) {
   const u = new URL(s.src);
   u.searchParams.set('autoplay', playing && s.autoplay !== false ? '1' : '0');
-  u.searchParams.set('controls', !playing || s.controls === true ? '1' : '0');
+  u.searchParams.set('controls', '1');
   u.searchParams.set('mute', playing && s.muted !== false ? '1' : '0');
   u.searchParams.set('playsinline', '1');
   u.searchParams.set('rel', '0');

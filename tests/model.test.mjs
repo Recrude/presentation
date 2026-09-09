@@ -73,7 +73,7 @@ test('gallery layout retains every aspect ratio with padding and no overlap for 
   }
 });
 
-test('youtube inputs normalize, autoplay is presentation-only and UI can be restored', () => {
+test('youtube inputs normalize, autoplay is presentation-only and controls remain visible for saved decks', () => {
   for (const src of [
     'https://youtu.be/QIAcSGkOLDk',
     'https://www.youtube.com/watch?v=QIAcSGkOLDk',
@@ -85,14 +85,14 @@ test('youtube inputs normalize, autoplay is presentation-only and UI can be rest
     const playing = new URL(youtubeUrl(s, true));
     assert.equal(playing.searchParams.get('autoplay'), '1');
     assert.equal(playing.searchParams.get('mute'), '1');
-    assert.equal(playing.searchParams.get('controls'), '0');
+    assert.equal(playing.searchParams.get('controls'), '1');
     assert.equal(
       new URL(youtubeUrl(s, false)).searchParams.get('autoplay'),
       '0',
     );
     assert.equal(
       new URL(
-        youtubeUrl({ ...s, controls: true, muted: false }, true),
+        youtubeUrl({ ...s, controls: false, muted: false }, true),
       ).searchParams.get('controls'),
       '1',
     );

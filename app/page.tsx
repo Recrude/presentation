@@ -328,6 +328,7 @@ export default function Home() {
   useEffect(() => {
     if (!present) return;
     const key = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' && e.target instanceof HTMLElement && e.target.closest('video, input, button, select, textarea, [contenteditable]')) return;
       if (e.key === 'Escape') {
         setPresent(false);
         return;
@@ -418,7 +419,7 @@ export default function Home() {
           ...parsed,
           hidden: false,
           autoplay: true,
-          controls: false,
+          controls: true,
           muted: true,
         },
       ]);
@@ -658,7 +659,7 @@ export default function Home() {
               </button>
             </div>
             <div className="row presets">
-              <button disabled={busy} onClick={() => insert([{id:crypto.randomUUID(),title:'음향형태론 전시 영상',kind:'video',src:'/media/audio-morphology.mp4',hidden:false,autoplay:true,muted:true,controls:false}])}>음향형태론 전시 영상</button>
+              <button disabled={busy} onClick={() => insert([{id:crypto.randomUUID(),title:'음향형태론 전시 영상',kind:'video',src:'/media/audio-morphology.mp4',hidden:false,autoplay:true,muted:true,controls:true}])}>음향형태론 전시 영상</button>
               {presets.map(([n, u]) => (
                 <button disabled={busy} key={u} onClick={() => addLink(u, n)}>
                   {n}
@@ -846,7 +847,6 @@ export default function Home() {
                       {(
                         [
                           ['autoplay', '자동 재생', active.autoplay !== false],
-                          ['controls', '컨트롤 표시', active.controls === true],
                           ['muted', '음소거', active.muted !== false],
                         ] as const
                       ).map(([key, label, checked]) => (
@@ -927,7 +927,7 @@ export default function Home() {
         </main>
       </div>
       {present && current && (
-        <div className="presentation">
+        <div className={`presentation${current.kind === 'youtube' || current.kind === 'video' ? ' presentation-media' : ''}`}>
           <PresentationStage
             slide={current}
             number={position + 1}
@@ -951,15 +951,6 @@ export default function Home() {
             >
               →
             </button>
-            {(current.kind === 'youtube' || current.kind === 'video') && (
-              <button
-                onClick={() =>
-                  patch(current.id, { controls: !current.controls })
-                }
-              >
-                {current.controls ? '컨트롤 숨김' : '컨트롤 표시'}
-              </button>
-            )}
             <button
               onClick={() => {
                 setPresent(false);

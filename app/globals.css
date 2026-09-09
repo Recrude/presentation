@@ -538,3 +538,8 @@ aside {
   position: absolute;
   inset: 0;
 }
+
+.presentation-media .present-controls {
+  top: 0;
+  bottom: auto;
+}

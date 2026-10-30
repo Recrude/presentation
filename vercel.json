@@ -95,7 +95,7 @@
   ],
   "rewrites": [
     {
-      "source": "/presentations/api/capture",
+      "source": "/presentations/api/capture/",
       "destination": "/api/capture"
     },
     {
@@ -127,8 +127,9 @@
       "destination": "/audio-morphology.html"
     },
     {
-      "source": "/presentations/:path*",
+      "source": "/presentations/:path*/",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "trailingSlash": true
 }

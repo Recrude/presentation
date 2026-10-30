@@ -8,6 +8,10 @@
       "maxDuration": 60,
       "memory": 2048,
       "includeFiles": "{node_modules/@sparticuz/chromium/bin/**,api/fonts/**}"
+    },
+    "api/publish.ts": {
+      "maxDuration": 60,
+      "memory": 1024
     }
   },
   "headers": [
@@ -103,6 +107,10 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/presentations/api/publish/",
+      "destination": "/api/publish"
+    },
     {
       "source": "/presentations/api/capture/",
       "destination": "/api/capture"

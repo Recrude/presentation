@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { BASE, catalogEntries, readCatalog, validCatalog, type CatalogItem } from './catalog';
-import { localPublishing, publishCatalog } from './github-publish';
+import { publishCatalog } from './github-publish';
 const draftKey = 'presentation-catalog-draft-v1';
 export function CatalogPage({ editing }: { editing: boolean }) {
   const [items, setItems] = useState<CatalogItem[]>([]);
   const [ready, setReady] = useState(false), [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false), [status, setStatus] = useState('불러오는 중');
-  const [token, setToken] = useState(''), [publishing, setPublishing] = useState(false);
   const [drag, setDrag] = useState<string | null>(null), [over, setOver] = useState<{id: string; after: boolean} | null>(null);
   useEffect(() => {
     document.body.classList.add('catalog-page'); document.title = editing ? '발표 관리 · Jaeyeon Kim' : 'Presentations · Jaeyeon Kim';
@@ -41,20 +40,15 @@ export function CatalogPage({ editing }: { editing: boolean }) {
   }
   async function publish() {
     if (!save()) return;
-    setBusy(true); setStatus('GitHub에 게시 중');
-    try { await publishCatalog({version:1,items},token); setPublishing(false); setStatus('게시됨 · 배포 완료 후 공개 목록에 반영됩니다'); }
+    setBusy(true); setStatus('게시 중');
+    try { const result=await publishCatalog({version:1,items}); setStatus(result.unchanged?'공개 목록과 같습니다':'게시됨 · 배포 완료 후 공개 목록에 반영됩니다'); }
     catch(e) { setStatus(e instanceof Error ? e.message : '게시하지 못했습니다.'); }
     finally { setBusy(false); }
   }
   return <main className="catalog">
     <header className="catalog-header"><a href="https://jaeyeonkim.kr/">Jaeyeon Kim</a>
-      {editing && <nav aria-label="발표 목록 설정"><a href={BASE} target="_blank" rel="noreferrer">공개 목록 ↗</a><button disabled={!ready || busy} onClick={save}>저장{dirty ? ' *' : ''}</button><button disabled={!ready || busy} onClick={() => setPublishing(v => !v)}>게시</button>{!import.meta.env.DEV && <form method="post" action={`${BASE}logout/`}><button type="submit">로그아웃</button></form>}</nav>}
+      {editing && <nav aria-label="발표 목록 설정"><a href={BASE} target="_blank" rel="noreferrer">공개 목록 ↗</a><button disabled={!ready || busy} onClick={save}>저장{dirty ? ' *' : ''}</button><button disabled={!ready || busy} onClick={publish}>게시</button>{!import.meta.env.DEV && <form method="post" action={`${BASE}logout/`}><button type="submit">로그아웃</button></form>}</nav>}
     </header>
-    {publishing && <section className="catalog-publish" aria-label="목록 게시">
-      {!localPublishing && <><input type="password" autoComplete="off" aria-label="GitHub 토큰" placeholder="GitHub 토큰" value={token} onChange={e => setToken(e.target.value)}/><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noreferrer">토큰 만들기 ↗</a></>}
-      <button disabled={busy || (!localPublishing && !token.trim())} onClick={publish}>공개 목록에 반영</button>
-      {!localPublishing && token && <button disabled={busy} onClick={() => setToken('')}>연결 해제</button>}
-    </section>}
     {status && <p className="catalog-status" role="status">{status}</p>}
     {!ready && status !== '불러오는 중' && <button onClick={() => location.reload()}>다시 불러오기</button>}
     <ol className={`presentation-list${editing ? ' managing' : ''}`} aria-label={editing ? '발표 순서와 공개 설정' : '발표 목록'}>

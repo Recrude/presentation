@@ -33,26 +33,27 @@ try {
    return {id,old:await (await readImage('same-photo')).text(),newSize:(await readImage(id)).size};
  });
  assert.notEqual(imported.id,'same-photo');assert.equal(imported.old,'original');assert.ok(imported.newSize>0);
- // Mock the API, inspect atomic tree creation and assets, never mutate GitHub during tests.
+ // Mock same-origin publishing; Git writes and authorization are covered by server tests.
  await page.goto(base+'edit/'+nov+'/');await page.waitForSelector('.toolbar');
  const result=await page.evaluate(async(slug)=>{
   const {publishDeck}=await import('/presentations/app/github-publish.ts');
   const originalFetch=window.fetch,calls=[];let fail=false;
   window.fetch=async(url,opts)=>{
-   if(!String(url).endsWith('api/github'))return originalFetch(url,opts);
+   if(!String(url).endsWith('api/publish/'))return originalFetch(url,opts);
    const body=JSON.parse(opts.body);calls.push(body);
-   if(body.method==='PATCH'&&fail)return new Response('',{status:422});
-   const data=body.path==='git/ref/heads/main'?{object:{sha:'a'.repeat(40)}}:body.path.startsWith('git/commits/')?{tree:{sha:'b'.repeat(40)}}:{sha:'c'.repeat(40)};
+   if(fail)return new Response(JSON.stringify({error:'다른 게시가 먼저 반영되었습니다. 다시 게시하세요.'}),{status:409});
+   const proof={data:{hash:body.hash},signature:'signed-upload'};
+   const data=body.action==='upload'?{proof}:{snapshot:{version:1,slug,slides:body.slides,assets:{uploaded:`/presentations/decks/${slug}/assets/${body.assets.uploaded.data.hash}.png`}}};
    return new Response(JSON.stringify(data),{headers:{'Content-Type':'application/json'}});
   };
   const photo={id:'uploaded',name:'test',width:1,height:1};
   const slides=[{id:'gallery',title:'photo',src:'',kind:'gallery',hidden:false,photos:[photo]},{id:'secret',title:'hidden',src:'https://ved.kr/',kind:'web',hidden:true}];
   try{
-   const snap=await publishDeck(slug,slides,{uploaded:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6mQAAAAASUVORK5CYII='},'',()=>{});
-   fail=true;let conflict='';try{await publishDeck(slug,[],{},'',()=>{});}catch(e){conflict=e.message;}
+   const snap=await publishDeck(slug,slides,{uploaded:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6mQAAAAASUVORK5CYII='},()=>{});
+   fail=true;let conflict='';try{await publishDeck(slug,[],{},()=>{});}catch(e){conflict=e.message;}
    return {snap,calls,conflict};
   }finally{window.fetch=originalFetch;}
  },nov);
- assert.equal(result.snap.slides.length,1);assert.match(result.snap.assets.uploaded,/^\/presentations\/decks\/.+\/assets\/[a-f0-9]{64}\.png$/);const tree=result.calls.find(x=>x.path==='git/trees');assert.equal(tree.body.base_tree,'b'.repeat(40));assert.equal(tree.body.tree.length,2);assert.equal(result.calls.find(x=>x.method==='PATCH').body.force,false);assert.match(result.conflict,/다른 게시/);
+ assert.equal(result.snap.slides.length,1);assert.match(result.snap.assets.uploaded,/^\/presentations\/decks\/.+\/assets\/[a-f0-9]{64}\.png$/);assert.deepEqual(result.calls.map(c=>c.action),['upload','deck','deck']);assert.equal(result.calls[1].slides.length,1);assert.equal(result.calls[1].assets.uploaded.signature,'signed-upload');assert.match(result.conflict,/다른 게시/);
  assert.deepEqual(errors,[]);console.log('PASS: public/editor separation, 92-slide archive, blank November deck, isolated drafts, unchanged legacy state, atomic publish with assets, safe conflict handling');
 }finally{await browser.close();}

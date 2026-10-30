@@ -24,7 +24,7 @@ import { sortOriginalSlides, projectForPage } from './chronology';
 import { detectFolioPalette, type FolioPalette } from './folio-palette';
 import { BASE, LEGACY_SLUG, localAsset, presentationUrl } from './catalog';
 import { assetIds, readPublished } from './published';
-import { publishDeck, localPublishing } from './github-publish';
+import { publishDeck } from './github-publish';
 import { exportBackup, importBackup, receiveLegacy } from './transfer';
 const presets = [
   ['VED', 'https://ved.kr/'],
@@ -42,7 +42,6 @@ type Drag = {
   slot: number;
 };
 export default function Home({entry, publicView = false}: {entry: {slug: string; date: string; title: string}; publicView?: boolean}) {
-  const [publishOpen, setPublishOpen] = useState(false), [token, setToken] = useState('');
   const backupRef = useRef<HTMLInputElement>(null);
   useEffect(() => { document.title = `${entry.date} · ${entry.title}`; }, [entry]);
   const [slides, setSlides] = useState<Slide[]>([]),
@@ -555,9 +554,8 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     try {
       await saveDeck(deck, entry.slug, assets);
       setDirty(false);
-      await publishDeck(entry.slug, deck, assets, token, setStatus);
-      setPublishOpen(false);
-      setStatus('GitHub에 게시됨 · 배포 완료 후 공개 링크에 반영됩니다');
+      await publishDeck(entry.slug, deck, assets, setStatus);
+      setStatus('게시됨 · 배포 완료 후 공개 링크에 반영됩니다');
     } catch (e) { setStatus(e instanceof Error ? e.message : '게시 실패 · 편집 내용은 유지됩니다'); }
     finally { setBusy(false); }
   }
@@ -693,7 +691,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
           {videoStatus === '영상 다운로드 재시도'
             ? <button onClick={() => setVideoRetry(value => value + 1)}>{videoStatus}</button>
             : <span className="status" role="status">{videoStatus}</span>}
-          <button disabled={!ready || busy} onClick={() => setPublishOpen(v => !v)}>게시</button>
+          <button disabled={!ready || busy} onClick={publish}>게시</button>
           <button disabled={!ready || busy} onClick={save}>
             저장{dirty ? ' *' : ''}
           </button>
@@ -707,12 +705,6 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
             발표
           </button>
         </header>
-        {publishOpen && <section className="publish-panel" aria-label="게시 설정">
-          {!localPublishing && <><input type="password" value={token} onChange={e => setToken(e.target.value)} aria-label="GitHub 토큰" placeholder="GitHub 토큰" autoComplete="off"/>
-          <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noreferrer">토큰 만들기 ↗</a><span className="note">Recrude/presentation · Contents 읽기/쓰기 · 토큰은 이 탭에서만 사용</span></>}
-          <button disabled={busy || (!localPublishing && !token.trim())} onClick={publish}>공개본 게시</button>
-          {!localPublishing && token && <button disabled={busy} onClick={() => setToken('')}>연결 해제</button>}
-        </section>}
         {adding && (
           <section className="add-panel">
             <div className="row"><button disabled={busy} onClick={() => insert(initial.filter(s => !slides.some(d => d.id === s.id)))}>원본 포트폴리오 가져오기</button>

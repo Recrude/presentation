@@ -35,7 +35,11 @@ try {
  await page.goto(base+'edit/260909-ahn/');await page.waitForSelector('.card');assert.equal(await page.$$('.card').then(x=>x.length),92);
  // Old long URL canonicalizes but preserves the same editor and IDB key.
  await page.goto(base+'edit/'+original[1]+'/');await page.waitForSelector('.card');assert.equal(page.url(),base+'edit/260909-ahn/');
- const published=await page.evaluate(async config=>{const {publishCatalog}=await import('/presentations/app/github-publish.ts');const real=fetch,calls=[];window.fetch=async(url,options)=>{if(!String(url).endsWith('api/github'))return real(url,options);const call=JSON.parse(options.body);calls.push(call);return new Response(JSON.stringify(call.path==='git/ref/heads/main'?{object:{sha:'a'.repeat(40)}}:call.path.startsWith('git/commits/')?{tree:{sha:'b'.repeat(40)}}:{sha:'c'.repeat(40)}),{headers:{'Content-Type':'application/json'}});};try{await publishCatalog(config,'');return calls;}finally{window.fetch=real;}},serverConfig);
- const tree=published.find(c=>c.path==='git/trees').body;assert.equal(tree.base_tree,'b'.repeat(40));assert.equal(tree.tree.length,1);assert.equal(tree.tree[0].path,'public/decks/catalog.json');assert.deepEqual(JSON.parse(tree.tree[0].content),serverConfig);assert.equal(published.find(c=>c.method==='PATCH').body.force,false);
+ const published=await page.evaluate(async config=>{
+  const {publishCatalog}=await import('/presentations/app/github-publish.ts');const real=fetch,calls=[];
+  window.fetch=async(url,options)=>{if(!String(url).endsWith('api/publish/'))return real(url,options);calls.push({body:JSON.parse(options.body),headers:options.headers,credentials:options.credentials});return new Response(JSON.stringify({published:true,unchanged:true}),{headers:{'Content-Type':'application/json'}});};
+  try{await publishCatalog(config);return calls;}finally{window.fetch=real;}
+ },serverConfig);
+ assert.equal(published.length,1);assert.deepEqual(published[0].body,{action:'catalog',config:serverConfig});assert.equal(published[0].headers['X-Presentation-Publish'],'1');assert.equal(published[0].credentials,'same-origin');assert.equal(await page.$('input[type=password]'),null);
  console.log('PASS: short/legacy routes, settings persistence, drag and arrow sorting, visibility, public/draft separation, hidden viewer guard, editor access, atomic catalog-only publish, mobile width');
 } finally {await browser.close();}

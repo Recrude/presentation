@@ -126,11 +126,11 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
         }
         if (!cancelled) {
           stateRef.current = deck; setSlides(deck); select(deck[0]?.id || ''); setAssets(loaded);
-          setStatus(missing ? `이미지 ${missing}개 없음 · 다시 추가하세요` : '');
+          setStatus(missing ? `이미지 ${missing}개 없음 · 다시 추가하세요` : ''); setReady(true);
         }
       } catch (e) {
         if (!cancelled) setStatus(e instanceof Error ? e.message : '발표를 불러오지 못했습니다.');
-      } finally { if (!cancelled) setReady(true); }
+      }
     })();
     return () => { cancelled = true; objectUrls.current.forEach(src => URL.revokeObjectURL(src)); objectUrls.current.clear(); };
   }, [entry.slug, publicView]);
@@ -556,7 +556,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       await saveDeck(deck, entry.slug, assets);
       setDirty(false);
       await publishDeck(entry.slug, deck, assets, token, setStatus);
-      setToken(''); setPublishOpen(false);
+      setPublishOpen(false);
       setStatus('GitHub에 게시됨 · 배포 완료 후 공개 링크에 반영됩니다');
     } catch (e) { setStatus(e instanceof Error ? e.message : '게시 실패 · 편집 내용은 유지됩니다'); }
     finally { setBusy(false); }
@@ -688,6 +688,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
           <span className="spacer" />
           <span className="status" role="status">
             {status || cacheStatus}
+            {!ready && status !== '불러오는 중' && <button onClick={() => location.reload()}>다시 불러오기</button>}
           </span>
           {videoStatus === '영상 다운로드 재시도'
             ? <button onClick={() => setVideoRetry(value => value + 1)}>{videoStatus}</button>
@@ -710,6 +711,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
           {!localPublishing && <><input type="password" value={token} onChange={e => setToken(e.target.value)} aria-label="GitHub 토큰" placeholder="GitHub 토큰" autoComplete="off"/>
           <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noreferrer">토큰 만들기 ↗</a><span className="note">Recrude/presentation · Contents 읽기/쓰기 · 토큰은 이 탭에서만 사용</span></>}
           <button disabled={busy || (!localPublishing && !token.trim())} onClick={publish}>공개본 게시</button>
+          {!localPublishing && token && <button disabled={busy} onClick={() => setToken('')}>연결 해제</button>}
         </section>}
         {adding && (
           <section className="add-panel">
@@ -1006,7 +1008,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
           </aside>
         </main>
       </div>}
-      {publicView && !current && <main className="public-empty"><p>{!ready ? '불러오는 중' : status || '아직 공개된 장표가 없습니다.'}</p><a href={BASE}>목록</a></main>}
+      {publicView && !current && <main className="public-empty"><p>{status || (!ready ? '불러오는 중' : '아직 공개된 장표가 없습니다.')}</p><a href={BASE}>목록</a></main>}
       {present && current && (
         <div tabIndex={-1} className={`presentation${current.kind === 'youtube' || current.kind === 'video' ? ' presentation-media' : ''}`}>
           <PresentationStage

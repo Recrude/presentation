@@ -12,7 +12,7 @@
 
 **저장**은 발표별로 현재 브라우저에만 저장합니다. **게시 → 공개본 게시**는 숨기지 않은 장표와 필요한 이미지를 `Recrude/presentation`의 `main`에 한 커밋으로 올립니다. Vercel 배포가 끝나면 공개 링크에 반영됩니다. 게시 중 동시 변경이 있으면 강제로 덮어쓰지 않고 재시도를 안내합니다.
 
-온라인 게시에는 GitHub fine-grained personal access token이 필요합니다. 저장소를 `Recrude/presentation`으로 제한하고 **Contents: Read and write** 권한을 지정하세요. 토큰은 입력한 탭의 메모리에서만 사용하며 GitHub API에 직접 전송합니다. localStorage/IndexedDB/서버/백업에는 저장하지 않고 게시 성공 시 지웁니다. 편집 페이지 자체는 로그인으로 잠그지 않았으며, 공개본 수정에는 GitHub 쓰기 권한이 반드시 필요합니다.
+온라인 게시에는 GitHub fine-grained personal access token이 필요합니다. 저장소를 `Recrude/presentation`으로 제한하고 **Contents: Read and write** 권한을 지정하세요. 토큰은 입력한 탭의 메모리에서만 사용하며 GitHub API에 직접 전송합니다. localStorage/IndexedDB/서버/백업에는 저장하지 않고 연결 해제하거나 페이지를 닫으면 지웁니다. 편집 페이지 자체는 로그인으로 잠그지 않았으며, 공개본 수정에는 GitHub 쓰기 권한이 반드시 필요합니다.
 
 이 컴퓨터에서는 `npm run dev -- --host 127.0.0.1` 후 로컬 편집 페이지를 열면 현재 `gh` 로그인으로 게시합니다. 개발 전용 프록시는 루프백 Host, 동일 Origin, 사용자 정의 헤더와 고정 저장소의 Git API 경로만 허용하며 프로덕션에는 배포하지 않습니다.
 

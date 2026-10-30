@@ -9,7 +9,7 @@ try{
   const githubRequests=[];page.on('request',r=>{if(r.url().startsWith('https://api.github.com/'))githubRequests.push(r.url());});
   const base=origin+'/presentations/';
   await page.goto(base+'edit/',{waitUntil:'networkidle2'});await page.waitForSelector('input[name=password]');
-  const unauth=await page.evaluate(async()=>{const r=await fetch('/presentations/api/publish/',{method:'POST',headers:{'Content-Type':'application/json','X-Presentation-Publish':'1'},body:JSON.stringify({action:'catalog'})});return r.status;});assert.equal(unauth,401);
+  const unauth=await fetch(base+'api/publish/',{method:'POST',headers:{'Content-Type':'application/json','X-Presentation-Publish':'1',Origin:origin},body:JSON.stringify({action:'catalog'})});assert.equal(unauth.status,401);
   await page.type('input[name=password]',password);await Promise.all([page.waitForNavigation({waitUntil:'networkidle2'}),page.click('button[type=submit]')]);
   await page.waitForSelector('.catalog-row');assert.equal(await page.$('input[type=password]'),null);
   const publicConfig=await page.evaluate(async()=>await(await fetch('/presentations/decks/catalog.json')).json());

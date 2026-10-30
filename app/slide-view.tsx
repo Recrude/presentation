@@ -1,3 +1,4 @@
+import { localAsset } from './catalog';
 'use client';
 import { useState, type CSSProperties } from 'react';
 import type { Slide } from './model';
@@ -98,9 +99,9 @@ export function SlideView({
             ))}
           </>
         ) : print ? (
-          preview ? <a href={slide.src} className="capture-slide"><img draggable={false} src={preview} alt={slide.title}/></a> : <div className="embed-placeholder">미리보기 캡처가 필요합니다.</div>
+          preview ? <a href={localAsset(slide.src)} className="capture-slide"><img draggable={false} src={preview} alt={slide.title}/></a> : <div className="embed-placeholder">미리보기 캡처가 필요합니다.</div>
         ) : live && slide.kind === 'video' ? (
-          <LocalVideo key={slide.id} slide={slide} src={assets[slide.src] || slide.src} preview={preview} playing={playing}/>
+          <LocalVideo key={slide.id} slide={slide} src={assets[slide.src] || localAsset(slide.src)} preview={preview} playing={playing}/>
         ) : live ? (
           <>
             <iframe

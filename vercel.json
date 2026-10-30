@@ -37,6 +37,98 @@
           "value": "public, max-age=604800"
         }
       ]
+    },
+    {
+      "source": "/presentations/decks/:slug/deck.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/presentations/decks/:slug/assets/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/presentations/slides/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800"
+        }
+      ]
+    },
+    {
+      "source": "/presentations/thumbnails/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/presentations/media/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800"
+        }
+      ]
+    },
+    {
+      "source": "/presentations/edit/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/presentations/api/capture",
+      "destination": "/api/capture"
+    },
+    {
+      "source": "/presentations/assets/:path*",
+      "destination": "/assets/:path*"
+    },
+    {
+      "source": "/presentations/slides/:path*",
+      "destination": "/slides/:path*"
+    },
+    {
+      "source": "/presentations/thumbnails/:path*",
+      "destination": "/thumbnails/:path*"
+    },
+    {
+      "source": "/presentations/media/:path*",
+      "destination": "/media/:path*"
+    },
+    {
+      "source": "/presentations/previews/:path*",
+      "destination": "/previews/:path*"
+    },
+    {
+      "source": "/presentations/decks/:path*",
+      "destination": "/decks/:path*"
+    },
+    {
+      "source": "/presentations/audio-morphology.html",
+      "destination": "/audio-morphology.html"
+    },
+    {
+      "source": "/presentations/:path*",
+      "destination": "/index.html"
     }
   ]
 }

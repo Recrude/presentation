@@ -1,10 +1,11 @@
+import { localAsset } from './catalog';
 import manifest from './slide-assets.json';
 const assets: Record<string, { full: string; thumbnail: string }> = manifest;
 export function originalSource(src: string): string {
-  return assets[src]?.full || src;
+  return localAsset(assets[src]?.full || src);
 }
 export function thumbnailSource(src: string): string {
-  return assets[src]?.thumbnail || src;
+  return localAsset(assets[src]?.thumbnail || src);
 }
 
 export async function warmSlides(sources: string[], signal: AbortSignal, progress: (done: number, failed: number) => void) {

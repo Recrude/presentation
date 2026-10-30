@@ -546,3 +546,14 @@ aside {
 .presentation-stage { overflow: hidden; overscroll-behavior: contain; }
 .presentation-zoom { position: absolute; inset: 0; transform-origin: 0 0; }
 .zoom-reset { position: absolute; top: 0; right: 0; z-index: 1; background: var(--paper); }
+
+.catalog { max-width: 960px; margin: 0 auto; padding: 48px 24px; }
+.presentation-list { margin: 48px 0; }
+.catalog-row a { display: grid; grid-template-columns: 120px 1fr; gap: 24px; padding: 12px 0; }
+.older-list { display: grid; gap: 24px; }
+.publish-panel { padding: 12px 24px; border-bottom: .5px solid var(--line); display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+.publish-panel input { flex:1; min-width:180px; }
+.deck-label { padding: 12px 24px 0; display:flex; gap:24px; flex-wrap:wrap; }
+.public-empty { min-height:100svh; display:grid; place-content:center; gap:24px; padding:24px; }
+.public-empty p { margin:0; }
+@media (max-width: 600px) { .catalog-row a { grid-template-columns: 1fr; gap:0; } }

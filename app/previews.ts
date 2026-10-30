@@ -1,3 +1,4 @@
+import { localAsset } from './catalog';
 import type { Slide } from './model';
 export function builtInPreview(src: string) {
   if (src === '/media/audio-morphology.mp4') return '/media/audio-morphology.jpg';
@@ -9,5 +10,5 @@ export function builtInPreview(src: string) {
   } catch { return ''; }
 }
 export function previewSource(s: Slide, assets: Record<string, string>) {
-  return (s.previewId ? assets[s.previewId] : '') || builtInPreview(s.src);
+  return (s.previewId ? assets[s.previewId] : '') || localAsset(builtInPreview(s.src));
 }

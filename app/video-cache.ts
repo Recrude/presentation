@@ -1,3 +1,4 @@
+import { localAsset } from './catalog';
 export const exhibitionVideo = '/media/audio-morphology.mp4';
 const version = '63dcc9cd153d';
 const cacheName = 'presentation-video-v1';
@@ -14,7 +15,7 @@ export async function prepareVideo(signal: AbortSignal, progress: (percent: numb
     await cache?.delete(key);
   }
   signal.throwIfAborted();
-  const response = await fetch(key, { signal });
+  const response = await fetch(localAsset(key), { signal });
   if (response.status !== 200 || !response.body) throw Error('영상 다운로드 실패');
   const reader = response.body.getReader();
   const chunks: BlobPart[] = [];

@@ -22,6 +22,10 @@ import { previewSource } from './previews';
 import { originalSource, warmSlides } from './slide-assets';
 import { sortOriginalSlides, projectForPage } from './chronology';
 import { detectFolioPalette, type FolioPalette } from './folio-palette';
+import { BASE, LEGACY_SLUG, localAsset } from './catalog';
+import { assetIds, readPublished } from './published';
+import { publishDeck, localPublishing } from './github-publish';
+import { exportBackup, importBackup, receiveLegacy } from './transfer';
 const presets = [
   ['VED', 'https://ved.kr/'],
   ['What are you doing now?', 'https://whatareyoudoingnow.vercel.app/'],
@@ -37,9 +41,12 @@ type Drag = {
   active: boolean;
   slot: number;
 };
-export default function Home() {
-  const [slides, setSlides] = useState<Slide[]>(initial),
-    [selected, select] = useState(initial[0].id);
+export default function Home({entry, publicView = false}: {entry: {slug: string; date: string; title: string}; publicView?: boolean}) {
+  const [publishOpen, setPublishOpen] = useState(false), [token, setToken] = useState('');
+  const backupRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { document.title = `${entry.date} · ${entry.title}`; }, [entry]);
+  const [slides, setSlides] = useState<Slide[]>([]),
+    [selected, select] = useState('');
   const [ready, setReady] = useState(false),
     [dirty, setDirty] = useState(false),
     [status, setStatus] = useState('불러오는 중');
@@ -54,7 +61,7 @@ export default function Home() {
     [group, setGroup] = useState(true),
     [live, setLive] = useState(false);
   const [navigationVisible, setNavigationVisible] = useState(true);
-  const [present, setPresent] = useState(false),
+  const [present, setPresent] = useState(publicView),
     [position, setPosition] = useState(0),
     [printing, setPrinting] = useState(false);
   const [dragUI, setDragUI] = useState<{ id: string; slot: number } | null>(
@@ -102,71 +109,32 @@ export default function Home() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      let deck: Slide[] = initial;
       try {
-        const stored = await readDeck();
-        if (stored !== undefined) {
-          if (!validDeck(stored))
-            throw Error('저장된 발표를 읽을 수 없습니다.');
-          deck = stored;
-        } else {
-          const legacy = JSON.parse(
-            localStorage.getItem('jaeyeon-slides-v1') || 'null',
-          );
-          if (validDeck(legacy)) deck = legacy;
-        }
-        const ids = [
-          ...new Set(deck.flatMap((s) => [...(s.photos?.map((p) => p.id) || []), ...(s.previewId ? [s.previewId] : [])])),
-        ];
+        const draft = publicView ? undefined : await readDeck(entry.slug);
+        const snapshot = draft ? null : await readPublished(entry.slug);
+        const deck = draft?.slides ?? snapshot?.slides ?? (entry.slug === LEGACY_SLUG && !publicView ? initial : []);
+        if (!validDeck(deck)) throw Error('저장된 발표를 읽을 수 없습니다.');
+        const loaded: Record<string, string> = { ...(snapshot?.assets || {}), ...(draft?.assets || {}) };
+        const ids = assetIds(deck);
+        const blobs = publicView ? {} : await readImages(ids);
         let missing = 0;
-        const loaded: Record<string, string> = {};
-        const blobs = await readImages(ids);
         for (const id of ids) {
-          const blob = blobs[id];
-          if (!blob) {
-            missing++;
-            continue;
-          }
           if (cancelled) return;
-          const src = URL.createObjectURL(blob);
-          objectUrls.current.set(id, src);
-          loaded[id] = src;
+          const blob = blobs[id];
+          if (blob) { const src = URL.createObjectURL(blob); objectUrls.current.set(id, src); loaded[id] = src; }
+          else if (!loaded[id]) missing++;
         }
         if (!cancelled) {
-          stateRef.current = deck;
-          setSlides(deck);
-          select(deck[0]?.id || '');
-          setAssets(loaded);
-          setStatus(
-            missing ? `이미지 ${missing}개 없음 · 다시 추가하세요` : '',
-          );
+          stateRef.current = deck; setSlides(deck); select(deck[0]?.id || ''); setAssets(loaded);
+          setStatus(missing ? `이미지 ${missing}개 없음 · 다시 추가하세요` : '');
         }
-      } catch {
-        if (!cancelled) {
-          try {
-            const legacy = JSON.parse(
-              localStorage.getItem('jaeyeon-slides-v1') || 'null',
-            );
-            if (validDeck(legacy)) {
-              stateRef.current = legacy;
-              setSlides(legacy);
-              select(legacy[0]?.id || '');
-            }
-          } catch {}
-          setStatus(
-            '저장된 자료를 읽지 못했습니다. 브라우저 저장 설정을 확인하세요.',
-          );
-        }
-      } finally {
-        if (!cancelled) setReady(true);
-      }
+      } catch (e) {
+        if (!cancelled) setStatus(e instanceof Error ? e.message : '발표를 불러오지 못했습니다.');
+      } finally { if (!cancelled) setReady(true); }
     })();
-    return () => {
-      cancelled = true;
-      objectUrls.current.forEach((src) => URL.revokeObjectURL(src));
-      objectUrls.current.clear();
-    };
-  }, []);
+    return () => { cancelled = true; objectUrls.current.forEach(src => URL.revokeObjectURL(src)); objectUrls.current.clear(); };
+  }, [entry.slug, publicView]);
+
   useEffect(() => {
     if (!dirty) return;
     const fn = (e: BeforeUnloadEvent) => {
@@ -336,6 +304,7 @@ export default function Home() {
       if (arrow) { e.preventDefault(); e.stopImmediatePropagation(); }
       if (!arrow && e.key !== 'Escape' && e.target instanceof HTMLElement && e.target.closest('video, input, button, select, textarea, [contenteditable]')) return;
       if (e.key === 'Escape') {
+        if (publicView) { if (document.fullscreenElement) void document.exitFullscreen(); return; }
         setPresent(false);
         return;
       }
@@ -352,10 +321,10 @@ export default function Home() {
     };
     window.addEventListener('keydown', key, true);
     return () => window.removeEventListener('keydown', key, true);
-  }, [present, visible.length]);
+  }, [present, visible.length, publicView]);
   useEffect(() => {
     const exit = () => {
-      if (!document.fullscreenElement) setPresent(false);
+      if (!document.fullscreenElement && !publicView) setPresent(false);
     };
     document.addEventListener('fullscreenchange', exit);
     return () => document.removeEventListener('fullscreenchange', exit);
@@ -432,6 +401,7 @@ export default function Home() {
   useEffect(() => {
     if (!ready) return;
     const controller = new AbortController();
+    if (!slides.some(s => !s.hidden && s.kind === 'video')) { setVideoStatus(''); return; }
     let objectUrl = '';
     setVideoStatus('영상 준비 중');
     const timeout = setTimeout(() => controller.abort(), 300000);
@@ -452,12 +422,12 @@ export default function Home() {
       clearTimeout(timeout);
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [ready, videoRetry]);
+  }, [ready, videoRetry, slides.some(s => !s.hidden && s.kind === 'video')]);
   async function save() {
     const snapshot = stateRef.current;
     setBusy(true);
     try {
-      await saveDeck(snapshot);
+      await saveDeck(snapshot, entry.slug, assets);
       if (stateRef.current === snapshot) {
         setDirty(false);
         setStatus('이 브라우저에 저장됨');
@@ -579,6 +549,34 @@ export default function Home() {
       if (fileRef.current) fileRef.current.value = '';
     }
   }
+  async function publish() {
+    const deck = stateRef.current;
+    setBusy(true);
+    try {
+      await saveDeck(deck, entry.slug, assets);
+      setDirty(false);
+      await publishDeck(entry.slug, deck, assets, token, setStatus);
+      setToken(''); setPublishOpen(false);
+      setStatus('GitHub에 게시됨 · 배포 완료 후 공개 링크에 반영됩니다');
+    } catch (e) { setStatus(e instanceof Error ? e.message : '게시 실패 · 편집 내용은 유지됩니다'); }
+    finally { setBusy(false); }
+  }
+  async function restoreBackup(data: unknown) {
+    setBusy(true);
+    try {
+      const restored = await importBackup(data);
+      change(restored.slides); setAssets(a => ({...a, ...restored.assets}));
+      for (const [id, url] of Object.entries(restored.assets)) if (url.startsWith('blob:')) objectUrls.current.set(id, url);
+      select(restored.slides[0]?.id || ''); setStatus('불러옴 · 저장하거나 게시하세요');
+    } catch(e) { setStatus(e instanceof Error ? e.message : '백업을 읽지 못했습니다'); }
+    finally { setBusy(false); }
+  }
+  async function migrate() {
+    setBusy(true); setStatus('이전 주소에서 저장된 작업을 가져오는 중');
+    try { await restoreBackup(await receiveLegacy()); }
+    catch(e) { setStatus(e instanceof Error ? e.message : '가져오기 실패'); }
+    finally { setBusy(false); }
+  }
   async function start() {
     if (!visible.length) return;
     setLive(false);
@@ -597,7 +595,7 @@ export default function Home() {
     let blob: Blob;
     if (file) blob = file;
     else {
-      const response = await fetch('/api/capture?url=' + encodeURIComponent(slide.src), { signal: AbortSignal.timeout(55000) });
+      const response = await fetch(BASE + 'api/capture?url=' + encodeURIComponent(slide.src), { signal: AbortSignal.timeout(55000) });
       if (!response.ok) throw Error(await response.text());
       blob = await response.blob();
     }
@@ -670,7 +668,8 @@ export default function Home() {
   return (
     <>
       <input ref={previewFileRef} className="file-input" type="file" accept="image/png,image/jpeg,image/webp" onChange={e => { const file = e.target.files?.[0]; if (file) void captureSelected(file); }}/>
-      <div className="editor">
+      {!publicView && <div className="editor">
+        <div className="deck-label"><a href={`${BASE}edit/`}>목록</a><span>{entry.date} · {entry.title}</span><a href={`${BASE}${entry.slug}/`} target="_blank" rel="noreferrer">공개 링크 ↗</a></div>
         <header className="toolbar">
           <span>
             발표 {visible.length} / 전체 {slides.length}
@@ -693,6 +692,7 @@ export default function Home() {
           {videoStatus === '영상 다운로드 재시도'
             ? <button onClick={() => setVideoRetry(value => value + 1)}>{videoStatus}</button>
             : <span className="status" role="status">{videoStatus}</span>}
+          <button disabled={!ready || busy} onClick={() => setPublishOpen(v => !v)}>게시</button>
           <button disabled={!ready || busy} onClick={save}>
             저장{dirty ? ' *' : ''}
           </button>
@@ -706,8 +706,18 @@ export default function Home() {
             발표
           </button>
         </header>
+        {publishOpen && <section className="publish-panel" aria-label="게시 설정">
+          {!localPublishing && <><input type="password" value={token} onChange={e => setToken(e.target.value)} aria-label="GitHub 토큰" placeholder="GitHub 토큰" autoComplete="off"/>
+          <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noreferrer">토큰 만들기 ↗</a><span className="note">Recrude/presentation · Contents 읽기/쓰기 · 토큰은 이 탭에서만 사용</span></>}
+          <button disabled={busy || (!localPublishing && !token.trim())} onClick={publish}>공개본 게시</button>
+        </section>}
         {adding && (
           <section className="add-panel">
+            <div className="row"><button disabled={busy} onClick={() => insert(initial.filter(s => !slides.some(d => d.id === s.id)))}>원본 포트폴리오 가져오기</button>
+            <button disabled={busy} onClick={async () => { setBusy(true); try { await exportBackup(entry.slug, slides, assets); setStatus('백업 다운로드 완료'); } catch(e) { setStatus(e instanceof Error ? e.message : '백업 실패'); } finally { setBusy(false); } }}>백업 내보내기</button>
+            <button disabled={busy} onClick={() => backupRef.current?.click()}>백업 불러오기</button>
+            {entry.slug === LEGACY_SLUG && location.hostname === 'jaeyeonkim.kr' && <button disabled={busy} onClick={migrate}>이전 Vercel 작업 가져오기</button>}
+            <input className="file-input" ref={backupRef} type="file" accept="application/json" onChange={async e => { const file = e.target.files?.[0]; e.target.value = ''; if (!file) return; try { await restoreBackup(JSON.parse(await file.text())); } catch { setStatus('올바른 백업 JSON을 선택하세요.'); } }}/></div>
             <div className="input-row">
               <input
                 aria-label="슬라이드 이름"
@@ -905,7 +915,7 @@ export default function Home() {
                       <button onClick={() => setLive((v) => !v)}>
                         {live ? '미리보기 닫기' : '미리보기'}
                       </button>
-                      <a href={active.kind === 'video' ? '/audio-morphology.html' : active.src} target="_blank" rel="noreferrer">
+                      <a href={active.kind === 'video' ? localAsset('/audio-morphology.html') : active.src} target="_blank" rel="noreferrer">
                         새 탭 ↗
                       </a>
                       {active.kind !== 'video' && <button disabled={busy} onClick={() => void captureSelected()}>캡처 갱신</button>}
@@ -995,7 +1005,8 @@ export default function Home() {
             )}
           </aside>
         </main>
-      </div>
+      </div>}
+      {publicView && !current && <main className="public-empty"><p>{!ready ? '불러오는 중' : status || '아직 공개된 장표가 없습니다.'}</p><a href={BASE}>목록</a></main>}
       {present && current && (
         <div tabIndex={-1} className={`presentation${current.kind === 'youtube' || current.kind === 'video' ? ' presentation-media' : ''}`}>
           <PresentationStage
@@ -1004,6 +1015,7 @@ export default function Home() {
             assets={assets}
           />
           <nav className={`present-controls${navigationVisible || current.kind === 'web' || current.kind === 'youtube' ? ' is-visible' : ''}`} aria-label="발표 이동">
+            {publicView && <button aria-label="전체화면" onClick={() => { void document.documentElement.requestFullscreen().catch(() => {}); }}>⛶</button>}
             <button
               disabled={position === 0}
               onClick={() => setPosition((p) => Math.max(0, p - 1))}

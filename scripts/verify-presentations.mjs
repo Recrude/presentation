@@ -6,7 +6,7 @@ const base='http://127.0.0.1:3100/presentations/';
 const sept='2026-09-09-ahn-byunghak-graduation-project',nov='2026-11-03-yoon-jaeyoung-graduation-project';
 const errors=[];page.on('pageerror',e=>errors.push(e.message));
 try {
- await page.goto(base);await page.waitForSelector('.catalog-row');assert.equal(await page.$$eval('.catalog-row',e=>e.length),2);assert.equal(await page.$$eval('.older-list a',e=>e.length),5);await page.screenshot({path:'/tmp/presentations-index.png'});
+ await page.goto(base);await page.waitForSelector('.catalog-row');assert.equal(await page.$$eval('.catalog-row',e=>e.length),7);assert.equal(await page.$$eval('.catalog-entry[href^="https:"]',e=>e.length),5);await page.screenshot({path:'/tmp/presentations-index.png'});
  await page.goto(base+sept+'/');await page.waitForSelector('.presentation .original');await page.waitForFunction(()=>document.querySelector('.original')?.complete);assert.equal(await page.$('.editor'),null);assert.match(await page.$eval('.present-controls',e=>e.textContent),/1 \/ 92/);
  await page.keyboard.press('ArrowRight');await page.waitForSelector('.presentation iframe');assert.match(await page.$eval('.presentation iframe',e=>e.src),/jaeyeonkim.kr/);await page.keyboard.press('ArrowRight');await page.waitForFunction(()=>document.querySelector('.present-controls')?.textContent.includes('3 / 92'));await page.screenshot({path:'/tmp/presentations-public.png'});
  assert.deepEqual(await page.evaluate(async()=>await indexedDB.databases()),[],'public view must not open the draft database');

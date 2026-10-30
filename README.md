@@ -3,10 +3,18 @@
 공개 목록: https://jaeyeonkim.kr/presentations/
 편집 목록: https://jaeyeonkim.kr/presentations/edit/
 
-- `/presentations/2026-09-09-ahn-byunghak-graduation-project/`: 안병학 교수님 졸업프로젝트 발표, 92쪽 보관본 복원.
-- `/presentations/2026-11-03-yoon-jaeyoung-graduation-project/`: 윤재영 교수님 졸업프로젝트 발표, 새 구성.
-- 편집 주소는 `/presentations/edit/<slug>/`. 공개 화면에는 편집 UI가 없고 게시된 JSON만 읽습니다.
+- `/presentations/260909-ahn/`: 안병학 교수님 졸업프로젝트 발표, 92쪽 보관본 복원.
+- `/presentations/261103-yun/`: 윤재영 교수님 졸업프로젝트 발표, 새 구성.
+- 개별 장표 편집 주소는 `/presentations/edit/260909-ahn/`, `/presentations/edit/261103-yun/`. 긴 예전 주소도 같은 발표를 열고 짧은 주소로 정리합니다. 저장 키와 자료 경로는 바꾸지 않습니다. 공개 화면에는 편집 UI가 없고 게시된 JSON만 읽습니다.
 - 예전 형식의 발표 5개는 외부 링크로 유지합니다. 새 항목은 `app/catalog.ts`에 등록합니다.
+
+## 목록 관리
+
+`/presentations/edit/`에서 새 발표 2개와 예전 발표 링크 5개를 함께 관리합니다. ↕ 손잡이를 끌거나 ↑↓ 버튼으로 순서를 바꾸고, 공개/비공개 버튼으로 목록 표시 여부를 결정합니다. 제목을 누르면 새 발표는 장표 편집기로, 예전 발표는 기존 링크로 연결됩니다.
+
+저장은 `presentation-catalog-draft-v1`이라는 별도 브라우저 키에 저장합니다. 게시하면 `public/decks/catalog.json`만 GitHub에 반영하며 장표나 이미지를 변경하지 않습니다. 공개 목록은 브라우저 초안을 읽지 않습니다. 목록 설정은 전체 항목이 한 번씩 들어 있는지 검사하고 읽기에 실패하면 공개 목록을 대신 만들어 노출하지 않습니다.
+
+비공개는 이 목록과 새 형식의 공개 발표 화면에서 숨기는 기능입니다. 공개된 GitHub 저장소의 원본 파일 및 기존 외부 발표 링크에 로그인 보호를 추가하는 기능은 아닙니다. 공개 화면은 비공개 발표의 장표 JSON을 요청하지 않으며 편집 화면은 계속 접근할 수 있습니다.
 
 ## 저장·게시
 

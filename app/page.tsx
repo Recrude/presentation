@@ -22,7 +22,7 @@ import { previewSource } from './previews';
 import { originalSource, warmSlides } from './slide-assets';
 import { sortOriginalSlides, projectForPage } from './chronology';
 import { detectFolioPalette, type FolioPalette } from './folio-palette';
-import { BASE, LEGACY_SLUG, localAsset } from './catalog';
+import { BASE, LEGACY_SLUG, localAsset, presentationUrl } from './catalog';
 import { assetIds, readPublished } from './published';
 import { publishDeck, localPublishing } from './github-publish';
 import { exportBackup, importBackup, receiveLegacy } from './transfer';
@@ -669,7 +669,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     <>
       <input ref={previewFileRef} className="file-input" type="file" accept="image/png,image/jpeg,image/webp" onChange={e => { const file = e.target.files?.[0]; if (file) void captureSelected(file); }}/>
       {!publicView && <div className="editor">
-        <div className="deck-label"><a href={`${BASE}edit/`}>목록</a><span>{entry.date} · {entry.title}</span><a href={`${BASE}${entry.slug}/`} target="_blank" rel="noreferrer">공개 링크 ↗</a></div>
+        <div className="deck-label"><a href={`${BASE}edit/`}>목록</a><span>{entry.date} · {entry.title}</span><a href={presentationUrl(entry.slug)} target="_blank" rel="noreferrer">공개 링크 ↗</a></div>
         <header className="toolbar">
           <span>
             발표 {visible.length} / 전체 {slides.length}

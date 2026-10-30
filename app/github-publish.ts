@@ -1,11 +1,9 @@
-import { BASE, presentations } from './catalog';
+import { BASE, presentations, validCatalog, type CatalogConfig } from './catalog';
 import { assetIds, type Snapshot } from './published';
 import { type Slide, validDeck } from './model';
 export const repository = 'Recrude/presentation';
 export const localPublishing = import.meta.env.DEV && ['localhost', '127.0.0.1'].includes(location.hostname);
-export async function publishDeck(slug: string, slides: Slide[], assets: Record<string, string>, token: string, progress: (s: string) => void) {
-  if (!presentations.some(p => p.slug === slug) || !validDeck(slides)) throw Error('발표 형식을 확인하세요.');
-  if (!localPublishing && !token.trim()) throw Error('GitHub 토큰을 입력하세요.');
+export function githubApi(token: string) {
   async function api(path: string, method = 'GET', body?: unknown) {
     const r = await fetch(localPublishing ? `${BASE}api/github` : `https://api.github.com/repos/${repository}/${path}`, {
       method: localPublishing ? 'POST' : method,
@@ -17,6 +15,12 @@ export async function publishDeck(slug: string, slides: Slide[], assets: Record<
     if (!r.ok) throw Error(r.status === 401 || r.status === 403 ? 'GitHub 저장소 Contents 쓰기 권한을 확인하세요.' : r.status === 422 || r.status === 409 ? '다른 게시가 먼저 반영되었습니다. 다시 게시하세요.' : `GitHub 요청 실패 (${r.status}) · 편집 내용은 유지됩니다.`);
     return r.json();
   }
+  return api;
+}
+export async function publishDeck(slug: string, slides: Slide[], assets: Record<string, string>, token: string, progress: (s: string) => void) {
+  if (!presentations.some(p => p.slug === slug) || !validDeck(slides)) throw Error('발표 형식을 확인하세요.');
+  if (!localPublishing && !token.trim()) throw Error('GitHub 토큰을 입력하세요.');
+  const api = githubApi(token);
   progress('게시 준비 중');
   const ref = await api('git/ref/heads/main');
   const parent = ref.object.sha;
@@ -52,4 +56,17 @@ export async function publishDeck(slug: string, slides: Slide[], assets: Record<
   // Non-force update makes concurrent publishes fail safely instead of overwriting work.
   await api('git/refs/heads/main','PATCH',{sha:next.sha,force:false});
   return snapshot;
+}
+
+export async function publishCatalog(config: CatalogConfig, token: string) {
+  if (!validCatalog(config)) throw Error('발표 목록 형식을 확인하세요.');
+  if (!localPublishing && !token.trim()) throw Error('GitHub 토큰을 입력하세요.');
+  const api = githubApi(token);
+  const ref = await api('git/ref/heads/main');
+  const parent = ref.object.sha;
+  const commit = await api(`git/commits/${parent}`);
+  const tree = await api('git/trees', 'POST', { base_tree: commit.tree.sha,
+    tree: [{path:'public/decks/catalog.json',mode:'100644',type:'blob',content:JSON.stringify(config,null,2)+'\n'}] });
+  const next = await api('git/commits', 'POST', {message:'Update presentation order and visibility',tree:tree.sha,parents:[parent]});
+  await api('git/refs/heads/main','PATCH',{sha:next.sha,force:false});
 }

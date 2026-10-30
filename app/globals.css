@@ -583,3 +583,7 @@ body.catalog-page { background:#000; color:snow; }
 }
 
 .catalog-entry span { word-break:keep-all; overflow-wrap:anywhere; }
+
+.deck-label form { margin:0; }
+.deck-label form button {padding:0;}
+.catalog-header form {margin:0;}

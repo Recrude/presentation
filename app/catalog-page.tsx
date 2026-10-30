@@ -48,7 +48,7 @@ export function CatalogPage({ editing }: { editing: boolean }) {
   }
   return <main className="catalog">
     <header className="catalog-header"><a href="https://jaeyeonkim.kr/">Jaeyeon Kim</a>
-      {editing && <nav aria-label="발표 목록 설정"><a href={BASE} target="_blank" rel="noreferrer">공개 목록 ↗</a><button disabled={!ready || busy} onClick={save}>저장{dirty ? ' *' : ''}</button><button disabled={!ready || busy} onClick={() => setPublishing(v => !v)}>게시</button></nav>}
+      {editing && <nav aria-label="발표 목록 설정"><a href={BASE} target="_blank" rel="noreferrer">공개 목록 ↗</a><button disabled={!ready || busy} onClick={save}>저장{dirty ? ' *' : ''}</button><button disabled={!ready || busy} onClick={() => setPublishing(v => !v)}>게시</button>{!import.meta.env.DEV && <form method="post" action={`${BASE}logout/`}><button type="submit">로그아웃</button></form>}</nav>}
     </header>
     {publishing && <section className="catalog-publish" aria-label="목록 게시">
       {!localPublishing && <><input type="password" autoComplete="off" aria-label="GitHub 토큰" placeholder="GitHub 토큰" value={token} onChange={e => setToken(e.target.value)}/><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noreferrer">토큰 만들기 ↗</a></>}

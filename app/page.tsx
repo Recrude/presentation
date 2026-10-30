@@ -669,7 +669,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     <>
       <input ref={previewFileRef} className="file-input" type="file" accept="image/png,image/jpeg,image/webp" onChange={e => { const file = e.target.files?.[0]; if (file) void captureSelected(file); }}/>
       {!publicView && <div className="editor">
-        <div className="deck-label"><a href={`${BASE}edit/`}>목록</a><span>{entry.date} · {entry.title}</span><a href={presentationUrl(entry.slug)} target="_blank" rel="noreferrer">공개 링크 ↗</a></div>
+        <div className="deck-label"><a href={`${BASE}edit/`}>목록</a><span>{entry.date} · {entry.title}</span><a href={presentationUrl(entry.slug)} target="_blank" rel="noreferrer">공개 링크 ↗</a>{!import.meta.env.DEV && <form method="post" action={`${BASE}logout/`}><button type="submit">로그아웃</button></form>}</div>
         <header className="toolbar">
           <span>
             발표 {visible.length} / 전체 {slides.length}

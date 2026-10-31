@@ -27,7 +27,7 @@ export async function importBackup(value: unknown) {
   const entries: [string,Blob][] = [], assets: Record<string,string> = {};
   for (const id of assetIds(b.slides)) {
     const data = b.images[id];
-    if (typeof data !== 'string' || !/^data:image\/(png|jpeg|webp|gif|avif);base64,[A-Za-z0-9+/=]+$/.test(data) || data.length > 56 * 1024 * 1024) throw Error('백업 이미지 형식을 확인하세요.');
+    if (typeof data !== 'string' || !/^data:(?:image\/(?:png|jpeg|webp|gif|avif|svg\+xml)|video\/(?:mp4|webm));base64,[A-Za-z0-9+/=]+$/.test(data) || data.length > 56 * 1024 * 1024) throw Error('백업 이미지 형식을 확인하세요.');
     const blob = await (await fetch(data)).blob(); entries.push([id,blob]);
   }
   // An imported copy must not replace image records used by another presentation.
@@ -37,6 +37,7 @@ export async function importBackup(value: unknown) {
   const slides = b.slides.map(s => ({...s,
     ...(s.photos ? {photos:s.photos.map(photo => ({...photo,id:remap.get(photo.id)!}))} : {}),
     ...(s.previewId ? {previewId:remap.get(s.previewId)!} : {}),
+    ...(s.media ? {media:{...s.media,id:remap.get(s.media.id)!}} : {}),
   }));
   return {slides,assets};
 }

@@ -11,11 +11,16 @@ import {
   numberOf,
   reorder,
   validDeck,
+  defaultTypography,
+  SEQUENCE_LIMIT,
+  MAX_ASSET,
   type Slide,
   type Photo,
+  type Typography,
 } from './model';
+import { fontData, fontsAvailable, importFontFiles } from './fonts';
 import { readDeck, saveDeck, readImage, readImages, saveImages } from './storage';
-import { SlideView } from './slide-view';
+import { SlideView, sequenceSteps } from './slide-view';
 import { PresentationStage } from './presentation-stage';
 import { exhibitionVideo, prepareVideo } from './video-cache';
 import { previewSource } from './previews';
@@ -32,6 +37,33 @@ const presets = [
   ['jaeyeonkim.kr', 'https://jaeyeonkim.kr/'],
   ['영상', 'https://www.youtube-nocookie.com/embed/QIAcSGkOLDk'],
 ];
+const typographyFields: [keyof Typography, string, number, number, number][] = [
+  ['size', '크기', 8, 400, 1], ['leading', '행간', 8, 800, 1], ['paragraph', '문단', 0, 1000, 1], ['tracking', '자간', -300, 1000, 5],
+  ['top', '위', 0, 1000, 1], ['left', '왼쪽', 0, 900, 1], ['right', '오른쪽', 0, 900, 1],
+];
+const endings = [['loop', '반복'], ['hold', '멈춤'], ['next', '다음 장']] as const;
+// Keeps the typed text while it is not yet a valid number (e.g. "0." on the way to "0.5").
+function NumberField({ label, value, min, max, step = 1, optional = false, onChange }: { label: string; value: number | undefined; min: number; max: number; step?: number; optional?: boolean; onChange: (value: number | undefined) => void }) {
+  const [text, setText] = useState(value === undefined ? '' : String(value));
+  useEffect(() => { if ((text === '' ? undefined : Number(text)) !== value) setText(value === undefined ? '' : String(value)); }, [value]);
+  return <label>{label}<input type="number" inputMode="decimal" min={min} max={max} step={step} value={text} placeholder="—"
+    onChange={e => {
+      setText(e.target.value);
+      const next = e.target.value === '' ? undefined : Number(e.target.value);
+      if (next === undefined ? optional : Number.isFinite(next) && next >= min && next <= max) onChange(next);
+    }}
+    onBlur={() => setText(value === undefined ? '' : String(value))}/></label>;
+}
+async function folderFiles(entry: FileSystemDirectoryEntry): Promise<File[]> {
+  const reader = entry.createReader(), entries: FileSystemEntry[] = [];
+  for (;;) {
+    const batch = await new Promise<FileSystemEntry[]>((resolve, reject) => reader.readEntries(resolve, reject));
+    if (!batch.length) break;
+    entries.push(...batch);
+  }
+  return Promise.all(entries.filter((e): e is FileSystemFileEntry => e.isFile).map(e => new Promise<File>((resolve, reject) => e.file(resolve, reject))));
+}
+const byName = (a: File, b: File) => a.name.localeCompare(b.name, undefined, { numeric: true });
 type Drag = {
   id: string;
   startX: number;
@@ -76,7 +108,12 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     fileRef = useRef<HTMLInputElement>(null),
     previewFileRef = useRef<HTMLInputElement>(null),
     photoTarget = useRef<string | null>(null),
-    importMode = useRef<'gallery' | 'folio'>('gallery');
+    importMode = useRef<'gallery' | 'folio' | 'sequence'>('gallery'),
+    clipRef = useRef<HTMLInputElement>(null),
+    fontFileRef = useRef<HTMLInputElement>(null);
+  const [fontState, setFontState] = useState<'' | 'ready' | 'missing'>('');
+  const [shownId, setShownId] = useState('');
+  const [fileOver, setFileOver] = useState(false);
   stateRef.current = slides;
   const visible = slides.filter((s) => !s.hidden),
     active = slides.find((s) => s.id === selected),
@@ -334,7 +371,9 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     visible.slice(Math.max(0, position - 1), position + 3).forEach(slide => {
       const sources = slide.kind === 'image' ? [originalSource(slide.src)]
         : slide.kind === 'gallery' || slide.kind === 'folio'
-          ? (slide.photos || []).map(photo => assets[photo.id]).filter(Boolean) : [];
+          ? (slide.photos || []).map(photo => assets[photo.id]).filter(Boolean)
+          : slide.kind === 'sequence' ? (slide.photos || []).slice(0, 4).map(photo => assets[photo.id]).filter(Boolean)
+            : (slide.kind === 'clip' || slide.kind === 'text' && publicView) && slide.previewId && assets[slide.previewId] ? [assets[slide.previewId]] : [];
       sources.forEach(src => {
         const image = new Image();
         image.src = src;
@@ -422,6 +461,30 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [ready, videoRetry, slides.some(s => !s.hidden && s.kind === 'video')]);
+  const advanceRef = useRef({ id: '', length: 0 });
+  advanceRef.current = { id: current?.id || '', length: visible.length };
+  useEffect(() => {
+    // Auto-advance counts from the moment the slide is actually on screen.
+    if (!present || !current?.advance || current.id !== shownId) return;
+    const timer = setTimeout(() => setPosition(p => Math.min(p + 1, advanceRef.current.length - 1)), current.advance * 1000);
+    return () => clearTimeout(timer);
+  }, [present, current?.id, current?.advance, shownId]);
+  function finish(id: string) {
+    if (advanceRef.current.id === id) setPosition(p => Math.min(p + 1, advanceRef.current.length - 1));
+  }
+  const hasText = slides.some(s => s.kind === 'text');
+  useEffect(() => {
+    if (publicView || !hasText) return;
+    let cancelled = false;
+    void fontsAvailable().then(ok => { if (!cancelled) setFontState(ok ? 'ready' : 'missing'); });
+    return () => { cancelled = true; };
+  }, [publicView, hasText]);
+  async function chooseFontFiles(files: File[]) {
+    if (!files.length) return;
+    try { await importFontFiles(files); setFontState(await fontsAvailable() ? 'ready' : 'missing'); setStatus('글꼴을 이 브라우저에 보관했습니다'); }
+    catch (e) { setStatus(e instanceof Error ? e.message : '글꼴 파일을 확인하세요.'); }
+    finally { if (fontFileRef.current) fontFileRef.current.value = ''; }
+  }
   async function save() {
     const snapshot = stateRef.current;
     setBusy(true);
@@ -453,6 +516,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
           id: crypto.randomUUID(),
           title: name.trim() || new URL(parsed.src).hostname,
           ...parsed,
+          ...(parsed.kind === 'web' ? { frame: 'browser' as const } : {}),
           hidden: false,
           autoplay: true,
           controls: true,
@@ -473,22 +537,11 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   function chooseFolioFiles(target: string | null = null) {
     importMode.current = 'folio'; photoTarget.current = target; fileRef.current?.click();
   }
-  async function importPhotos(files: File[]) {
-    if (!files.length) return;
-    const mode = importMode.current;
-    const target = photoTarget.current,
-      after = selected,
-      grouped = group;
-    if (mode === 'folio' && target && files.length !== 1) { setStatus('교체할 이미지 한 장을 선택하세요.'); return; }
-    const existing = target
-      ? stateRef.current.find((s) => s.id === target)?.photos || []
-      : [];
-    if (files.length + existing.length > 60) {
-      setStatus('한 번에 최대 60장까지 선택할 수 있습니다.');
-      return;
-    }
-    setBusy(true);
-    setStatus('이미지 불러오는 중');
+  function chooseSequence(target: string | null = null) {
+    importMode.current = 'sequence'; photoTarget.current = target; fileRef.current?.click();
+  }
+  // Decodes and stores images in this browser. Object URLs are registered only after storage succeeds.
+  async function loadPhotos(files: File[], folio = false) {
     const palettes: Record<string, FolioPalette> = {};
     const photos: Photo[] = [],
       entries: [string, Blob][] = [],
@@ -497,7 +550,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       for (const file of files) {
         if (!/^image\/(png|jpeg|webp|gif|avif)$/.test(file.type))
           throw Error(`${file.name} · PNG, JPG, WEBP, GIF, AVIF를 선택하세요.`);
-        if (file.size > 40 * 1024 * 1024)
+        if (file.size > MAX_ASSET)
           throw Error(`${file.name} · 이미지 한 장은 40MB 이하여야 합니다.`);
         const id = crypto.randomUUID(),
           src = URL.createObjectURL(file);
@@ -507,7 +560,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
         await img.decode();
         if (!img.naturalWidth || !img.naturalHeight)
           throw Error(`${file.name} · 이미지 크기를 읽지 못했습니다.`);
-        if (mode === 'folio') palettes[id] = detectFolioPalette(img);
+        if (folio) palettes[id] = detectFolioPalette(img);
         photos.push({
           id,
           name: file.name,
@@ -517,12 +570,39 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
         entries.push([id, file]);
       }
       await saveImages(entries);
-      Object.entries(newUrls).forEach(([id, src]) =>
-        objectUrls.current.set(id, src),
-      );
-      setAssets((a) => ({ ...a, ...newUrls }));
+    } catch (e) {
+      Object.values(newUrls).forEach((src) => URL.revokeObjectURL(src));
+      throw e;
+    }
+    Object.entries(newUrls).forEach(([id, src]) =>
+      objectUrls.current.set(id, src),
+    );
+    setAssets((a) => ({ ...a, ...newUrls }));
+    return { photos, palettes };
+  }
+  const sequence = (photos: Photo[], title: string): Slide => ({ id: crypto.randomUUID(), title, kind: 'sequence', src: '', hidden: false, photos, interval: 400, end: 'loop' });
+  async function importPhotos(files: File[]) {
+    if (!files.length) return;
+    const mode = importMode.current;
+    const target = photoTarget.current,
+      after = selected,
+      grouped = group;
+    if (mode === 'folio' && target && files.length !== 1) { setStatus('교체할 이미지 한 장을 선택하세요.'); return; }
+    const targetSlide = target ? stateRef.current.find((s) => s.id === target) : undefined;
+    const existing = targetSlide?.photos || [];
+    const limit = mode === 'sequence' || targetSlide?.kind === 'sequence' ? SEQUENCE_LIMIT : 60;
+    if (files.length + existing.length > limit) {
+      setStatus(`한 번에 최대 ${limit}장까지 선택할 수 있습니다.`);
+      return;
+    }
+    if (mode === 'sequence') files = [...files].sort(byName);
+    setBusy(true);
+    setStatus('이미지 불러오는 중');
+    try {
+      const { photos, palettes } = await loadPhotos(files, mode === 'folio');
       if (target && stateRef.current.some((s) => s.id === target))
         patch(target, mode === 'folio' ? { photos, folioPalette: palettes[photos[0].id] } : { photos: [...existing, ...photos] });
+      else if (mode === 'sequence') insert([sequence(photos, photos[0].name.replace(/\.[^.]+$/, ''))], after);
       else {
         const groups = mode === 'folio' ? photos.map(p => [p]) : grouped ? [photos] : photos.map((p) => [p]);
         insert(
@@ -538,8 +618,8 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
           after,
         );
       }
+      setStatus('저장되지 않음');
     } catch (e) {
-      Object.values(newUrls).forEach((src) => URL.revokeObjectURL(src));
       setStatus(
         e instanceof Error ? e.message : '이미지를 추가하지 못했습니다.',
       );
@@ -548,13 +628,94 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       if (fileRef.current) fileRef.current.value = '';
     }
   }
+  // A clip is stored with a poster frame used for thumbnails, PDF and the moment before playback.
+  async function loadClip(file: File): Promise<Slide> {
+    if (!/^video\/(mp4|webm)$/.test(file.type)) throw Error(`${file.name} · MP4, WebM 영상을 선택하세요.`);
+    if (file.size > MAX_ASSET) throw Error(`${file.name} · 영상 한 개는 40MB 이하여야 합니다. 짧게 자르거나 압축하세요.`);
+    const src = URL.createObjectURL(file);
+    try {
+      const video = document.createElement('video');
+      video.muted = true; video.playsInline = true; video.preload = 'auto'; video.src = src;
+      await new Promise<void>((resolve, reject) => { video.onloadeddata = () => resolve(); video.onerror = () => reject(Error(`${file.name} · 이 브라우저에서 재생할 수 없는 영상입니다.`)); });
+      if (!video.videoWidth || !video.videoHeight) throw Error(`${file.name} · 영상 크기를 읽지 못했습니다.`);
+      await new Promise<void>(resolve => { const timer = setTimeout(resolve, 5000); video.onseeked = () => { clearTimeout(timer); resolve(); }; video.currentTime = Math.min(0.1, (video.duration || 0.2) / 2); });
+      const scale = Math.min(1, 1920 / video.videoWidth), canvas = document.createElement('canvas');
+      canvas.width = Math.round(video.videoWidth * scale); canvas.height = Math.round(video.videoHeight * scale);
+      canvas.getContext('2d')!.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const poster = await new Promise<Blob>((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(Error('미리보기 프레임을 만들지 못했습니다.')), 'image/webp', 0.86));
+      const mediaId = crypto.randomUUID(), posterId = crypto.randomUUID(), posterUrl = URL.createObjectURL(poster);
+      await saveImages([[mediaId, file], [posterId, poster]]);
+      objectUrls.current.set(mediaId, src); objectUrls.current.set(posterId, posterUrl);
+      setAssets(a => ({ ...a, [mediaId]: src, [posterId]: posterUrl }));
+      return { id: crypto.randomUUID(), title: file.name.replace(/\.[^.]+$/, ''), kind: 'clip', src: '', hidden: false, media: { id: mediaId, name: file.name, width: video.videoWidth, height: video.videoHeight }, previewId: posterId, end: 'loop', muted: true };
+    } catch (e) { URL.revokeObjectURL(src); throw e; }
+  }
+  async function importClips(files: File[]) {
+    if (!files.length) return;
+    setBusy(true); setStatus('영상 불러오는 중');
+    try { const added: Slide[] = []; for (const file of files) added.push(await loadClip(file)); insert(added); setStatus('저장되지 않음'); }
+    catch (e) { setStatus(e instanceof Error ? e.message : '영상을 추가하지 못했습니다.'); }
+    finally { setBusy(false); if (clipRef.current) clipRef.current.value = ''; }
+  }
+  // Finder drop: each folder becomes a sequence (files in name order), loose images one sequence,
+  // a single image a picture slide, and each video a clip.
+  async function dropFiles(transfer: DataTransfer) {
+    const entries = Array.from(transfer.items).map(item => item.webkitGetAsEntry?.()).filter((e): e is FileSystemEntry => !!e);
+    const loose = Array.from(transfer.files);
+    setBusy(true); setStatus('불러오는 중');
+    try {
+      const folders: { name: string; files: File[] }[] = [];
+      for (const entry of entries) if (entry.isDirectory) folders.push({ name: entry.name, files: await folderFiles(entry as FileSystemDirectoryEntry) });
+      const files = entries.length ? loose.filter(f => entries.some(e => e.isFile && e.name === f.name)) : loose;
+      const image = (f: File) => /^image\/(png|jpeg|webp|gif|avif)$/.test(f.type), video = (f: File) => /^video\//.test(f.type);
+      const added: Slide[] = [];
+      for (const folder of folders) {
+        const images = folder.files.filter(image).sort(byName);
+        if (images.length > SEQUENCE_LIMIT) throw Error(`${folder.name} · 시퀀스는 최대 ${SEQUENCE_LIMIT}장입니다.`);
+        if (images.length) added.push(sequence((await loadPhotos(images)).photos, folder.name));
+        for (const file of folder.files.filter(video).sort(byName)) added.push(await loadClip(file));
+      }
+      const images = files.filter(image).sort(byName);
+      if (images.length > SEQUENCE_LIMIT) throw Error(`시퀀스는 최대 ${SEQUENCE_LIMIT}장입니다.`);
+      if (images.length) {
+        const { photos } = await loadPhotos(images), title = photos[0].name.replace(/\.[^.]+$/, '');
+        added.push(photos.length > 1 ? sequence(photos, title) : { id: crypto.randomUUID(), title, kind: 'gallery', src: '', hidden: false, photos });
+      }
+      for (const file of files.filter(video).sort(byName)) added.push(await loadClip(file));
+      if (!added.length) throw Error('이미지·영상 파일이나 폴더를 놓으세요.');
+      insert(added);
+      setStatus('저장되지 않음');
+    } catch (e) { setStatus(e instanceof Error ? e.message : '파일을 추가하지 못했습니다.'); }
+    finally { setBusy(false); }
+  }
+  // Text slides are published as SVG outlines (fonts stay in this browser). Regenerated on every publish.
+  async function outlineTexts(deck: Slide[], current: Record<string, string>) {
+    const texts = deck.filter(s => !s.hidden && s.kind === 'text');
+    if (!texts.length) return { deck, assets: current };
+    setStatus('텍스트 윤곽 만드는 중');
+    const data = await fontData();
+    const { textSvg } = await import('./text-svg');
+    const entries: [string, Blob][] = [], urls: Record<string, string> = {}, ids: Record<string, string> = {};
+    for (const slide of texts) {
+      const { blob, missing } = await textSvg(slide, data);
+      if (missing.length) throw Error(`${slide.title} · 글꼴에 없는 글자: ${[...new Set(missing)].join(' ')}`);
+      const id = crypto.randomUUID();
+      entries.push([id, blob]); urls[id] = URL.createObjectURL(blob); ids[slide.id] = id;
+    }
+    await saveImages(entries);
+    Object.entries(urls).forEach(([id, src]) => objectUrls.current.set(id, src));
+    setAssets(a => ({ ...a, ...urls }));
+    const next = deck.map(s => ids[s.id] ? { ...s, previewId: ids[s.id] } : s);
+    if (stateRef.current === deck) { stateRef.current = next; setSlides(next); }
+    return { deck: next, assets: { ...current, ...urls } };
+  }
   async function publish() {
-    const deck = stateRef.current;
     setBusy(true);
     try {
-      await saveDeck(deck, entry.slug, assets);
+      const { deck, assets: prepared } = await outlineTexts(stateRef.current, assets);
+      await saveDeck(deck, entry.slug, prepared);
       setDirty(false);
-      await publishDeck(entry.slug, deck, assets, setStatus);
+      await publishDeck(entry.slug, deck, prepared, setStatus);
       setStatus('게시됨 · 배포 완료 후 공개 링크에 반영됩니다');
     } catch (e) { setStatus(e instanceof Error ? e.message : '게시 실패 · 편집 내용은 유지됩니다'); }
     finally { setBusy(false); }
@@ -627,8 +788,11 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
           ? [originalSource(s.src)]
           : s.kind === 'gallery' || s.kind === 'folio'
             ? (s.photos || []).map((p) => preparedAssets[p.id])
-            : [previewSource(s, preparedAssets)],
+            : s.kind === 'sequence' ? sequenceSteps(s.photos!, s.perFrame)[0].map(p => preparedAssets[p.id])
+              : s.kind === 'text' ? []
+                : [previewSource(s, preparedAssets)],
       );
+      await document.fonts.ready;
       await Promise.all(
         sources.map(
           (src) =>
@@ -707,6 +871,12 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
         </header>
         {adding && (
           <section className="add-panel">
+            <div className="row">
+              <button disabled={busy} onClick={() => insert([{ id: crypto.randomUUID(), title: '텍스트', kind: 'text', src: '', hidden: false, text: '', typo: { ...defaultTypography } }])}>텍스트</button>
+              <button disabled={busy} onClick={() => chooseSequence()}>시퀀스</button>
+              <button disabled={busy} onClick={() => clipRef.current?.click()}>클립</button>
+              <span className="note">이미지·영상 파일이나 폴더를 목록에 끌어다 놓아도 됩니다.</span>
+            </div>
             <div className="row"><button disabled={busy} onClick={() => insert(initial.filter(s => !slides.some(d => d.id === s.id)))}>원본 포트폴리오 가져오기</button>
             <button disabled={busy} onClick={async () => { setBusy(true); try { await exportBackup(entry.slug, slides, assets); setStatus('백업 다운로드 완료'); } catch(e) { setStatus(e instanceof Error ? e.message : '백업 실패'); } finally { setBusy(false); } }}>백업 내보내기</button>
             <button disabled={busy} onClick={() => backupRef.current?.click()}>백업 불러오기</button>
@@ -764,7 +934,12 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
           accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
           onChange={(e) => void importPhotos(Array.from(e.target.files || []))}
         />
-        <main className="workspace" inert={!ready || busy}>
+        <input className="file-input" ref={clipRef} type="file" multiple accept="video/mp4,video/webm" onChange={e => void importClips(Array.from(e.target.files || []))}/>
+        <input className="file-input" ref={fontFileRef} type="file" multiple accept=".otf,.ttf,font/otf,font/ttf" onChange={e => void chooseFontFiles(Array.from(e.target.files || []))}/>
+        <main className={`workspace${fileOver ? ' file-over' : ''}`} inert={!ready || busy}
+          onDragOver={e => { if (!e.dataTransfer.types.includes('Files')) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setFileOver(true); }}
+          onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setFileOver(false); }}
+          onDrop={e => { if (!e.dataTransfer.types.includes('Files')) return; e.preventDefault(); setFileOver(false); void dropFiles(e.dataTransfer); }}>
           <div className="grid" ref={gridRef} aria-label="슬라이드 순서">
             {slides.map((s, i) => (
               <article
@@ -904,6 +1079,24 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                       →
                     </button>
                   </div>
+                  <div className="row number-fields">
+                    <NumberField key={`${active.id}-advance`} label="자동 넘김 초" value={active.advance} min={0.1} max={3600} step={0.1} optional onChange={v => patch(active.id, { advance: v })}/>
+                    <label className="check"><input type="checkbox" checked={active.transition === 'dissolve'} onChange={e => patch(active.id, { transition: e.target.checked ? 'dissolve' : undefined })}/>디졸브</label>
+                  </div>
+                  {active.kind === 'text' && <>
+                    <textarea className="text-editor" aria-label="텍스트" placeholder="빈 줄로 문단을 나눕니다" value={active.text || ''} onChange={e => patch(active.id, { text: e.target.value })}/>
+                    <div className="number-fields">
+                      {typographyFields.map(([key, label, min, max, step]) => <NumberField key={`${active.id}-${key}`} label={label} value={(active.typo || defaultTypography)[key]} min={min} max={max} step={step}
+                        onChange={v => { const typo = stateRef.current.find(s => s.id === active.id)?.typo || defaultTypography; if (v !== undefined) patch(active.id, { typo: { ...typo, [key]: v } }); }}/>)}
+                    </div>
+                    {fontState === 'missing' && <div className="row"><span className="note">합성글꼴을 찾지 못했습니다</span><button disabled={busy} onClick={() => fontFileRef.current?.click()}>글꼴 파일 지정</button></div>}
+                  </>}
+                  {(active.kind === 'sequence' || active.kind === 'clip') && <div className="row number-fields">
+                    {active.kind === 'sequence' && <NumberField key={`${active.id}-interval`} label="간격 ms" value={active.interval} min={40} max={10000} step={10} onChange={v => { if (v !== undefined) patch(active.id, { interval: Math.round(v) }); }}/>}
+                    {active.kind === 'sequence' && <NumberField key={`${active.id}-per`} label="한 번에" value={active.perFrame || 1} min={1} max={12} onChange={v => { if (v !== undefined && Number.isInteger(v)) patch(active.id, { perFrame: v === 1 ? undefined : v }); }}/>}
+                    <label>끝나면<select value={active.end || 'loop'} onChange={e => patch(active.id, { end: e.target.value as Slide['end'] })}>{endings.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+                    <button onClick={() => setLive(v => !v)}>{live ? '미리보기 닫기' : '미리보기'}</button>
+                  </div>}
                   {['web', 'youtube', 'video'].includes(active.kind) && (
                     <div className="row">
                       <button onClick={() => setLive((v) => !v)}>
@@ -916,6 +1109,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                       <button disabled={busy} onClick={() => previewFileRef.current?.click()}>캡처 이미지 지정</button>
                     </div>
                   )}
+                  {active.kind === 'web' && <div className="row"><label className="check"><input type="checkbox" checked={active.frame === 'browser'} onChange={e => patch(active.id, { frame: e.target.checked ? 'browser' : undefined })}/>브라우저 창</label></div>}
                   {(active.kind === 'youtube' || active.kind === 'video') && (
                     <div className="video-settings">
                       {(
@@ -942,11 +1136,11 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                   )}
                   {active.kind === 'image' && <div className="note">{projectForPage(Number(active.src.match(/page-(\d+)/)?.[1]))?.period}</div>}
                   {active.kind === 'folio' && <div className="row"><button disabled={busy} onClick={() => chooseFolioFiles(active.id)}>조판면 이미지 교체</button></div>}
-                  {active.kind === 'gallery' && (
+                  {(active.kind === 'gallery' || active.kind === 'sequence') && (
                     <div className="photo-list">
                       <button
                         disabled={busy}
-                        onClick={() => chooseFiles(active.id)}
+                        onClick={() => active.kind === 'sequence' ? chooseSequence(active.id) : chooseFiles(active.id)}
                       >
                         이미지 더 넣기
                       </button>
@@ -1007,6 +1201,9 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
             slide={current}
             number={position + 1}
             assets={assets}
+            outlined={publicView}
+            onShown={setShownId}
+            onFinish={finish}
           />
           <nav className={`present-controls${navigationVisible || current.kind === 'web' || current.kind === 'youtube' ? ' is-visible' : ''}`} aria-label="발표 이동">
             {publicView && <button aria-label="전체화면" onClick={() => { void document.documentElement.requestFullscreen().catch(() => {}); }}>⛶</button>}

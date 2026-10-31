@@ -2,8 +2,8 @@ import puppeteer from 'puppeteer-core';
 import assert from 'node:assert/strict';
 const browser = await puppeteer.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true});
 try {
- const page=await browser.newPage();
- await page.goto('http://localhost:3100/',{waitUntil:'networkidle0'});
+ const page=await browser.newPage();await page.setRequestInterception(true);page.on('request',r=>{if(r.url().endsWith('/deck.json'))void r.respond({status:404,contentType:'application/json',body:'{}'});else void r.continue();}); /* 9/9 editor without a published copy starts from the 79 originals */ 
+ await page.goto('http://localhost:3100/presentations/edit/260909-ahn/',{waitUntil:'networkidle0'});
  await page.waitForFunction(()=>document.querySelectorAll('.card').length===79);
  await page.evaluate(()=>{
    window.decodeGates=[];

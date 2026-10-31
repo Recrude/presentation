@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 const browser=await puppeteer.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true});
 try {
  const page=await browser.newPage();
- await page.goto('http://localhost:3100/');
+ await page.goto('http://localhost:3100/presentations/edit/260909-ahn/');
  await page.waitForFunction(()=>document.body.textContent.includes('영상 준비 완료'),{timeout:60000});
  const cacheSize=await page.evaluate(async()=>{const c=await caches.open('presentation-video-v1');const keys=await c.keys();return (await (await c.match(keys[0])).blob()).size;});
  assert.equal(cacheSize,33530903);

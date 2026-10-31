@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash, createHmac, randomBytes } from 'node:crypto';
-import { executePublish, CHUNK_SIZE } from '../server/publish.ts';
+import { executePublish, CHUNK_SIZE, safeSvg } from '../server/publish.ts';
 import { catalogEntries, LEGACY_SLUG } from '../app/catalog.ts';
 import handler from '../api/publish.ts';
 const secret='test-upload-signature-key';
@@ -91,4 +91,24 @@ test('creation registers only a private unique deck and dynamic publishing keeps
  const lastTree=repo.calls.filter(c=>c.path==='git/trees').at(-1).body.tree;assert.deepEqual(lastTree.map(t=>t.path),[`public/decks/${item.id}/deck.json`]);
  const renamed=structuredClone(current);renamed.items[0].presentation.slug='changed';await executePublish({action:'catalog',config:renamed},git,secret);
  assert.equal(repo.calls.filter(c=>c.path==='git/trees').at(-1).body.tree.length,1);
+});
+
+test('text outlines and clips publish; scripted or external SVG never does',async()=>{
+  const {git,calls}=repository();
+  const svg=Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080"><defs><path id="h1086" d="M950-298L805-298Z"/></defs><g fill="#ffffff"><use href="#h1086" transform="translate(96 150.4) scale(0.048)"/></g></svg>\n');
+  assert.ok(safeSvg(svg));
+  for(const bad of ['<svg onload="alert(1)"></svg>','<svg xmlns="http://www.w3.org/2000/svg"><script>x</script></svg>','<svg xmlns="http://www.w3.org/2000/svg"><use href="https://evil.example/x.svg#a"/></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg"><foreignObject/></svg>','<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0" style="x"/></svg>','<svg xmlns="http://www.w3.org/2000/svg">&x;</svg>','<svg xmlns="http://www.w3.org/2000/svg"><g fill="url(#a)"/></svg>'])
+    assert.equal(safeSvg(Buffer.from(bad)),false,bad);
+  const svgProof=(await executePublish({action:'upload',slug:LEGACY_SLUG,mime:'image/svg+xml',hash:hash(svg),count:1,index:0,content:svg.toString('base64')},git,secret)).proof;
+  const mp4=Buffer.concat([Buffer.from('000000186674797069736f6d','hex'),randomBytes(64)]);
+  const mp4Proof=(await executePublish({action:'upload',slug:LEGACY_SLUG,mime:'video/mp4',hash:hash(mp4),count:1,index:0,content:mp4.toString('base64')},git,secret)).proof;
+  const text={id:'t',title:'T',kind:'text',src:'',hidden:false,text:'가',typo:{size:48,leading:80,paragraph:80,tracking:-40,top:96,left:96,right:96}};
+  await assert.rejects(()=>executePublish({action:'deck',slug:LEGACY_SLUG,slides:[text],assets:{}},git,secret),/윤곽/);
+  const result=await executePublish({action:'deck',slug:LEGACY_SLUG,slides:[{...text,previewId:'o'},{id:'c',title:'C',kind:'clip',src:'',hidden:false,media:{id:'m',name:'c.mp4',width:1280,height:720},previewId:'o',end:'loop'}],assets:{o:svgProof,m:mp4Proof}},git,secret);
+  assert.match(result.snapshot.assets.o,/\.svg$/);assert.match(result.snapshot.assets.m,/\.mp4$/);
+  const bad=Buffer.from('<svg onload="x"></svg>');
+  await assert.rejects(()=>executePublish({action:'upload',slug:LEGACY_SLUG,mime:'image/svg+xml',hash:hash(bad),count:1,index:0,content:bad.toString('base64')},git,secret));
+  await assert.rejects(()=>executePublish({action:'upload',slug:LEGACY_SLUG,mime:'constructor',hash:hash(svg),count:1,index:0,content:svg.toString('base64')},git,secret));
+  assert.ok(calls.length>0);
 });

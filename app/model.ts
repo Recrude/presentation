@@ -1,9 +1,11 @@
 import { chronologicalPages, projectForPage } from './chronology.ts';
 export type Photo = { id: string; name: string; width: number; height: number };
+// Text slide measurements are px on the 1920×1080 sheet; tracking is 1/1000 em like InDesign.
+export type Typography = { size: number; leading: number; paragraph: number; tracking: number; top: number; left: number; right: number };
 export type Slide = {
   id: string;
   title: string;
-  kind: 'image' | 'web' | 'youtube' | 'gallery' | 'folio' | 'video';
+  kind: 'image' | 'web' | 'youtube' | 'gallery' | 'folio' | 'video' | 'text' | 'sequence' | 'clip';
   src: string;
   hidden: boolean;
   photos?: Photo[];
@@ -12,7 +14,26 @@ export type Slide = {
   autoplay?: boolean;
   controls?: boolean;
   muted?: boolean;
+  text?: string;
+  typo?: Typography;
+  media?: Photo;
+  interval?: number;
+  /** Sequence: images shown together per step, laid out like a gallery. */
+  perFrame?: number;
+  /** Web: show the page inside a Safari-like window. */
+  frame?: 'browser';
+  end?: 'loop' | 'hold' | 'next';
+  advance?: number;
+  transition?: 'dissolve';
 };
+export const defaultTypography: Typography = { size: 48, leading: 80, paragraph: 80, tracking: -40, top: 96, left: 96, right: 96 };
+export const SEQUENCE_LIMIT = 200;
+// Published asset formats. Text slides publish as SVG outlines, clips as MP4/WebM.
+export const assetTypes: Record<string, string> = Object.assign(Object.create(null), { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif', 'image/avif': 'avif', 'image/svg+xml': 'svg', 'video/mp4': 'mp4', 'video/webm': 'webm' });
+export const MAX_ASSET = 40 * 1024 * 1024;
+export function assetIds(slides: Slide[]) {
+  return [...new Set(slides.flatMap(s => [...(s.photos?.map(p => p.id) || []), ...(s.media ? [s.media.id] : []), ...(s.previewId ? [s.previewId] : [])]))];
+}
 export const initial: Slide[] = chronologicalPages.map(i => {
   const project = projectForPage(i);
   return { id: `original-${i}`, title: project ? `${project.start} · ${project.title} · ${i - project.first + 1}` : i === 0 ? '표지' : i === 1 ? '원본 목차' : '마지막 장', kind: 'image', src: `/slides/page-${String(i).padStart(2, '0')}.webp`, hidden: false };
@@ -119,6 +140,19 @@ export function layoutPhotos(photos: Pick<Photo, 'width' | 'height'>[]) {
   }
   return best;
 }
+const validPhoto = (p: Photo) =>
+  !!p &&
+  typeof p.id === 'string' &&
+  typeof p.name === 'string' &&
+  Number.isFinite(p.width) &&
+  p.width > 0 &&
+  Number.isFinite(p.height) &&
+  p.height > 0;
+const within = (v: unknown, min: number, max: number) => typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
+export function validTypography(t: Typography | undefined): t is Typography {
+  return !!t && within(t.size, 8, 400) && within(t.leading, 8, 800) && within(t.paragraph, 0, 1000) && within(t.tracking, -300, 1000) &&
+    within(t.top, 0, 1000) && within(t.left, 0, 1800) && within(t.right, 0, 1800) && t.left + t.right <= 1800;
+}
 export function validDeck(value: unknown): value is Slide[] {
   return (
     Array.isArray(value) &&
@@ -130,27 +164,30 @@ export function validDeck(value: unknown): value is Slide[] {
         typeof s.id !== 'string' ||
         typeof s.title !== 'string' ||
         typeof s.hidden !== 'boolean' ||
-        typeof s.src !== 'string'
+        typeof s.src !== 'string' ||
+        (s.advance !== undefined && !within(s.advance, 0.1, 3600)) ||
+        (s.transition !== undefined && s.transition !== 'dissolve') ||
+        (s.previewId !== undefined && typeof s.previewId !== 'string') ||
+        (s.frame !== undefined && (s.frame !== 'browser' || s.kind !== 'web'))
       )
         return false;
       if (s.kind === 'image')
         return /^\/slides\/page-(?:[0-6]\d|7[0-8])\.webp$/.test(s.src);
+      if (s.kind === 'text')
+        return typeof s.text === 'string' && s.text.length <= 10000 && validTypography(s.typo);
+      if (s.kind === 'sequence')
+        return Array.isArray(s.photos) && s.photos.length > 0 && s.photos.length <= SEQUENCE_LIMIT && s.photos.every(validPhoto) &&
+          Number.isInteger(s.interval) && within(s.interval, 40, 10000) && ['loop', 'hold', 'next'].includes(s.end) &&
+          (s.perFrame === undefined || Number.isInteger(s.perFrame) && within(s.perFrame, 1, 12));
+      if (s.kind === 'clip')
+        return validPhoto(s.media) && ['loop', 'hold', 'next'].includes(s.end);
       if (s.kind === 'gallery' || s.kind === 'folio')
         return (
           (s.kind !== 'folio' || (s.photos?.length === 1 && /^#[0-9a-fA-F]{6}$/.test(s.folioPalette?.background || '') && /^#[0-9a-fA-F]{6}$/.test(s.folioPalette?.foreground || ''))) &&
           Array.isArray(s.photos) &&
           s.photos.length > 0 &&
           s.photos.length <= 60 &&
-          s.photos.every(
-            (p: Photo) =>
-              p &&
-              typeof p.id === 'string' &&
-              typeof p.name === 'string' &&
-              Number.isFinite(p.width) &&
-              p.width > 0 &&
-              Number.isFinite(p.height) &&
-              p.height > 0,
-          )
+          s.photos.every(validPhoto)
         );
       if (s.kind === 'video') return s.src === '/media/audio-morphology.mp4';
       if (s.kind === 'web' || s.kind === 'youtube') {

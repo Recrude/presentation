@@ -8,7 +8,7 @@ try {
    if(request.url().startsWith('https://ved.kr/')) void request.respond({status:200,contentType:'text/html',body:'<button id="control" style="width:400px;height:200px">Embedded control</button>'});
    else void request.continue();
  });
- await page.goto('http://localhost:3100/');
+ await page.goto('http://localhost:3100/presentations/edit/260909-ahn/');
  await page.evaluate(()=>localStorage.setItem('jaeyeon-slides-v1',JSON.stringify([
    {id:'web',title:'Web',kind:'web',src:'https://ved.kr/',hidden:false},
    {id:'next',title:'Next',kind:'image',src:'/slides/page-01.webp',hidden:false}

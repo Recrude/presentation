@@ -1,6 +1,6 @@
 import { BASE, validDeckId, validCatalog, type CatalogItem, type CatalogConfig } from './catalog';
 import { assetIds, type Snapshot } from './published';
-import { type Slide, validDeck } from './model';
+import { type Slide, validDeck, assetTypes, MAX_ASSET } from './model';
 const CHUNK_SIZE = 2 * 1024 * 1024;
 async function api(body: unknown) {
   const r=await fetch(`${BASE}api/publish/`,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Presentation-Publish':'1'},body:JSON.stringify(body),signal:AbortSignal.timeout(90000)});
@@ -15,16 +15,16 @@ export async function publishDeck(slug: string, slides: Slide[], assets: Record<
   for(let i=0;i<ids.length;i++) {
     const id=ids[i],source=assets[id];
     if(!source)throw Error('누락된 이미지가 있습니다. 다시 추가한 뒤 게시하세요.');
-    if(/^\/presentations\/decks\/[a-z0-9-]+\/assets\/[a-f0-9]{64}\.(png|jpg|webp|gif|avif)$/.test(source)){uploaded[id]=source;continue;}
+    if(/^\/presentations\/decks\/[a-z0-9-]+\/assets\/[a-f0-9]{64}\.(png|jpg|webp|gif|avif|svg|mp4|webm)$/.test(source)){uploaded[id]=source;continue;}
     const r=await fetch(source);if(!r.ok)throw Error('이미지 파일을 읽지 못했습니다.');
     const blob=await r.blob();
-    if(!/^image\/(png|jpeg|webp|gif|avif)$/.test(blob.type) || !blob.size || blob.size>40*1024*1024)throw Error('40MB 이하의 이미지 파일만 게시할 수 있습니다.');
+    if(!assetTypes[blob.type] || !blob.size || blob.size>MAX_ASSET)throw Error('40MB 이하의 이미지·영상 파일만 게시할 수 있습니다.');
     const bytes=new Uint8Array(await blob.arrayBuffer());
     const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(b=>b.toString(16).padStart(2,'0')).join('');
     if(dedupe.has(hash)){uploaded[id]=dedupe.get(hash);continue;}
     const count=Math.ceil(bytes.length/CHUNK_SIZE),parts=[];
     for(let index=0;index<count;index++) {
-      progress(`이미지 게시 ${i+1}/${ids.length}${count>1?` · ${index+1}/${count}`:''}`);
+      progress(`파일 게시 ${i+1}/${ids.length}${count>1?` · ${index+1}/${count}`:''}`);
       const chunk=bytes.subarray(index*CHUNK_SIZE,(index+1)*CHUNK_SIZE);
       let binary='';for(let j=0;j<chunk.length;j+=8192)binary+=String.fromCharCode(...chunk.subarray(j,j+8192));
       const result=await api({action:'upload',slug,mime:blob.type,hash,index,count,content:btoa(binary)});parts.push(result.proof);

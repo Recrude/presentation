@@ -2,7 +2,7 @@ import puppeteer from 'puppeteer-core';
 import assert from 'node:assert/strict';
 const browser=await puppeteer.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true});
 try {
- const page=await browser.newPage();await page.goto('http://localhost:3100/',{waitUntil:'networkidle0'});
+ const page=await browser.newPage();await page.setRequestInterception(true);page.on('request',r=>{if(r.url().endsWith('/deck.json'))void r.respond({status:404,contentType:'application/json',body:'{}'});else void r.continue();}); /* 9/9 editor without a published copy starts from the 79 originals */ await page.goto('http://localhost:3100/presentations/edit/260909-ahn/',{waitUntil:'networkidle0'});
  for(const b of await page.$$('.toolbar button')) if((await b.evaluate(e=>e.textContent)).trim()==='발표'){await b.click();break;}
  await page.waitForSelector('.presentation-stage');
  const wheel=async(deltaY,ctrlKey=true,deltaX=0)=>page.$eval('.presentation-stage',(node,args)=>{const box=node.getBoundingClientRect();const event=new WheelEvent('wheel',{...args,clientX:box.width/2,clientY:box.height/2,bubbles:true,cancelable:true});node.dispatchEvent(event);return event.defaultPrevented;},{deltaY,ctrlKey,deltaX});

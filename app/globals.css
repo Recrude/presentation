@@ -595,3 +595,59 @@ body.catalog-page { background:#000; color:snow; }
 .catalog-details > div { display:flex; gap:24px; }
 .catalog-address { overflow-wrap:anywhere; color:#888; }
 @media(max-width:720px) { .catalog-details {grid-template-columns:1fr;} .catalog-actions {gap:18px;flex-wrap:wrap;} }
+
+/* Text slides: composite font from the portfolio (SM3신중고딕-03 + SF Pro Display), editor only.
+   Installed fonts via local(); app/fonts.ts can add the same families from picked files. */
+@font-face { font-family: 'JK Composite Hangul'; src: local('SM3SJGothic-03'), local('SM3SJGothic 03'); ascent-override: 80%; descent-override: 20%; line-gap-override: 0%; font-display: block; }
+@font-face { font-family: 'JK Composite Latin'; src: local('SFProDisplay-Regular'), local('SF Pro Display Regular'); ascent-override: 80%; descent-override: 20%; line-gap-override: 0%; font-display: block; }
+.text-frame { position: absolute; inset: 0; container-type: size; overflow: hidden; }
+.text-body {
+  position: absolute; inset: 0; margin: 0; color: #fff; text-align: left;
+  padding: calc(var(--top) * 100cqw / 1920) calc(var(--right) * 100cqw / 1920) 0 calc(var(--left) * 100cqw / 1920);
+  font-family: 'JK Composite Latin', 'JK Composite Hangul'; font-weight: 400; font-style: normal; font-synthesis: none;
+  font-size: calc(var(--size) * 100cqw / 1920);
+  line-height: calc(var(--leading) * 100cqw / 1920);
+  letter-spacing: calc(var(--tracking) * var(--size) * 100cqw / 1920000);
+  white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; line-break: strict;
+  font-kerning: normal; font-variant-ligatures: none; -webkit-font-smoothing: antialiased;
+}
+.text-body p { margin: 0 0 calc(var(--paragraph) * 100cqw / 1920); }
+/* Runs never change the line box: every line is exactly the leading, as in InDesign. */
+.text-body span { position: relative; line-height: 0; }
+.text-editor { width: 100%; min-height: 12em; resize: vertical; padding: var(--half) 0; font: inherit; color: inherit; background: transparent; border: 0; border-bottom: var(--rule) solid var(--line); }
+.number-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(10em, 1fr)); gap: var(--half) var(--space); padding: var(--half) 0; }
+.number-fields label { display: flex; align-items: center; justify-content: space-between; gap: var(--half); white-space: nowrap; }
+.number-fields input { width: 4.5em; text-align: right; }
+.workspace.file-over { outline: 1px solid var(--ink); outline-offset: -1px; }
+.sequence-step { position: absolute; inset: 0; }
+
+/* Safari window around web slides (see BrowserFrame in slide-view.tsx). The global rule removes
+   radii and shadows, so the window restores them explicitly. */
+.browser-stage { position: absolute; inset: 0; container-type: size; }
+.browser-window {
+  --u: calc(100cqw / 1920);
+  position: absolute; inset: calc(48 * 100cqw / 1920); overflow: hidden;
+  background: var(--tint); border: calc(1 * var(--u)) solid #333; border-top-color: #555;
+  border-radius: calc(25 * var(--u)) !important;
+}
+.browser-stage.is-live .browser-window { --u: min(1px, calc(100cqw / 1440)); }
+.browser-bar { position: absolute; inset: 0 0 auto; height: calc(52 * var(--u)); background: var(--tint); }
+.browser-light { position: absolute; top: calc(18.25 * var(--u)); width: calc(14 * var(--u)); height: calc(14 * var(--u)); border-radius: 50% !important; background: #ec6765; left: calc(18.75 * var(--u)); }
+.browser-light:nth-child(2) { background: #f2ca44; left: calc(41.75 * var(--u)); }
+.browser-light:nth-child(3) { background: #65c466; left: calc(64.75 * var(--u)); }
+.browser-address { position: absolute; left: 50%; top: calc(7.75 * var(--u)); width: calc(279 * var(--u)); height: calc(36 * var(--u)); transform: translateX(-50%); padding: calc(3 * var(--u)) calc(3.5 * var(--u)); background: #121212; border-radius: calc(18 * var(--u)) !important; }
+.browser-field {
+  position: relative; display: flex; align-items: center; justify-content: center; gap: calc(7.5 * var(--u)); height: 100%;
+  background: #343434; color: #eaebeb; border-radius: calc(15 * var(--u)) !important;
+  box-shadow: inset 0 calc(.5 * var(--u)) 0 rgba(255,255,255,.08), inset 0 calc(-.5 * var(--u)) 0 rgba(255,255,255,.12) !important;
+  font: 400 calc(13 * var(--u))/1 -apple-system, 'SF Pro Text', system-ui, sans-serif; letter-spacing: 0;
+}
+.browser-globe { width: calc(13 * var(--u)); height: calc(13 * var(--u)); opacity: .82; flex: none; }
+.browser-host { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(200 * var(--u)); }
+.browser-reader { position: absolute; right: calc(10.5 * var(--u)); width: calc(11.5 * var(--u)); height: calc(13.5 * var(--u)); opacity: .9; }
+.browser-window.is-light .browser-address { background: rgba(0,0,0,.08); }
+.browser-window.is-light .browser-field { background: rgba(255,255,255,.92); color: #262626; box-shadow: none !important; }
+.browser-page { position: absolute; inset: calc(52 * var(--u)) 0 0; background: var(--tint); }
+.browser-page iframe, .browser-page .capture-slide, .browser-page .embed-placeholder { width: 100%; height: 100%; }
+.browser-page iframe { background: var(--tint); }
+.browser-page .capture-preview, .browser-page .capture-slide img { width: 100%; height: 100%; object-fit: cover; object-position: top; }

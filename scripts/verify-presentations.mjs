@@ -1,12 +1,15 @@
 import puppeteer from 'puppeteer-core';
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+const baseline=JSON.parse(await readFile(new URL('../public/decks/catalog.json',import.meta.url)));
+const publicItems=baseline.items.filter(i=>i.public);
 const browser=await puppeteer.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true,args:['--no-sandbox']});
 const page=await browser.newPage();await page.setViewport({width:1440,height:1000});
 const base='http://127.0.0.1:3100/presentations/';
 const sept='2026-09-09-ahn-byunghak-graduation-project',nov='2026-11-03-yoon-jaeyoung-graduation-project';
 const errors=[];page.on('pageerror',e=>errors.push(e.message));
 try {
- await page.goto(base);await page.waitForSelector('.catalog-row');assert.equal(await page.$$eval('.catalog-row',e=>e.length),7);assert.equal(await page.$$eval('.catalog-entry[href^="https:"]',e=>e.length),5);await page.screenshot({path:'/tmp/presentations-index.png'});
+ await page.goto(base);await page.waitForSelector('.catalog-row');assert.equal(await page.$$eval('.catalog-row',e=>e.length),publicItems.length);assert.equal(await page.$$eval('.catalog-entry[href^="https:"]',e=>e.length),publicItems.filter(i=>i.id.startsWith('legacy-')).length);await page.screenshot({path:'/tmp/presentations-index.png'});
  await page.goto(base+sept+'/');await page.waitForSelector('.presentation .original');await page.waitForFunction(()=>document.querySelector('.original')?.complete);assert.equal(await page.$('.editor'),null);assert.match(await page.$eval('.present-controls',e=>e.textContent),/1 \/ 92/);
  await page.keyboard.press('ArrowRight');await page.waitForSelector('.presentation iframe');assert.match(await page.$eval('.presentation iframe',e=>e.src),/jaeyeonkim.kr/);await page.keyboard.press('ArrowRight');await page.waitForFunction(()=>document.querySelector('.present-controls')?.textContent.includes('3 / 92'));await page.screenshot({path:'/tmp/presentations-public.png'});
  assert.deepEqual(await page.evaluate(async()=>await indexedDB.databases()),[],'public view must not open the draft database');

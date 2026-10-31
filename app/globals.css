@@ -587,3 +587,11 @@ body.catalog-page { background:#000; color:snow; }
 .deck-label form { margin:0; }
 .deck-label form button {padding:0;}
 .catalog-header form {margin:0;}
+
+.catalog-details { margin-top:48px; display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr); gap:24px; }
+.catalog-details label { display:flex; flex-direction:column; gap:12px; min-width:0; }
+.catalog-details input { width:100%; min-width:0; padding:0 0 6px; font:inherit; color:inherit; background:transparent; border:0; border-bottom:1px solid #888; border-radius:0; color-scheme:dark; }
+.catalog-details p, .catalog-details > div { grid-column:1/-1; margin:0; }
+.catalog-details > div { display:flex; gap:24px; }
+.catalog-address { overflow-wrap:anywhere; color:#888; }
+@media(max-width:720px) { .catalog-details {grid-template-columns:1fr;} .catalog-actions {gap:18px;flex-wrap:wrap;} }

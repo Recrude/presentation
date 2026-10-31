@@ -12,6 +12,7 @@ function repository() {
   const calls=[],blobs=new Map();
   const git=async(path,method='GET',body)=>{
     calls.push({path,method,body});
+    if(path.startsWith('contents/public/decks/catalog.json?ref='))return {content:Buffer.from(JSON.stringify(config)).toString('base64')};
     if(path==='git/blobs' && method==='POST') {const b=Buffer.from(body.content,'base64'),sha=createHash('sha1').update(`blob ${b.length}\0`).update(b).digest('hex');blobs.set(sha,b);return {sha};}
     if(path.startsWith('git/blobs/')) {const b=blobs.get(path.split('/').pop());return {encoding:'base64',content:b.toString('base64')};}
     if(path==='git/ref/heads/main')return {object:{sha:'a'.repeat(40)}};
@@ -63,7 +64,7 @@ test('HTTP publisher requires session, same-origin custom header, and keeps GitH
   const payload=String(Date.now()+3600000)+'.'+'c'.repeat(32),sig=createHmac('sha256',Buffer.from(sessionKey,'hex')).update('presentation-editor:'+payload).digest('hex');
   const cookie='__Secure-presentation-edit='+payload+'.'+sig;
   const repo=repository();
-  globalThis.fetch=async(url,options)=>{assert.ok(String(url).startsWith('https://api.github.com/repos/Recrude/presentation/git/'));assert.equal(options.headers.Authorization,'Bearer server-only-test-credential');const data=await repo.git(String(url).split('/presentation/')[1],options.method,options.body?JSON.parse(options.body):undefined);return new Response(JSON.stringify(data));};
+  globalThis.fetch=async(url,options)=>{assert.match(String(url),/^https:\/\/api.github.com\/repos\/Recrude\/presentation\/(git\/|contents\/public\/decks\/catalog.json\?ref=)/);assert.equal(options.headers.Authorization,'Bearer server-only-test-credential');const data=await repo.git(String(url).split('/presentation/')[1],options.method,options.body?JSON.parse(options.body):undefined);return new Response(JSON.stringify(data));};
   async function invoke(headers,body={action:'catalog',config},method='POST') {const res={statusCode:200,headers:{},setHeader(k,v){this.headers[k]=v;},end(value){this.body=JSON.parse(value);}};await handler({method,headers,body},res);return res;}
   const headers={cookie,origin:'https://jaeyeonkim.kr','x-presentation-publish':'1','content-type':'application/json'};
   try {
@@ -73,4 +74,21 @@ test('HTTP publisher requires session, same-origin custom header, and keeps GitH
     assert.equal((await invoke(headers,{},'GET')).statusCode,405);assert.equal(repo.calls.length,0);
     const result=await invoke(headers);assert.equal(result.statusCode,200);assert.equal(result.body.published,true);assert.ok(!JSON.stringify(result.body).includes(process.env.PRESENTATION_GITHUB_TOKEN));assert.match(result.headers['Cache-Control'],/no-store/);
   }finally{globalThis.fetch=realFetch;if(oldAuth===undefined)delete process.env.PRESENTATION_AUTH;else process.env.PRESENTATION_AUTH=oldAuth;if(oldToken===undefined)delete process.env.PRESENTATION_GITHUB_TOKEN;else process.env.PRESENTATION_GITHUB_TOKEN=oldToken;}
+});
+
+test('creation registers only a private unique deck and dynamic publishing keeps its stable path',async()=>{
+ const repo=repository();let current=structuredClone(config);
+ const git=async(path,method,body)=>path.startsWith('contents/public/decks/catalog.json?ref=')?{content:Buffer.from(JSON.stringify(current)).toString('base64')}:repo.git(path,method,body);
+ const item={id:'deck-12345678-abcd-4abc-8abc-123456789abc',public:false,presentation:{title:'New talk',date:'2026-11-03',slug:'new-talk'}};
+ await assert.rejects(()=>executePublish({action:'deck',slug:item.id,slides:[],assets:{}},git,secret),/먼저/);
+ const created=await executePublish({action:'create',item},git,secret);assert.equal(created.config.items[0].public,false);assert.deepEqual(created.config.items.slice(1),config.items);
+ const tree=repo.calls.find(c=>c.path==='git/trees').body.tree;assert.deepEqual(tree.map(t=>t.path),['public/decks/catalog.json']);
+ current=created.config;
+ const upload=await executePublish({action:'upload',slug:item.id,mime:'image/png',hash:hash(png),count:1,index:0,content:png.toString('base64')},git,secret);assert.equal(upload.proof.data.slug,item.id);
+ await assert.rejects(()=>executePublish({action:'create',item:{...item,id:'deck-12345678-abcd-4abc-8abc-123456789abd'}},git,secret),/슬러그/);
+ await assert.rejects(()=>executePublish({action:'catalog',config},git,secret),/새 발표/);
+ const published=await executePublish({action:'deck',slug:item.id,slides:[],assets:{}},git,secret);assert.equal(published.snapshot.slug,item.id);
+ const lastTree=repo.calls.filter(c=>c.path==='git/trees').at(-1).body.tree;assert.deepEqual(lastTree.map(t=>t.path),[`public/decks/${item.id}/deck.json`]);
+ const renamed=structuredClone(current);renamed.items[0].presentation.slug='changed';await executePublish({action:'catalog',config:renamed},git,secret);
+ assert.equal(repo.calls.filter(c=>c.path==='git/trees').at(-1).body.tree.length,1);
 });

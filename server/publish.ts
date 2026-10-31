@@ -1,5 +1,5 @@
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
-import { presentations, validCatalog } from '../app/catalog.ts';
+import { validDeckId, validCatalog, validDetails, type CatalogConfig } from '../app/catalog.ts';
 import { validDeck, type Slide } from '../app/model.ts';
 export const CHUNK_SIZE = 2 * 1024 * 1024;
 const MAX_IMAGE = 40 * 1024 * 1024;
@@ -16,7 +16,7 @@ const sign = (d: ProofData, secret: string): Proof => ({data:d,signature:createH
 function verify(value: any, secret: string, kind: string): ProofData {
   const d = value?.data;
   if (!d || d.kind !== kind || typeof value.signature !== 'string' || !/^[a-f0-9]{64}$/.test(value.signature) ||
-      !presentations.some(p=>p.slug===d.slug) || !/^[a-f0-9]{64}$/.test(d.hash) || !/^[a-f0-9]{40}$/.test(d.sha) || !extensions[d.mime] ||
+      !validDeckId(d.slug) || !/^[a-f0-9]{64}$/.test(d.hash) || !/^[a-f0-9]{40}$/.test(d.sha) || !extensions[d.mime] ||
       !Number.isInteger(d.expires) || d.expires < Date.now()) throw new PublishError('업로드 확인 정보가 만료되었거나 올바르지 않습니다. 다시 게시하세요.');
   const expected=sign(d,secret).signature;
   if (!timingSafeEqual(Buffer.from(value.signature),Buffer.from(expected))) throw new PublishError('업로드 확인 정보가 올바르지 않습니다.');
@@ -34,18 +34,28 @@ function assetPath(d: ProofData) { return `public/decks/${d.slug}/assets/${d.has
 function existingAsset(value: unknown): value is string {
   if (typeof value !== 'string') return false;
   const m=value.match(/^\/presentations\/decks\/([a-z0-9-]+)\/assets\/[a-f0-9]{64}\.(png|jpg|webp|gif|avif)$/);
-  return !!m && presentations.some(p=>p.slug===m[1]);
+  return !!m && validDeckId(m[1]);
+}
+async function currentCatalog(git:GitApi, ref='main'):Promise<CatalogConfig> {
+  const file=await git(`contents/public/decks/catalog.json?ref=${ref}`);
+  let config:unknown;try{config=JSON.parse(Buffer.from(file.content,'base64').toString('utf8'));}catch{throw new PublishError('발표 목록을 읽지 못했습니다.',502);}
+  if(!validCatalog(config))throw new PublishError('발표 목록 형식을 확인하세요.',502);
+  return config;
+}
+async function registered(git:GitApi,id:string) {
+  if(!(await currentCatalog(git)).items.some(i=>i.id===id))throw new PublishError('먼저 발표 목록에서 새 발표를 추가하세요.');
 }
 export async function executePublish(input: any, git: GitApi, secret: string) {
   if (!input || typeof input !== 'object') throw new PublishError('게시 내용을 확인하세요.');
   if (input.action === 'upload') {
     const {slug,mime,content,index,count,hash:expectedHash}=input;
-    if (!presentations.some(p=>p.slug===slug) || !extensions[mime] || !/^[a-f0-9]{64}$/.test(expectedHash) ||
+    if (!validDeckId(slug) || !extensions[mime] || !/^[a-f0-9]{64}$/.test(expectedHash) ||
         !Number.isInteger(count) || count<1 || count>20 || !Number.isInteger(index) || index<0 || index>=count ||
         typeof content!=='string' || content.length>Math.ceil(CHUNK_SIZE/3)*4 || !/^[A-Za-z0-9+/]+={0,2}$/.test(content)) throw new PublishError('이미지 업로드 형식을 확인하세요.');
     const bytes=Buffer.from(content,'base64');
     if (!bytes.length || bytes.length>CHUNK_SIZE || bytes.toString('base64')!==content || (index<count-1 && bytes.length!==CHUNK_SIZE) ||
         (index===0 && !imageHeader(bytes,mime)) || (count===1 && hash(bytes)!==expectedHash)) throw new PublishError('이미지 파일을 확인하세요.');
+    await registered(git,slug);
     const blob=await git('git/blobs','POST',{content,encoding:'base64'});
     if (!/^[a-f0-9]{40}$/.test(blob.sha)) throw new PublishError('이미지를 저장하지 못했습니다.',502);
     return {proof:sign({kind:count===1?'asset':'chunk',slug,hash:expectedHash,mime,sha:blob.sha,index,count,length:bytes.length,expires:Date.now()+3600000},secret)};
@@ -69,13 +79,13 @@ export async function executePublish(input: any, git: GitApi, secret: string) {
     return {proof:sign({...first,kind:'asset',sha:blob.sha,length:bytes.length,index:0,count:1,expires:Date.now()+3600000},secret)};
   }
   const tree: {path:string;mode:string;type:string;content?:string;sha?:string}[]=[];
-  let snapshot: any, message: string;
-  if(input.action==='catalog') {
-    if(!validCatalog(input.config))throw new PublishError('발표 목록 형식을 확인하세요.');
-    tree.push({path:'public/decks/catalog.json',mode:'100644',type:'blob',content:JSON.stringify(input.config,null,2)+'\n'});
-    message='Update presentation order and visibility';
+  let snapshot: any, message: string, publishedConfig:CatalogConfig|undefined;
+  if(input.action==='catalog' || input.action==='create') {
+    if(input.action==='catalog' && !validCatalog(input.config))throw new PublishError('발표 목록 형식을 확인하세요.');
+    if(input.action==='create' && (!validDeckId(input.item?.id) || !input.item.id.startsWith('deck-') || input.item.public!==false || !validDetails(input.item.presentation)))throw new PublishError('새 발표의 제목·날짜·슬러그를 확인하세요.');
+    message=input.action==='create'?'Create presentation':'Update presentation order and visibility';
   } else if(input.action==='deck') {
-    if(!presentations.some(p=>p.slug===input.slug) || !validDeck(input.slides))throw new PublishError('발표 형식을 확인하세요.');
+    if(!validDeckId(input.slug) || !validDeck(input.slides))throw new PublishError('발표 형식을 확인하세요.');
     snapshot={version:1,slug:input.slug,slides:input.slides.filter((s:Slide)=>!s.hidden),assets:Object.create(null),publishedAt:new Date().toISOString()};
     const paths=new Set<string>();
     for(const id of ids(snapshot.slides)) {
@@ -91,14 +101,28 @@ export async function executePublish(input: any, git: GitApi, secret: string) {
     message=`Publish ${input.slug}`;
   } else throw new PublishError('지원하지 않는 게시 요청입니다.');
   // The server chooses every path, parent, tree and branch. Clients cannot write application code or force-push.
+  if(input.action==='deck')await registered(git,input.slug);
   const ref=await git('git/ref/heads/main');
   const parent=ref.object.sha;
+  if(input.action==='catalog' || input.action==='create') {
+    const current=await currentCatalog(git,parent);
+    if(input.action==='create') {
+      const existing=current.items.find(i=>i.id===input.item.id);
+      if(existing)throw new PublishError('이미 추가된 발표입니다. 목록을 다시 불러오세요.',409);
+      publishedConfig={version:1,items:[input.item,...current.items]};
+    }else{
+      publishedConfig=input.config;
+      if(!current.items.every(i=>publishedConfig!.items.some(n=>n.id===i.id)))throw new PublishError('새 발표가 추가되었습니다. 목록을 다시 불러온 뒤 게시하세요.',409);
+    }
+    if(!validCatalog(publishedConfig))throw new PublishError('이미 사용 중이거나 사용할 수 없는 슬러그입니다.');
+    tree.push({path:'public/decks/catalog.json',mode:'100644',type:'blob',content:JSON.stringify(publishedConfig,null,2)+'\n'});
+  }
   const commit=await git(`git/commits/${parent}`);
   const nextTree=await git('git/trees','POST',{base_tree:commit.tree.sha,tree});
-  if(nextTree.sha===commit.tree.sha)return {published:true,unchanged:true,snapshot};
+  if(nextTree.sha===commit.tree.sha)return {published:true,unchanged:true,snapshot,config:publishedConfig};
   const next=await git('git/commits','POST',{message,tree:nextTree.sha,parents:[parent]});
   await git('git/refs/heads/main','PATCH',{sha:next.sha,force:false});
-  return {published:true,commit:next.sha,snapshot};
+  return {published:true,commit:next.sha,snapshot,config:publishedConfig};
 }
 export function githubTransport(token: string): GitApi {
   return async (path,method='GET',body) => {

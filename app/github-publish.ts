@@ -1,4 +1,4 @@
-import { BASE, presentations, validCatalog, type CatalogConfig } from './catalog';
+import { BASE, validDeckId, validCatalog, type CatalogItem, type CatalogConfig } from './catalog';
 import { assetIds, type Snapshot } from './published';
 import { type Slide, validDeck } from './model';
 const CHUNK_SIZE = 2 * 1024 * 1024;
@@ -9,7 +9,7 @@ async function api(body: unknown) {
   return result;
 }
 export async function publishDeck(slug: string, slides: Slide[], assets: Record<string,string>, progress: (s:string)=>void) {
-  if(!presentations.some(p=>p.slug===slug) || !validDeck(slides))throw Error('발표 형식을 확인하세요.');
+  if(!validDeckId(slug) || !validDeck(slides))throw Error('발표 형식을 확인하세요.');
   const visible=slides.filter(s=>!s.hidden), uploaded:Record<string,unknown>={}, dedupe=new Map<string,unknown>();
   const ids=assetIds(visible);
   for(let i=0;i<ids.length;i++) {
@@ -40,3 +40,5 @@ export async function publishCatalog(config: CatalogConfig) {
   if(!validCatalog(config))throw Error('발표 목록 형식을 확인하세요.');
   return api({action:'catalog',config});
 }
+
+export async function createPresentation(item: CatalogItem) { return api({action:"create",item}); }

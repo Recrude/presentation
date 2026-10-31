@@ -12,6 +12,7 @@ try{
   const unauth=await fetch(base+'api/publish/',{method:'POST',headers:{'Content-Type':'application/json','X-Presentation-Publish':'1',Origin:origin},body:JSON.stringify({action:'catalog'})});assert.equal(unauth.status,401);
   await page.type('input[name=password]',password);await Promise.all([page.waitForNavigation({waitUntil:'networkidle2'}),page.click('button[type=submit]')]);
   await page.waitForSelector('.catalog-row');assert.equal(await page.$('input[type=password]'),null);
+  assert.equal(await page.$$eval('.catalog-header button',buttons=>buttons.filter(b=>b.textContent.trim()==='새 발표').length),1);
   const publicConfig=await page.evaluate(async()=>await(await fetch('/presentations/decks/catalog.json')).json());
   assert.deepEqual(await page.$$eval('.catalog-row',rows=>rows.map(r=>({id:r.dataset.presentationId,public:r.querySelector('.catalog-actions button').getAttribute('aria-pressed')==='true'}))),publicConfig.items);
   const publishedResponse=page.waitForResponse(r=>r.url().endsWith('/api/publish/')&&r.request().method()==='POST',{timeout:90000});
@@ -24,8 +25,10 @@ try{
    const content='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6mQAAAAASUVORK5CYII=';
    const bytes=Uint8Array.from(atob(content),c=>c.charCodeAt(0));const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(b=>b.toString(16).padStart(2,'0')).join('');
    const upload=await api({action:'upload',slug:'2026-11-03-yoon-jaeyoung-graduation-project',mime:'image/png',hash,index:0,count:1,content});
-   return {forbidden,invalid,upload,hash};
+   const duplicate=await api({action:'create',item:{id:'deck-'+crypto.randomUUID(),public:false,presentation:{title:'Verification',date:'2026-11-03',slug:'260909-ahn'}}});
+   return {forbidden,invalid,upload,hash,duplicate};
   });
+  assert.equal(checks.duplicate.status,400);assert.match(checks.duplicate.result.error,/슬러그/);
   assert.equal(checks.forbidden.status,403);assert.equal(checks.invalid.status,400);assert.equal(checks.upload.status,200,JSON.stringify(checks.upload.result));assert.equal(checks.upload.result.proof.data.hash,checks.hash);assert.match(checks.upload.result.proof.signature,/^[a-f0-9]{64}$/);
   await page.goto(base+'edit/261103-yun/',{waitUntil:'networkidle2'});await page.waitForSelector('.toolbar');assert.equal(await page.$('input[type=password]'),null);assert.equal(await page.$$eval('.toolbar button',buttons=>buttons.filter(b=>b.textContent.trim()==='게시').length),1);
   assert.deepEqual(githubRequests,[]);await context.close();console.log('PASS '+origin+': password-only one-click catalog publish, unchanged public data, authenticated image upload, invalid requests rejected, no browser GitHub requests or token input');

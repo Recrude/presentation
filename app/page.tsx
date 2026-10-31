@@ -18,7 +18,8 @@ import {
   type Photo,
   type Typography,
 } from './model';
-import { fontData, fontsAvailable, importFontFiles } from './fonts';
+import { fontData, missingFonts, importFontFiles } from './fonts';
+import { fontsIn } from './composite';
 import { readDeck, saveDeck, readImage, readImages, saveImages } from './storage';
 import { SlideView, sequenceSteps } from './slide-view';
 import { PresentationStage } from './presentation-stage';
@@ -111,7 +112,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     importMode = useRef<'gallery' | 'folio' | 'sequence'>('gallery'),
     clipRef = useRef<HTMLInputElement>(null),
     fontFileRef = useRef<HTMLInputElement>(null);
-  const [fontState, setFontState] = useState<'' | 'ready' | 'missing'>('');
+  const [fontsMissing, setFontsMissing] = useState<string[]>([]);
   const [shownId, setShownId] = useState('');
   const [fileOver, setFileOver] = useState(false);
   stateRef.current = slides;
@@ -472,16 +473,17 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   function finish(id: string) {
     if (advanceRef.current.id === id) setPosition(p => Math.min(p + 1, advanceRef.current.length - 1));
   }
-  const hasText = slides.some(s => s.kind === 'text');
+  const textFonts = (deck: Slide[]) => [...new Set(deck.filter(s => s.kind === 'text').flatMap(s => fontsIn(s.text || '')))];
+  const usedFonts = textFonts(slides).sort().join(',');
   useEffect(() => {
-    if (publicView || !hasText) return;
+    if (publicView || !usedFonts) return;
     let cancelled = false;
-    void fontsAvailable().then(ok => { if (!cancelled) setFontState(ok ? 'ready' : 'missing'); });
+    void missingFonts(usedFonts.split(',')).then(missing => { if (!cancelled) setFontsMissing(missing); });
     return () => { cancelled = true; };
-  }, [publicView, hasText]);
+  }, [publicView, usedFonts]);
   async function chooseFontFiles(files: File[]) {
     if (!files.length) return;
-    try { await importFontFiles(files); setFontState(await fontsAvailable() ? 'ready' : 'missing'); setStatus('글꼴을 이 브라우저에 보관했습니다'); }
+    try { await importFontFiles(files); setFontsMissing(usedFonts ? await missingFonts(usedFonts.split(',')) : []); setStatus('글꼴을 이 브라우저에 보관했습니다'); }
     catch (e) { setStatus(e instanceof Error ? e.message : '글꼴 파일을 확인하세요.'); }
     finally { if (fontFileRef.current) fontFileRef.current.value = ''; }
   }
@@ -693,7 +695,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     const texts = deck.filter(s => !s.hidden && s.kind === 'text');
     if (!texts.length) return { deck, assets: current };
     setStatus('텍스트 윤곽 만드는 중');
-    const data = await fontData();
+    const data = await fontData(textFonts(texts));
     const { textSvg } = await import('./text-svg');
     const entries: [string, Blob][] = [], urls: Record<string, string> = {}, ids: Record<string, string> = {};
     for (const slide of texts) {
@@ -1084,12 +1086,12 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                     <label className="check"><input type="checkbox" checked={active.transition === 'dissolve'} onChange={e => patch(active.id, { transition: e.target.checked ? 'dissolve' : undefined })}/>디졸브</label>
                   </div>
                   {active.kind === 'text' && <>
-                    <textarea className="text-editor" aria-label="텍스트" placeholder="빈 줄로 문단을 나눕니다" value={active.text || ''} onChange={e => patch(active.id, { text: e.target.value })}/>
+                    <textarea className="text-editor" aria-label="텍스트" placeholder="빈 줄로 문단을 나눕니다 · **굵게**" value={active.text || ''} onChange={e => patch(active.id, { text: e.target.value })}/>
                     <div className="number-fields">
                       {typographyFields.map(([key, label, min, max, step]) => <NumberField key={`${active.id}-${key}`} label={label} value={(active.typo || defaultTypography)[key]} min={min} max={max} step={step}
                         onChange={v => { const typo = stateRef.current.find(s => s.id === active.id)?.typo || defaultTypography; if (v !== undefined) patch(active.id, { typo: { ...typo, [key]: v } }); }}/>)}
                     </div>
-                    {fontState === 'missing' && <div className="row"><span className="note">합성글꼴을 찾지 못했습니다</span><button disabled={busy} onClick={() => fontFileRef.current?.click()}>글꼴 파일 지정</button></div>}
+                    {fontsMissing.some(f => fontsIn(active.text || '').includes(f)) && <div className="row"><span className="note">글꼴 없음 · {fontsMissing.join(', ')}</span><button disabled={busy} onClick={() => fontFileRef.current?.click()}>글꼴 파일 지정</button></div>}
                   </>}
                   {(active.kind === 'sequence' || active.kind === 'clip') && <div className="row number-fields">
                     {active.kind === 'sequence' && <NumberField key={`${active.id}-interval`} label="간격 ms" value={active.interval} min={40} max={10000} step={10} onChange={v => { if (v !== undefined) patch(active.id, { interval: Math.round(v) }); }}/>}

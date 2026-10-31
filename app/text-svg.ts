@@ -4,15 +4,13 @@ import { flushSync } from 'react-dom';
 import opentype, { type Font } from 'opentype.js';
 import type { Slide } from './model';
 import { TextBody } from './text-slide';
-import { runStyles, styleOf, type FontKey } from './composite';
+import { FONTS, fontsIn, runStyles, styleSample } from './composite';
 import type { FontData } from './fonts';
 // The browser lays out the text exactly as the editor shows it (keep-all, tracking, composite runs).
 // Each glyph is then drawn from the font file at the position the browser gave it, so the public
 // SVG matches the editor without shipping the font.
 const parsed = new WeakMap<ArrayBuffer, Font>();
 const font = (data: ArrayBuffer) => parsed.get(data) || parsed.set(data, opentype.parse(data)).get(data)!;
-// One character per run style, so each style's baseline can be measured on its own line.
-export const styleSample = (style: number) => ['가', 'A', '×', '一'].find(c => styleOf(c.codePointAt(0)!) === style)!;
 const n = (v: number) => String(Math.round(v * 100) / 100);
 function mount(host: HTMLElement, slide: Slide) {
   const root = createRoot(host);
@@ -20,7 +18,11 @@ function mount(host: HTMLElement, slide: Slide) {
   return root;
 }
 export async function textSvg(slide: Slide, data: FontData): Promise<{ blob: Blob; missing: string[] }> {
-  const fonts: Record<FontKey, Font> = { hangul: font(data.hangul), latin: font(data.latin) };
+  const fonts: Record<string, Font> = {};
+  for (const postscript of fontsIn(slide.text || '')) {
+    if (!data[postscript]) throw Error(`글꼴 파일을 지정하세요 · ${postscript}`);
+    fonts[postscript] = font(data[postscript]);
+  }
   const host = document.createElement('div');
   host.style.cssText = 'position:fixed;left:-30000px;top:0;width:1920px;height:1080px;visibility:hidden;pointer-events:none';
   document.body.append(host);
@@ -28,7 +30,7 @@ export async function textSvg(slide: Slide, data: FontData): Promise<{ blob: Blo
   const probeHost = document.createElement('div');
   probeHost.style.cssText = host.style.cssText;
   document.body.append(probeHost);
-  const probeRoot = mount(probeHost, { ...slide, text: runStyles.map((_, i) => styleSample(i)).join('\n\n') });
+  const probeRoot = mount(probeHost, { ...slide, text: runStyles.map((s, i) => s.bold ? `**${styleSample(i)}**` : styleSample(i)).join('\n\n') });
   try {
     await document.fonts.ready;
     const origin = host.getBoundingClientRect(), range = document.createRange();
@@ -46,7 +48,7 @@ export async function textSvg(slide: Slide, data: FontData): Promise<{ blob: Blo
     }
     const defs = new Map<string, string>(), uses: string[] = [], missing: string[] = [];
     for (const span of host.querySelectorAll<HTMLElement>('[data-run]')) {
-      const style = Number(span.dataset.run), face = fonts[runStyles[style].font], key = runStyles[style].font[0];
+      const style = Number(span.dataset.run), { font: postscript, hscale } = runStyles[style], face = fonts[postscript], key = `f${FONTS.indexOf(postscript)}g`;
       const size = parseFloat(getComputedStyle(span).fontSize), node = span.firstChild as Text;
       let offset = 0;
       for (const char of node.data) {
@@ -58,7 +60,8 @@ export async function textSvg(slide: Slide, data: FontData): Promise<{ blob: Blo
         const id = key + glyph.index;
         if (!defs.has(id)) defs.set(id, glyph.getPath(0, 0, face.unitsPerEm).toPathData(1));
         if (!defs.get(id)) continue;
-        uses.push(`<use href="#${id}" transform="translate(${n(rect.left - origin.left)} ${n(rect.top - origin.top + ascent.get(style)!)}) scale(${(size / face.unitsPerEm).toFixed(6)})"/>`);
+        const k = size / face.unitsPerEm, scale = hscale === 1 ? k.toFixed(6) : `${(k * hscale).toFixed(6)} ${k.toFixed(6)}`;
+        uses.push(`<use href="#${id}" transform="translate(${n(rect.left - origin.left)} ${n(rect.top - origin.top + ascent.get(style)!)}) scale(${scale})"/>`);
       }
     }
     const paths = [...defs].filter(([, d]) => d).map(([id, d]) => `<path id="${id}" d="${d}"/>`).join('');

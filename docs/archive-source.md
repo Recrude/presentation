@@ -9,6 +9,8 @@
 
 # 2026-01-15 코드클럽 발표 「바코드: 현실과 디지털 매체 사이를 이어주기」
 
+목록 제목은 영문 「Bar-Code: Connecting Reality and Digital Media」, 장소는 Code Club이다.
+
 - 원본: 로컬 `08 코드클럽/01 동아리 주간/[코드클럽]김재연_발표장표.pdf`(29쪽, 1920×1080pt, InDesign 2026-01-08 출력). 웹 저장소 밖에 둔다.
 - 변환: `scripts/pdf-deck.py`로 만들었다.
   - 쪽마다 조판면(folio) 장표 하나가 된다. 3840×2160 webp q80이고, 전체 2.4MB다.

@@ -46,12 +46,13 @@ export function CatalogPage({ editing }: { editing: boolean }) {
   function openDetails(item?:CatalogItem) {
     const p=item?deckEntry(item):undefined;
     const now=new Date(),today=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
-    setForm({id:item?.id||null,details:{title:p?.title||'',date:p?.date.replaceAll('.','-')||today,slug:p?.shortSlug||''}});setFormError('');
+    setForm({id:item?.id||null,details:{title:p?.title||'',date:p?.date.replaceAll('.','-')||today,slug:p?.shortSlug||'',venue:p?.venue||''}});setFormError('');
   }
   async function submitDetails(e:React.FormEvent) {
     e.preventDefault();if(!form || busy)return;
     const id=form.id||`deck-${crypto.randomUUID()}`;
-    const details={...form.details,title:form.details.title.trim(),slug:form.details.slug.trim().toLowerCase()};
+    const venue=form.details.venue?.trim();
+    const details={title:form.details.title.trim(),date:form.details.date,slug:form.details.slug.trim().toLowerCase(),...(venue?{venue}:{})};
     const item:CatalogItem={id,public:form.id?items.find(i=>i.id===id)!.public:false,presentation:details};
     const next=form.id?items.map(i=>i.id===id?item:i):[item,...items];
     if(!validCatalog({version:1,items:next})){setFormError('제목·날짜를 확인하세요. 슬러그는 중복되지 않는 영문 소문자·숫자·하이픈으로 입력하세요.');return;}
@@ -73,6 +74,7 @@ export function CatalogPage({ editing }: { editing: boolean }) {
     {form && <form className="catalog-details" onSubmit={submitDetails}>
       <label>제목<input name="title" value={form.details.title} required maxLength={200} autoFocus disabled={busy} onChange={e=>setForm({...form,details:{...form.details,title:e.target.value}})}/></label>
       <label>날짜<input name="date" type="date" value={form.details.date} required disabled={busy} onChange={e=>setForm({...form,details:{...form.details,date:e.target.value}})}/></label>
+      <label>장소<input name="venue" value={form.details.venue||''} maxLength={80} placeholder="HIVCD" disabled={busy} onChange={e=>setForm({...form,details:{...form.details,venue:e.target.value}})}/></label>
       <label>슬러그<input name="slug" value={form.details.slug} required maxLength={64} pattern="[a-z0-9]+(-[a-z0-9]+)*" autoCapitalize="none" spellCheck={false} disabled={busy} onChange={e=>setForm({...form,details:{...form.details,slug:e.target.value.toLowerCase()}})}/></label>
       <p className="catalog-address">jaeyeonkim.kr/presentations/{form.details.slug || 'slug'}/</p>
       {formError && <p role="alert">{formError}</p>}
@@ -92,7 +94,7 @@ export function CatalogPage({ editing }: { editing: boolean }) {
           {editing && <button className="catalog-handle" draggable={!busy} disabled={busy} aria-label={`${entry.title} 순서 끌기`} onDragStart={e => {setDrag(item.id);e.dataTransfer.setData('text/plain',item.id);e.dataTransfer.effectAllowed='move';}} onDragEnd={() => {setDrag(null);setOver(null);}}>↕</button>}
           {/* Date on a tab column, the title as the link, like the News list on jaeyeonkim.kr. */}
           <span className="catalog-entry">
-            <time>{entry.date}</time><a href={editing && entry.editHref ? entry.editHref : entry.href}>{entry.title}</a>
+            <time>{entry.date}</time><a href={editing && entry.editHref ? entry.editHref : entry.href}>{entry.title}</a><span className="catalog-venue">{entry.venue}</span>
           </span>
           {editing && <div className="catalog-actions">
             <button disabled={busy} aria-pressed={item.public} aria-label={`${entry.title} 공개 여부`} onClick={() => change(items.map(i => i.id === item.id ? {...i,public:!i.public} : i))}>{item.public ? '공개' : '비공개'}</button>

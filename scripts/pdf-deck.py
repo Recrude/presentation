@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """PDF 발표 장표 → 공개 발표(public/decks/<id>/)와 목록 항목.
 
-    python3 scripts/pdf-deck.py <발표.pdf> --title "제목" --date 2026-01-15 --slug 260115-codeclub [--public]
+    python3 scripts/pdf-deck.py <발표.pdf> --title "Title" --date 2026-01-15 --slug 260115-codeclub [--venue "Code Club"] [--public]
         [--id deck-…] [--after <목록 항목 id>] [--mask 14:1025,733;1137,743;1137,758;1025,748]
 
 - 쪽마다 한 장의 '조판면'(folio) 장표가 된다. 가로 3840px(2x) webp q80, 세로는 쪽 비율.
@@ -21,6 +21,7 @@ ap.add_argument('pdf', type=Path)
 ap.add_argument('--title', required=True)
 ap.add_argument('--date', required=True)
 ap.add_argument('--slug', required=True)
+ap.add_argument('--venue')
 ap.add_argument('--id', default=f'deck-{uuid.uuid4()}')
 ap.add_argument('--public', action='store_true')
 ap.add_argument('--after')
@@ -87,7 +88,7 @@ snapshot = {'version': 1, 'slug': a.id, 'slides': slides, 'assets': assets, 'pub
 
 catalog_path = WEB / 'public' / 'decks' / 'catalog.json'
 catalog = json.loads(catalog_path.read_text())
-item = {'id': a.id, 'public': a.public, 'presentation': {'title': a.title, 'date': a.date, 'slug': a.slug}}
+item = {'id': a.id, 'public': a.public, 'presentation': {'title': a.title, 'date': a.date, 'slug': a.slug, **({'venue': a.venue.strip()} if a.venue else {})}}
 existing = next((i for i in catalog['items'] if i['id'] == a.id), None)
 if existing: existing['presentation'] = item['presentation']; existing['public'] = a.public
 else:

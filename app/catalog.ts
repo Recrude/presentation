@@ -1,16 +1,17 @@
 export const BASE = '/presentations/';
 export const LEGACY_SLUG = '2026-09-09-ahn-byunghak-graduation-project';
+// Titles are in English like jaeyeonkim.kr; venue is where the talk was given.
 export const presentations = [
-  { slug: '2026-11-03-yoon-jaeyoung-graduation-project', shortSlug: '261103-yun', date: '2026.11.03', title: '윤재영 교수님 졸업프로젝트 발표' },
-  { slug: LEGACY_SLUG, shortSlug: '260909-ahn', date: '2026.09.09', title: '안병학 교수님 졸업프로젝트 발표' },
+  { slug: '2026-11-03-yoon-jaeyoung-graduation-project', shortSlug: '261103-yun', date: '2026.11.03', title: 'Talk at Prof. Yoon Jaeyoung’s Graduation Project Class', venue: 'HIVCD' },
+  { slug: LEGACY_SLUG, shortSlug: '260909-ahn', date: '2026.09.09', title: 'Talk at Prof. Ahn Byunghak’s Graduation Project Class', venue: 'HIVCD' },
 ];
 // Dates as each deck states it was presented (cover or first slide).
 export const olderPresentations = [
-  ['New Media Design 01', 'https://jaeyeonkim.kr/presentation-for-newmediadesign/index.html#1', '2022.10.14'],
-  ['New Media Design 02', 'https://jaeyeonkim.kr/presentation/nmd02/index.html#1', '2022.10.28'],
-  ['Physical Workshop and Design Studio (2)', 'https://jaeyeonkim.kr/presentation/mph01/index.html#1', '2022.11.03'],
-  ['English for Art Major · Mid BEM art', 'https://jaeyeonkim.kr/presentation/eng01/index.html#1', '2022.11.07'],
-  ['English for Art Major · Writing as Therapy', 'https://docs.google.com/presentation/d/1r25TtjRkMtNOQz7VPuf3iXk6AXaZijrb_6WHgjL9T-o/preview', '2022.12.12'],
+  ['New Media Design 01', 'https://jaeyeonkim.kr/presentation-for-newmediadesign/index.html#1', '2022.10.14', 'HIVCD'],
+  ['New Media Design 02', 'https://jaeyeonkim.kr/presentation/nmd02/index.html#1', '2022.10.28', 'HIVCD'],
+  ['Physical Workshop and Design Studio (2)', 'https://jaeyeonkim.kr/presentation/mph01/index.html#1', '2022.11.03', 'HIVCD'],
+  ['English for Art Major · Mid BEM art', 'https://jaeyeonkim.kr/presentation/eng01/index.html#1', '2022.11.07', 'HIVCD'],
+  ['English for Art Major · Writing as Therapy', 'https://docs.google.com/presentation/d/1r25TtjRkMtNOQz7VPuf3iXk6AXaZijrb_6WHgjL9T-o/preview', '2022.12.12', 'HIVCD'],
 ];
 export function localAsset(path: string) { return path.startsWith('/') && !path.startsWith(BASE) ? BASE + path.slice(1) : path; }
 export function presentationUrl(slug: string, editing = false, shortSlug?: string) {
@@ -18,10 +19,10 @@ export function presentationUrl(slug: string, editing = false, shortSlug?: strin
   return `${BASE}${editing ? 'edit/' : ''}${shortSlug || entry?.shortSlug || slug}/`;
 }
 export const catalogEntries = [
-  ...presentations.map(p => ({ id: p.slug, title: p.title, date: p.date, href: presentationUrl(p.slug), editHref: presentationUrl(p.slug, true) })),
-  ...olderPresentations.map(([title, href, date], i) => ({ id: `legacy-${i + 1}`, title, date, href, editHref: '' })),
+  ...presentations.map(p => ({ id: p.slug, title: p.title, date: p.date, venue: p.venue, href: presentationUrl(p.slug), editHref: presentationUrl(p.slug, true) })),
+  ...olderPresentations.map(([title, href, date, venue], i) => ({ id: `legacy-${i + 1}`, title, date, venue, href, editHref: '' })),
 ];
-export type PresentationDetails = { title: string; date: string; slug: string };
+export type PresentationDetails = { title: string; date: string; slug: string; venue?: string };
 export type CatalogItem = { id: string; public: boolean; presentation?: PresentationDetails };
 export type CatalogConfig = { version: 1; items: CatalogItem[] };
 export const draftKey = 'presentation-catalog-draft-v1';
@@ -33,18 +34,19 @@ export function validDetails(v: unknown): v is PresentationDetails {
   const d=v as PresentationDetails;
   if(!d || typeof d.title!=='string' || !d.title.trim() || d.title!==d.title.trim() || d.title.length>200 ||
     typeof d.slug!=='string' || d.slug.length>64 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(d.slug) || reserved.has(d.slug) ||
-    typeof d.date!=='string' || !/^\d{4}-\d{2}-\d{2}$/.test(d.date))return false;
+    typeof d.date!=='string' || !/^\d{4}-\d{2}-\d{2}$/.test(d.date) ||
+    d.venue!==undefined && (typeof d.venue!=='string' || !d.venue.trim() || d.venue!==d.venue.trim() || d.venue.length>80))return false;
   const date=new Date(d.date+'T00:00:00Z');return Number.isFinite(date.getTime()) && date.toISOString().slice(0,10)===d.date;
 }
 export function deckEntry(item: CatalogItem) {
   if(!validDeckId(item.id))return undefined;
   const original=presentations.find(p=>p.slug===item.id);
   const d=item.presentation;
-  return d ? {slug:item.id,shortSlug:d.slug,title:d.title,date:d.date.replaceAll('-','.')} : original;
+  return d ? {slug:item.id,shortSlug:d.slug,title:d.title,date:d.date.replaceAll('-','.'),venue:d.venue||''} : original;
 }
 export function catalogEntry(item: CatalogItem) {
   const p=deckEntry(item);
-  return p ? {id:item.id,title:p.title,date:p.date,href:presentationUrl(p.slug,false,p.shortSlug),editHref:presentationUrl(p.slug,true,p.shortSlug)} : catalogEntries.find(e=>e.id===item.id)!;
+  return p ? {id:item.id,title:p.title,date:p.date,venue:p.venue,href:presentationUrl(p.slug,false,p.shortSlug),editHref:presentationUrl(p.slug,true,p.shortSlug)} : catalogEntries.find(e=>e.id===item.id)!;
 }
 export function validCatalog(value: unknown): value is CatalogConfig {
   const v=value as CatalogConfig;

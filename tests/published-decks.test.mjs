@@ -26,9 +26,18 @@ test('every published deck in the repository reads in the viewer and has its fil
   }
 });
 
-test('the 코드클럽 talk is listed publicly after the 9/9 talk', () => {
+test('the Code Club talk is listed publicly after the 9/9 talk', () => {
   const ids = catalog.items.map(i => i.id), codeclub = catalog.items.find(i => i.presentation?.slug === '260115-codeclub');
-  assert.deepEqual(codeclub?.presentation, { title: '바코드: 현실과 디지털 매체 사이를 이어주기', date: '2026-01-15', slug: '260115-codeclub' });
+  assert.deepEqual(codeclub?.presentation, { title: 'Bar-Code: Connecting Reality and Digital Media', date: '2026-01-15', slug: '260115-codeclub', venue: 'Code Club' });
   assert.equal(codeclub.public, true);
   assert.equal(ids.indexOf(codeclub.id), ids.indexOf('2026-09-09-ahn-byunghak-graduation-project') + 1);
+});
+
+test('talks show where they were given; the venue is optional, trimmed and short', async () => {
+  const { validDetails, catalogEntries } = await import('../app/catalog.ts');
+  assert.ok(catalogEntries.every(e => e.venue === 'HIVCD'), 'school talks');
+  assert.ok(catalogEntries.every(e => e.date), 'every older talk has a date');
+  const base = { title: 'T', date: '2026-01-15', slug: 't' };
+  assert.ok(validDetails(base) && validDetails({ ...base, venue: 'Code Club' }));
+  for (const venue of ['', ' Code Club', 'x'.repeat(81), 3]) assert.equal(validDetails({ ...base, venue }), false, JSON.stringify(venue));
 });

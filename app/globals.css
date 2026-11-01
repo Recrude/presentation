@@ -573,7 +573,6 @@ body.catalog-page { background:#000; color:snow; }
 @media (max-width:600px) { .catalog { font-size:18px; } }
 .catalog a { text-underline-offset:auto; }
 .catalog-header > a { text-decoration:none; }
-.catalog-label, .catalog .presentation-list:not(.managing) { max-width:calc(600px - 1em); }
 .catalog-label { margin:1.25em 0 0; padding-bottom:.3333em; text-indent:2em; }
 @keyframes catalog-blink { 50% { color:#0a0a0a; background-color:white; letter-spacing:-.1px; } }
 .catalog a:hover { animation:catalog-blink .8s step-start infinite !important; border-radius:2px !important; text-decoration:underline; }
@@ -589,6 +588,18 @@ body.catalog-page { background:#000; color:snow; }
 .catalog-entry { display:flex; }
 .catalog-entry time { flex:none; width:6em; font-variant-numeric:tabular-nums; }
 .catalog-entry a { min-width:0; }
+.catalog-venue { flex:none; padding-left:1em; white-space:nowrap; }
+/* Public list: letter, date, title and venue line up in columns like tab stops. A title stays on one
+   line while there is room and wraps in its own column only on narrow screens. */
+.catalog .presentation-list:not(.managing) { display:grid; grid-template-columns:2em 6em minmax(0, max-content) max-content; padding-left:0; list-style:none; counter-reset:talk; }
+.presentation-list:not(.managing) .catalog-row { display:grid; grid-column:1 / -1; grid-template-columns:subgrid; counter-increment:talk; }
+.presentation-list:not(.managing) .catalog-row::before { content:counter(talk, lower-alpha) "."; text-align:right; padding-right:.25em; }
+.presentation-list:not(.managing) .catalog-entry { display:contents; }
+.presentation-list:not(.managing) .catalog-venue { padding-left:2em; }
+@media (max-width:600px) {
+  .catalog .presentation-list:not(.managing) { grid-template-columns:2em 6em minmax(0, 1fr); }
+  .presentation-list:not(.managing) .catalog-venue { grid-column:3; padding-left:0; }
+}
 .catalog .managing { margin-top:2em; padding-left:0; list-style:none; }
 .managing .catalog-row { display:grid; grid-template-columns:24px minmax(0,1fr) auto; column-gap:24px; align-items:baseline; padding:12px 0; margin-bottom:0; }
 .catalog-handle { cursor:grab; }
@@ -610,7 +621,7 @@ body.catalog-page { background:#000; color:snow; }
 .deck-label form button {padding:0;}
 .catalog-header form {margin:0;}
 
-.catalog-details { margin-top:48px; display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr); gap:24px; }
+.catalog-details { margin-top:48px; display:grid; grid-template-columns:minmax(0,2fr) repeat(3, minmax(0,1fr)); gap:24px; }
 .catalog-details label { display:flex; flex-direction:column; gap:12px; min-width:0; }
 .catalog-details input { width:100%; min-width:0; padding:0 0 6px; font:inherit; color:inherit; background:transparent; border:0; border-bottom:1px solid #888; border-radius:0; color-scheme:dark; }
 .catalog-details p, .catalog-details > div { grid-column:1/-1; margin:0; }

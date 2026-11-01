@@ -28,6 +28,9 @@ export type Slide = {
   perFrame?: number;
   /** Web: show the page inside a Safari-like window. */
   frame?: 'browser';
+  /** Web: Safari's toolbar color for the page in the light and dark color schemes (read when captured). */
+  tint?: string;
+  tintDark?: string;
   end?: 'loop' | 'hold' | 'next';
   advance?: number;
   transition?: 'dissolve';
@@ -174,7 +177,8 @@ export function validDeck(value: unknown): value is Slide[] {
         (s.advance !== undefined && !within(s.advance, 0.1, 3600)) ||
         (s.transition !== undefined && s.transition !== 'dissolve') ||
         (s.previewId !== undefined && typeof s.previewId !== 'string') ||
-        (s.frame !== undefined && (s.frame !== 'browser' || s.kind !== 'web'))
+        (s.frame !== undefined && (s.frame !== 'browser' || s.kind !== 'web')) ||
+        [s.tint, s.tintDark].some(t => t !== undefined && (s.kind !== 'web' || typeof t !== 'string' || !/^#[0-9a-f]{6}$/.test(t)))
       )
         return false;
       if (s.kind === 'image')

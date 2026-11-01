@@ -76,3 +76,9 @@ test('판형 keeps the 1920-wide sheet and changes only its height', () => {
   assert.equal(boxes[0].y + boxes[0].height, 1440 - 64);
   assert.deepEqual(layoutPhotos([{ width: 1600, height: 900 }]), layoutPhotos([{ width: 1600, height: 900 }], 1080));
 });
+
+test('Safari toolbar colors belong to web slides and are #rrggbb', () => {
+  assert.ok(validDeck([{ ...web, tint: '#ffffff', tintDark: '#0e1012' }]));
+  for (const bad of [{ ...web, tint: 'white' }, { ...web, tint: '#FFFFFF' }, { ...web, tintDark: '#fff' }, { ...text, tint: '#ffffff' }, { ...web, tint: 16777215 }])
+    assert.equal(validDeck([bad]), false, JSON.stringify(bad).slice(0, 80));
+});

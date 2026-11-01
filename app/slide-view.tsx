@@ -209,33 +209,50 @@ function Clip({ slide, src, poster, onFinish }: { slide: Slide; src: string; pos
 }
 
 function browserFrame(slide: Slide, live: boolean, preview: string, content: ReactNode) {
-  return slide.kind === 'web' && slide.frame === 'browser' ? <BrowserFrame src={slide.src} live={live} preview={preview}>{content}</BrowserFrame> : content;
+  return slide.kind === 'web' && slide.frame === 'browser' ? <BrowserFrame slide={slide} live={live} preview={preview}>{content}</BrowserFrame> : content;
 }
-// Safari (macOS 26) window, measured from a 2x window capture: 25pt corners, 52pt toolbar,
+// An embedded page follows the viewer's color scheme, so the toolbar does too.
+function useDarkScheme() {
+  const [dark, setDark] = useState(() => matchMedia('(prefers-color-scheme: dark)').matches);
+  useEffect(() => {
+    const query = matchMedia('(prefers-color-scheme: dark)'), update = () => setDark(query.matches);
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+  return dark;
+}
+// Safari (macOS 26) window, measured from 2x window captures: 25pt corners, 52pt toolbar,
 // 14pt traffic lights, 279×36pt address field with 13pt text. Units are pt on the 1920 sheet;
 // a live page uses CSS px so the chrome keeps Safari's size relative to the page inside.
-function BrowserFrame({ src, live, preview, children }: { src: string; live: boolean; preview: string; children: ReactNode }) {
-  let host = src;
-  try { host = new URL(src).hostname.replace(/^www\./, ''); } catch {}
-  // Safari tints the toolbar with the page colour; the capture's top edge stands in for it.
-  const [tint, setTint] = useState('#000000');
+// The toolbar takes the page's color as Safari does (read by the capture, see api/capture.mjs).
+function BrowserFrame({ slide, live, preview, children }: { slide: Slide; live: boolean; preview: string; children: ReactNode }) {
+  let host = slide.src;
+  try { host = new URL(slide.src).hostname.replace(/^www\./, ''); } catch {}
+  const dark = useDarkScheme(), stored = (dark ? slide.tintDark : undefined) || slide.tint;
+  // Without a color from the capture (an image picked by hand, older slides) the capture's top edge
+  // stands in when it is one solid color.
+  const [sampled, setSampled] = useState('');
   useEffect(() => {
-    if (!preview) return;
+    setSampled('');
+    if (stored || !preview) return;
     let cancelled = false;
     const image = new Image();
     image.src = preview;
     void image.decode().then(() => {
-      const canvas = document.createElement('canvas');
-      canvas.width = canvas.height = 1;
+      const width = image.naturalWidth, canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = 1;
       const context = canvas.getContext('2d', { willReadFrequently: true });
       if (!context || cancelled) return;
-      context.drawImage(image, image.naturalWidth / 2, 1, 1, 1, 0, 0, 1, 1);
-      const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
-      setTint(`rgb(${r} ${g} ${b})`);
+      context.drawImage(image, 0, 0, width, 1, 0, 0, width, 1);
+      const row = context.getImageData(0, 0, width, 1).data;
+      const points = [0, 1, 2, 3, 4].map(i => { const x = Math.round((width - 1) * i / 4) * 4; return [row[x], row[x + 1], row[x + 2]]; });
+      if (points.some(p => p.some((v, c) => Math.abs(v - points[0][c]) > 8))) return;
+      setSampled('#' + [0, 1, 2].map(c => Math.round(points.reduce((sum, p) => sum + p[c], 0) / 5).toString(16).padStart(2, '0')).join(''));
     }).catch(() => {});
     return () => { cancelled = true; };
-  }, [preview]);
-  const channels = tint.match(/\d+/g)?.map(Number) || [0, 0, 0];
+  }, [stored, preview]);
+  const tint = stored || sampled || '#000000';
+  const channels = [1, 3, 5].map(i => parseInt(tint.slice(i, i + 2), 16));
   const light = (0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]) / 255 > 0.55;
   return <div className={`browser-stage${live ? ' is-live' : ''}`}>
     <div className={`browser-window${light ? ' is-light' : ''}`} style={{ '--tint': tint } as CSSProperties}>

@@ -530,20 +530,25 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   function addLink(raw = url, name = title) {
     try {
       const parsed = embed(raw);
-      insert([
-        {
-          id: crypto.randomUUID(),
-          title: name.trim() || new URL(parsed.src).hostname,
-          ...parsed,
-          ...(parsed.kind === 'web' ? { frame: 'browser' as const } : {}),
-          hidden: false,
-          autoplay: true,
-          controls: true,
-          muted: true,
-        },
-      ]);
+      const slide: Slide = {
+        id: crypto.randomUUID(),
+        title: name.trim() || new URL(parsed.src).hostname,
+        ...parsed,
+        ...(parsed.kind === 'web' ? { frame: 'browser' as const } : {}),
+        hidden: false,
+        autoplay: true,
+        controls: true,
+        muted: true,
+      };
+      insert([slide]);
       setUrl('');
       setTitle('');
+      // A new web page is captured right away: the preview for thumbnails and PDF, and Safari's toolbar color.
+      if (slide.kind === 'web') {
+        setStatus(`${slide.title} · 캡처 중`);
+        preparePreview(slide).then(() => setStatus('캡처 완료 · 저장되지 않음'),
+          e => setStatus(`${slide.title} · ${e instanceof Error ? e.message : '캡처 실패'} · 캡처 이미지를 지정할 수 있습니다`));
+      }
     } catch (e) {
       setStatus(e instanceof Error ? e.message : '주소를 확인하세요.');
     }
@@ -770,19 +775,24 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     } catch {}
   }
   async function preparePreview(slide: Slide, file?: File) {
-    let blob: Blob;
+    let blob: Blob, toolbar: Pick<Slide, 'tint' | 'tintDark'> = {};
     if (file) blob = file;
     else {
       const response = await fetch(BASE + 'api/capture?url=' + encodeURIComponent(slide.src), { signal: AbortSignal.timeout(55000) });
       if (!response.ok) throw Error(await response.text());
       blob = await response.blob();
+      // Safari's toolbar color for this page; a capture image picked by hand keeps the color already read.
+      const color = (name: string) => { const value = response.headers.get(name); return value && /^#[0-9a-f]{6}$/.test(value) ? value : undefined; };
+      const light = color('X-Toolbar-Color'), dark = color('X-Toolbar-Color-Dark');
+      if (light) toolbar = { tint: light, tintDark: dark !== light ? dark : undefined };
     }
     if (!blob.type.startsWith('image/') || blob.size > 40 * 1024 * 1024) throw Error('40MB 이하의 캡처 이미지를 선택하세요.');
     const src = URL.createObjectURL(blob), id = crypto.randomUUID();
     try {
       const image = new Image(); image.src = src; await image.decode();
       await saveImages([[id, blob]]);
-      objectUrls.current.set(id, src); setAssets(a => ({ ...a, [id]: src })); patch(slide.id, { previewId: id });
+      objectUrls.current.set(id, src); setAssets(a => ({ ...a, [id]: src }));
+      if (stateRef.current.some(s => s.id === slide.id)) patch(slide.id, { previewId: id, ...toolbar });
     } catch (e) { URL.revokeObjectURL(src); throw e; }
   }
   async function captureSelected(file?: File) {

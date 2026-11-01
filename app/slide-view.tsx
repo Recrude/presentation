@@ -2,7 +2,7 @@ import { localAsset } from './catalog';
 'use client';
 import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { Photo, Slide } from './model';
-import { layoutPhotos, youtubeUrl } from './model';
+import { defaultTypography, layoutPhotos, youtubeUrl, type Typography } from './model';
 import colors from './number-colors.json';
 import { FolioNumber } from './folio';
 import { previewSource } from './previews';
@@ -19,6 +19,7 @@ export function SlideView({
   print = false,
   thumbnail = false,
   outlined = false,
+  guides = false,
   onFinish,
 }: {
   slide: Slide;
@@ -30,6 +31,8 @@ export function SlideView({
   thumbnail?: boolean;
   /** Public viewer: text slides show their published SVG outlines instead of live type. */
   outlined?: boolean;
+  /** Editor preview: show a text slide's top, left and right margins. */
+  guides?: boolean;
   /** Sequence or clip reached its end with “다음 장” selected. */
   onFinish?: () => void;
 }) {
@@ -84,7 +87,10 @@ export function SlideView({
           </>
         ) : slide.kind === 'text' ? (
           outlined ? (slide.previewId && assets[slide.previewId] ? <img draggable={false} className="capture-preview" src={assets[slide.previewId]} alt={slide.text} onError={() => setFailed(true)}/> : null)
-            : <TextBody slide={slide}/>
+            : <>
+              <TextBody slide={slide}/>
+              {guides && <MarginGuides typo={slide.typo || defaultTypography} height={height}/>}
+            </>
         ) : slide.kind === 'sequence' ? (
           <Sequence key={slide.id} slide={slide} assets={assets} moving={moving} eager={live || print || playing} onFinish={playing ? onFinish : undefined} onError={() => setFailed(true)}/>
         ) : slide.kind === 'clip' ? (
@@ -154,6 +160,15 @@ export function SlideView({
       </div>
     </div>
   );
+}
+
+function MarginGuides({ typo, height }: { typo: Typography; height: number }) {
+  const x = (px: number) => `${px / 19.2}%`;
+  return <div className="margin-guides" aria-hidden="true">
+    <i style={{ left: 0, right: 0, top: `${typo.top / height * 100}%`, height: 1 }}/>
+    <i style={{ top: 0, bottom: 0, left: x(typo.left), width: 1 }}/>
+    <i style={{ top: 0, bottom: 0, left: x(1920 - typo.right), width: 1 }}/>
+  </div>;
 }
 
 function LocalVideo({ slide, src, preview, playing }: { slide: Slide; src: string; preview: string; playing: boolean }) {

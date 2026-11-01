@@ -3,6 +3,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type CSSProperties,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 import {
@@ -859,7 +860,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   return (
     <SheetHeight.Provider value={height}>
       <input ref={previewFileRef} className="file-input" type="file" accept="image/png,image/jpeg,image/webp" onChange={e => { const file = e.target.files?.[0]; if (file) void captureSelected(file); }}/>
-      {!publicView && <div className="editor">
+      {!publicView && <div className="editor" style={{ '--sheet-ratio': 1920 / height } as CSSProperties}>
         <div className="deck-label"><a href={`${BASE}edit/`}>목록</a><span>{entry.date} · {entry.title}</span><a href={presentationUrl(entry.slug, false, entry.shortSlug)} target="_blank" rel="noreferrer">공개 링크 ↗</a>{!import.meta.env.DEV && <form method="post" action={`${BASE}logout/`}><button type="submit">로그아웃</button></form>}</div>
         <header className="toolbar">
           <span>
@@ -1049,6 +1050,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                     number={numberOf(slides, active.id)}
                     assets={assets}
                     live={live}
+                    guides
                   />
                 </div>
                 <div className="properties">

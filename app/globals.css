@@ -173,10 +173,10 @@ a:focus-visible {
 }
 .thumbnail {
   width: 100%;
-  aspect-ratio: 16/11;
+  aspect-ratio: var(--sheet-ratio, 16/9);
   padding: 0;
   display: block;
-  background: var(--black);
+  background: transparent;
   border: var(--rule) solid transparent;
   touch-action: pan-y;
   overflow: hidden;
@@ -248,9 +248,17 @@ aside {
 }
 .preview {
   width: 100%;
-  aspect-ratio: 3840/2716;
-  background: var(--black);
+  aspect-ratio: var(--sheet-ratio, 16/9);
 }
+/* Editor boxes take the presentation's 판형; a slide of another ratio (portfolio page, clip) leaves
+   the panel color around its black sheet, so the sheet's edges always show. */
+.thumbnail .slide-viewport,
+.preview .slide-viewport {
+  background: transparent;
+}
+/* Text margins in the editor preview: the first line's ink touches these lines (alignInk). */
+.margin-guides { position: absolute; inset: 0; pointer-events: none; }
+.margin-guides i { position: absolute; background: rgba(255, 255, 255, .28); }
 .properties {
   padding-top: var(--space);
 }
@@ -436,7 +444,7 @@ aside {
     min-height: 120px;
   }
   .thumbnail {
-    aspect-ratio: 16/9;
+    aspect-ratio: var(--sheet-ratio, 16/9);
   }
   .drop-before::before,
   .drop-after::after {

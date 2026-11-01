@@ -124,6 +124,14 @@ try {
   await button('삭제', '.properties');
   await page.waitForFunction(n => document.querySelectorAll('.card').length === n, {}, cases.length);
   assert.ok(Math.abs(await page.$eval('.preview .slide-sheet', e => { const r = e.getBoundingClientRect(); return r.width / r.height; }) - 4 / 3) < 0.005, 'preview sheet is 4:3');
+  // The editor's boxes take the 판형, so the sheet fills them and its edges are the box's edges.
+  for (const box of ['.preview', '.card .thumbnail']) assert.ok(Math.abs(await page.$eval(box, e => { const r = e.getBoundingClientRect(); return r.width / r.height; }) - 4 / 3) < 0.01, box + ' is 4:3');
+  // Margin guides sit on the margins (last case: 96 on a 1440-high sheet).
+  const guides = await page.$eval('.preview', box => {
+    const sheet = box.querySelector('.slide-sheet').getBoundingClientRect(), unit = sheet.width / 1920;
+    return [...box.querySelectorAll('.margin-guides i')].map((g, i) => { const r = g.getBoundingClientRect(); return Math.round((i ? r.left - sheet.left : r.top - sheet.top) / unit); });
+  });
+  assert.deepEqual(guides, [96, 96, 1920 - 96], 'top, left and right guides');
 
   await button('저장'); await status('이 브라우저에 저장됨');
   await page.reload(); await page.waitForSelector('.toolbar'); await ready();

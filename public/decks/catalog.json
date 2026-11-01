@@ -10,6 +10,15 @@
       "public": true
     },
     {
+      "id": "deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81",
+      "public": true,
+      "presentation": {
+        "title": "바코드: 현실과 디지털 매체 사이를 이어주기",
+        "date": "2026-01-15",
+        "slug": "260115-codeclub"
+      }
+    },
+    {
       "id": "legacy-1",
       "public": false
     },

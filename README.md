@@ -129,6 +129,11 @@ Vercel presentation 프로젝트의 Production에만 `PRESENTATION_GITHUB_TOKEN`
 게시 서버는 SVG를 허용 목록으로 검사합니다. 통과하는 요소는 `svg`, `defs`, `g`, `path`, `use`이고, 속성 값도 정해진 형식만 받습니다. 스크립트, 스타일, 외부 참조, 엔티티는 거절합니다. MP4와 WebM은 파일 헤더를 확인합니다.
 
 포트폴리오 내부 이미지는 `scripts/extract-portfolio-images.py`로 뽑습니다.
+
+PDF로 남은 발표는 `scripts/pdf-deck.py`로 목록에 넣습니다.
+- 쪽마다 조판면 장표가 되고, 공개 장표 파일(`public/decks/<id>/`)과 목록 항목을 직접 씁니다.
+- 연락처처럼 가려야 할 곳은 `--mask 쪽:x,y;…`(PDF pt)로 덮습니다.
+- 출처와 가린 곳은 [docs/archive-source.md](docs/archive-source.md)에 적습니다.
 - 원본은 2608 PDF의 내장 이미지입니다.
 - 결과는 저장소 바깥 `261103-yun/portfolio-images/<시작연월>-<프로젝트>/`에 생깁니다.
 - 긴 변은 2560px이고, WebP로 저장하며 sRGB로 변환합니다.

@@ -1,0 +1,589 @@
+{
+  "version": 1,
+  "slug": "deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81",
+  "slides": [
+    {
+      "id": "7a00de20-2dfc-4f6f-8f5e-4d8c133c3e29",
+      "title": "1쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "fe1b5d93-fa72-4889-a3ac-b60ef6f3c42c",
+          "name": "p01.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "700a860f-a3c4-4ebb-bd04-d0cd60d92374",
+      "title": "2쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "8c650514-2bad-4417-ba22-87d31b94db6f",
+          "name": "p02.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "6a3b6afd-612c-4cbe-b580-7c7860b64223",
+      "title": "3쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "4b2c991d-b2fe-478a-8846-07610f05551c",
+          "name": "p03.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "e047d3b2-7af8-4c50-bf29-dafe6180d088",
+      "title": "4쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "24bbe714-5f87-426e-ab6e-010ede742a69",
+          "name": "p04.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "a17eba95-4051-4a48-a701-f3432acf56fe",
+      "title": "5쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "cff16c2d-8b8a-4f8e-8130-f9f2fa3f804b",
+          "name": "p05.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "42894d9a-5db7-4fbb-bbd3-dbb3f5156eb1",
+      "title": "6쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "1ec38518-d165-4f96-ab9a-d90f649dc56d",
+          "name": "p06.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "d393f2df-7c77-42ea-85ab-0977f793cbab",
+      "title": "7쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "7066eca8-8f23-4418-8c16-924445862ca1",
+          "name": "p07.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "a6f744b9-9bf4-4ff2-990d-7a2c7c025b08",
+      "title": "8쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "36251c25-0b68-44d0-9f5f-a9aefee42bbb",
+          "name": "p08.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "93a9a8be-d60c-4294-b3b6-2766ebe900f4",
+      "title": "9쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "72450558-0fc0-4b5a-888f-450fbd652749",
+          "name": "p09.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "3b160840-1c15-4b11-a846-2877c5cc48dd",
+      "title": "10쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "00901c46-7e86-4347-833c-40e096df7839",
+          "name": "p10.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "d1a561a2-f2c0-43c3-b8c2-e6c380b8f696",
+      "title": "11쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "7689c1ff-6485-4b5a-ad36-21d98ad059b3",
+          "name": "p11.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "6a6d0ceb-7914-47bc-9857-14d6131419dc",
+      "title": "12쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "f00b8172-d3b1-41f2-a231-febe38f766d4",
+          "name": "p12.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "70efb069-eb9a-48c3-aef7-c961d37500d6",
+      "title": "13쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "60adcb07-e161-40bc-bb39-a37316e3c0a0",
+          "name": "p13.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "beab9f72-db76-4157-9523-5c8631211598",
+      "title": "14쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "779c42b6-27c2-4bf1-83dc-9872d46eb9d5",
+          "name": "p14.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "2ea11abb-29cd-488e-b35d-49795b4ec0ee",
+      "title": "15쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "906293c9-eb69-44ea-96b5-b683fb8563fb",
+          "name": "p15.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "de522bf8-9fda-467d-97f4-3c540e49a950",
+      "title": "16쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "763d3935-9237-494f-b799-9ff38a356993",
+          "name": "p16.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "23b98583-d09c-45a7-89dd-860715ffb71e",
+      "title": "17쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "2c92370d-06de-42c8-84ac-7987cb3798bb",
+          "name": "p17.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "85e8a278-1e67-4cb2-9cf4-39ebcb559715",
+      "title": "18쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "cfa4951e-526e-454c-978a-80e95bb27270",
+          "name": "p18.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "a9a1294c-b90b-405e-a5bf-507e7ab5965c",
+      "title": "19쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "9baff27d-4c2a-4bdd-81be-f1e6426aacda",
+          "name": "p19.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "a81938bf-1e6a-4281-9b12-4dad4f5e88b3",
+      "title": "20쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "b41ca360-b74f-48b3-9429-caa39a308d58",
+          "name": "p20.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "67af667b-37a4-42bb-b0a0-21168661628f",
+      "title": "21쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "d56253dd-9fe0-45ec-a379-a5938bc2a240",
+          "name": "p21.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "1d39c1e9-052e-4ec1-82c6-5d428907c35a",
+      "title": "22쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "18571cad-edd5-4800-96ec-e4dc85ba98e4",
+          "name": "p22.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "3bbe1e1a-2091-46b9-83c1-a88100d24e59",
+      "title": "23쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "94595165-4138-40eb-bc56-9752c39ada93",
+          "name": "p23.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "65f1084c-e1e0-4262-bab5-a0e684990984",
+      "title": "24쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "5330df7c-cd9c-4078-bf58-dc524164ccd9",
+          "name": "p24.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "34866576-08a5-495f-9450-0adca465f593",
+      "title": "25쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "6d8fa5b8-13fb-4373-b3fe-4c2ad11c1227",
+          "name": "p25.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "1f19e8cd-eb11-4185-b9bc-55e937852d34",
+      "title": "26쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "a93e2e67-9999-4bd9-ac73-c4f10a8a37ae",
+          "name": "p26.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "e0b79d14-eaa3-4baa-8fb5-25dcf146f4fc",
+      "title": "27쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "fb8114cd-7176-4999-8e8e-cb5d9be695bd",
+          "name": "p27.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "ce17b0ff-a295-42f0-b9d3-fbcb70c26937",
+      "title": "28쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "102dac90-888d-46fd-aca7-cb5c7e63fec4",
+          "name": "p28.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    },
+    {
+      "id": "60170e9b-39c1-4d4f-818f-3f6e914aeb9e",
+      "title": "29쪽",
+      "kind": "folio",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "0dce7b9a-95be-43f8-bb9a-32df297fec19",
+          "name": "p29.webp",
+          "width": 3840,
+          "height": 2160
+        }
+      ],
+      "folioPalette": {
+        "background": "#0c0b0b",
+        "foreground": "#ffffff"
+      }
+    }
+  ],
+  "assets": {
+    "fe1b5d93-fa72-4889-a3ac-b60ef6f3c42c": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/0aae42f85b8a941a6cc283de3a3b77c4e4fcc0e9cc9e36e8a9c43cdb5cb10d2a.webp",
+    "8c650514-2bad-4417-ba22-87d31b94db6f": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/e918db66c3f5511432b770117fa547a0d92501c1fe79f8128d3635492c33c50f.webp",
+    "4b2c991d-b2fe-478a-8846-07610f05551c": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/3eeac566776cefee98e21f5eb32e22c7a0d5de06437c6686da1ff8579204fd26.webp",
+    "24bbe714-5f87-426e-ab6e-010ede742a69": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/523fa300c6cd4ae40c31e7b816679c5513166d8b296c32f016bd1f7aff7c4b14.webp",
+    "cff16c2d-8b8a-4f8e-8130-f9f2fa3f804b": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/006409d8058ff7cf19183df943771d12fa65371f07c0c1a4280266117130a4d1.webp",
+    "1ec38518-d165-4f96-ab9a-d90f649dc56d": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/e7ebd7fe4e657c7c839258ffa01f21f541c8755ed1aa34e121d095c9058ce8ea.webp",
+    "7066eca8-8f23-4418-8c16-924445862ca1": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/de0668cf43c4ad339f8b21796ea08d97c1660b88634dbd8cc9955b5994f8bf7a.webp",
+    "36251c25-0b68-44d0-9f5f-a9aefee42bbb": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/b3b4f3e68fb4ee268dfb799058b55dea2f5366594e6ca5fa3099fd8baf4e6493.webp",
+    "72450558-0fc0-4b5a-888f-450fbd652749": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/f66fb8b6ba527f10a6210315c0dad8d2c868ef19ed58273ea841a693459feacd.webp",
+    "00901c46-7e86-4347-833c-40e096df7839": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/811ea542e87e302a39c2097599a82ad0dedd6c545ea0bdf1eb7edc0da3a626a1.webp",
+    "7689c1ff-6485-4b5a-ad36-21d98ad059b3": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/9776270daaab278af63d529e2ae4aaa3e4d0222fe25852a70d863454b2520370.webp",
+    "f00b8172-d3b1-41f2-a231-febe38f766d4": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/f98f797f328467023b05902c8135ceabc0cbf0bf01ac1494e142cc06d650171d.webp",
+    "60adcb07-e161-40bc-bb39-a37316e3c0a0": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/335f8f038429dba971f164c2fb9651dd88497d3fd753eba417312f190e5d4421.webp",
+    "779c42b6-27c2-4bf1-83dc-9872d46eb9d5": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/3dc84df5c732c6280780da8de23f85c028a56912a3e320e5c702ade69f1c81f5.webp",
+    "906293c9-eb69-44ea-96b5-b683fb8563fb": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/5f733378ca5627d5c8ab98bf51f41e08710ee9ff488c670fea0848308e8d16eb.webp",
+    "763d3935-9237-494f-b799-9ff38a356993": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/6d6e99961a4dfec75e2ae26af25babbeef15835915439432413b340cf674b7e1.webp",
+    "2c92370d-06de-42c8-84ac-7987cb3798bb": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/126624f7ab6ddd7667377053d007f40e421d8b3fc9a6f9ae14e6e8933361a668.webp",
+    "cfa4951e-526e-454c-978a-80e95bb27270": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/f1d5e21d1604f2750bb970164e3cb3b1fa86ac6afbbce0119b8a9726714f8280.webp",
+    "9baff27d-4c2a-4bdd-81be-f1e6426aacda": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/15ecdb84bc24ee5c20bd9d820937833880cb7d7b45168c8400d7a01abf5959b6.webp",
+    "b41ca360-b74f-48b3-9429-caa39a308d58": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/5425b14af7c1efea7a61680795ff6f48c30196dd8f39918ba78d0b91ee5f8416.webp",
+    "d56253dd-9fe0-45ec-a379-a5938bc2a240": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/8f8614241a2c8fed2610928d13d33e7557f8a2786a9432ad89f0b20149dca9f2.webp",
+    "18571cad-edd5-4800-96ec-e4dc85ba98e4": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/a58836e3a435b36a9cea380e3ef8e119fd71e5849216355894f78f53d4744789.webp",
+    "94595165-4138-40eb-bc56-9752c39ada93": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/bafc31cbc004bbe564f3da4fa75d92d99613c98eac8c4edc04088a9af99ba443.webp",
+    "5330df7c-cd9c-4078-bf58-dc524164ccd9": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/9572abcd82e492659249740817e3fd6d2714adf83b44f07a29090499cfa928ab.webp",
+    "6d8fa5b8-13fb-4373-b3fe-4c2ad11c1227": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/cc2a2a6076654e2566de522d0a7e813c332c562eefd858c2899511b8575a98b6.webp",
+    "a93e2e67-9999-4bd9-ac73-c4f10a8a37ae": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/cc2909f3559d5cf526ba4a9ea4f85a10ca98516b4220471c7c1aeb8855fd6a69.webp",
+    "fb8114cd-7176-4999-8e8e-cb5d9be695bd": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/440d61838b232e4dfe1d685041f7d43fec6c577553ecd7c385a79452576b7a5f.webp",
+    "102dac90-888d-46fd-aca7-cb5c7e63fec4": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/7e7cc84ad6190f1dfde7f9e17e1a1dff9c12d7f790e5d54c5b5309983a906d62.webp",
+    "0dce7b9a-95be-43f8-bb9a-32df297fec19": "/presentations/decks/deck-4aa98eb5-4e4a-4e60-8aa2-53c35e92bd81/assets/676d9fbbf3a36802d0eefa35e146893bf1322c8aa3cbe315ad59edac559d4284.webp"
+  },
+  "publishedAt": "2026-11-01T11:44:14.596Z"
+}

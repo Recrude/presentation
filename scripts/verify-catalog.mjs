@@ -7,9 +7,9 @@ const browser=await puppeteer.launch({executablePath:'/Applications/Google Chrom
 const page=await browser.newPage(); await page.setViewport({width:1440,height:950});
 const base='http://127.0.0.1:3100/presentations/';
 try {
- await page.goto(base+'edit/');await page.waitForSelector('.catalog-row');assert.equal(await page.$$('.catalog-row').then(x=>x.length),7);
+ await page.goto(base+'edit/');await page.waitForSelector('.catalog-row');assert.equal(await page.$$('.catalog-row').then(x=>x.length),baseline.items.length);
  const original = await page.$$eval('.catalog-row',rows=>rows.map(r=>r.dataset.presentationId));
- assert.match(await page.$eval('.catalog-entry',a=>a.href),/edit\/261103-yun\/$/);
+ assert.match(await page.$eval('.catalog-entry a',a=>a.href),/edit\/261103-yun\/$/);
  await page.click('.catalog-row:first-child .catalog-actions button:last-child');
  let order = await page.$$eval('.catalog-row',rows=>rows.map(r=>r.dataset.presentationId));assert.equal(order[1],original[0]);
  await page.click('.catalog-row:first-child .catalog-actions button:first-child');assert.equal(await page.$eval('.catalog-row:first-child .catalog-actions button',b=>b.getAttribute('aria-pressed')),'false');

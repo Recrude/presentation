@@ -564,8 +564,19 @@ aside {
 
 
 @font-face { font-family: 'Presentation Suisse'; src: url('/assets/suisse-regular.woff') format('woff'); font-weight:400; font-style:normal; font-display:swap; }
+@font-face { font-family: 'Presentation Suisse'; src: url('/assets/suisse-book.woff') format('woff'); font-weight:500; font-style:normal; font-display:swap; }
 body.catalog-page { background:#000; color:snow; }
-.catalog { min-height:100svh; padding: 13px 24px 48px; background:#000; color:snow; font:400 24px/1.25 'Presentation Suisse', 'Apple SD Gothic Neo', sans-serif; letter-spacing:0; }
+/* The list follows jaeyeonkim.kr (assets/css/style.css): Suisse Book 24px/1.25 (18px under 600px),
+   1.5rem side and .8rem top margin, a 3rem first-line indent for the section label, a lettered list
+   whose letters hang in the 3rem indent, and links that blink on hover. Spacing is in em of 24px. */
+.catalog { min-height:100svh; padding:.5333em 1em 2em; background:#000; color:snow; font:500 24px/1.25 'Presentation Suisse', 'Apple SD Gothic Neo', sans-serif; letter-spacing:0; }
+@media (max-width:600px) { .catalog { font-size:18px; } }
+.catalog a { text-underline-offset:auto; }
+.catalog-header > a { text-decoration:none; }
+.catalog-label, .catalog .presentation-list:not(.managing) { max-width:calc(600px - 1em); }
+.catalog-label { margin:1.25em 0 0; padding-bottom:.3333em; text-indent:2em; }
+@keyframes catalog-blink { 50% { color:#0a0a0a; background-color:white; letter-spacing:-.1px; } }
+.catalog a:hover { animation:catalog-blink .8s step-start infinite !important; border-radius:2px !important; text-decoration:underline; }
 .catalog button, .catalog input { font:inherit; letter-spacing:inherit; line-height:inherit; }
 .catalog button { padding:0; }
 .catalog a { color:inherit; }
@@ -573,25 +584,27 @@ body.catalog-page { background:#000; color:snow; }
 .catalog-header nav, .catalog-publish { display:flex; align-items:baseline; gap:24px; flex-wrap:wrap; }
 .catalog-publish { margin-top:48px; }
 .catalog-publish input { min-width:160px; max-width:400px; flex:1; padding:0 0 6px; }
-.catalog .presentation-list { margin:48px 0; padding-left:48px; max-width:1100px; list-style:lower-alpha; }
-.catalog .catalog-row { margin:0 0 24px; position:relative; }
-.catalog-entry { display:inline-flex; flex-wrap:wrap; column-gap:24px; }
-.catalog-entry time { font-variant-numeric:tabular-nums; }
-.catalog .managing { max-width:none; padding-left:0; list-style:none; }
+.catalog .presentation-list { margin:0 0 2em; padding-left:2em; list-style:lower-alpha; }
+.catalog .catalog-row { margin:0; position:relative; }
+.catalog-entry { display:flex; }
+.catalog-entry time { flex:none; width:6em; font-variant-numeric:tabular-nums; }
+.catalog-entry a { min-width:0; }
+.catalog .managing { margin-top:2em; padding-left:0; list-style:none; }
 .managing .catalog-row { display:grid; grid-template-columns:24px minmax(0,1fr) auto; column-gap:24px; align-items:baseline; padding:12px 0; margin-bottom:0; }
 .catalog-handle { cursor:grab; }
 .catalog-actions { display:flex; gap:24px; }
 .catalog .is-private .catalog-entry { color:#888; }
+.catalog-header + .catalog-status { margin-top:1.25em; }
 .catalog .drop-before::before { content:""; position:absolute; top:0; left:0; right:0; border-top:1px solid snow; }
 .catalog .drop-after::after { content:""; position:absolute; bottom:0; left:0; right:0; border-bottom:1px solid snow; }
-.catalog-status, .catalog-note { margin:24px 0 0; color:#888; }
+.catalog-status, .catalog-note { margin:1em 0 0; color:#888; }
 @media(max-width:800px) {
   .catalog-header {gap:24px;}
   .managing .catalog-row { grid-template-columns:24px minmax(0,1fr); row-gap:12px; padding:24px 0; }
   .catalog-actions { grid-column:2; }
 }
 
-.catalog-entry span { word-break:keep-all; overflow-wrap:anywhere; }
+.catalog-entry a { word-break:keep-all; overflow-wrap:anywhere; }
 
 .deck-label form { margin:0; }
 .deck-label form button {padding:0;}

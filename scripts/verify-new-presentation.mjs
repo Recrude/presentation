@@ -40,12 +40,12 @@ try{
  await field('title','테스트 발표');await field('slug','260909-ahn');await button('추가','.catalog-details');await page.waitForSelector('[role=alert]');assert.equal(calls.length,0);
  await field('slug','new-talk');assert.equal(await page.$eval('[name=slug]',e=>e.value),'new-talk');await page.screenshot({path:'/tmp/new-presentation-form.png'});await button('추가','.catalog-details');await page.waitForFunction(()=>document.querySelectorAll('.catalog-row').length===8);
  const id=registry.items[0].id;assert.equal(registry.items[0].public,false);assert.equal(deployed.items.length,7,'creation opens before deployment');
- await page.click('.catalog-row:first-child .catalog-entry');await page.waitForSelector('.toolbar');assert.equal(await page.$$('.card').then(x=>x.length),0);assert.match(await page.$eval('.deck-label',e=>e.textContent),/테스트 발표/);
+ await page.click('.catalog-row:first-child .catalog-entry a');await page.waitForSelector('.toolbar');assert.equal(await page.$$('.card').then(x=>x.length),0);assert.match(await page.$eval('.deck-label',e=>e.textContent),/테스트 발표/);
  await button('추가','.toolbar');await button('원본 포트폴리오 가져오기');await page.waitForFunction(()=>document.querySelectorAll('.card').length===79);
  await button('게시','.toolbar');await page.waitForFunction(()=>document.querySelector('[role=status]')?.textContent.includes('게시됨'));
  assert.equal(decks.get(`public/decks/${id}/deck.json`).slides.length,79);
  await page.goto(base+'edit/');await page.waitForFunction(()=>document.querySelectorAll('.catalog-row').length===8);await button('설정','.catalog-row:first-child');await field('title','수정된 발표');await field('slug','renamed-talk');await button('적용','.catalog-details');await button('저장','.catalog-header');
- await page.click('.catalog-row:first-child .catalog-entry');await page.waitForSelector('.toolbar');assert.equal(page.url(),base+'edit/renamed-talk/');assert.equal(await page.$$('.card').then(x=>x.length),79);
+ await page.click('.catalog-row:first-child .catalog-entry a');await page.waitForSelector('.toolbar');assert.equal(page.url(),base+'edit/renamed-talk/');assert.equal(await page.$$('.card').then(x=>x.length),79);
  assert.match(await page.$eval('.deck-label a[target=_blank]',a=>a.href),/\/renamed-talk\/$/);
  await page.goto(base+'edit/');await page.waitForSelector('.catalog-row');await button('비공개','.catalog-row:first-child');await button('게시','.catalog-header');await page.waitForFunction(()=>document.querySelector('[role=status]')?.textContent.includes('게시됨'));
  assert.equal(registry.items[0].id,id);assert.equal(registry.items[0].presentation.slug,'renamed-talk');assert.equal(registry.items[0].public,true);

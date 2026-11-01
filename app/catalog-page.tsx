@@ -79,6 +79,7 @@ export function CatalogPage({ editing }: { editing: boolean }) {
       <div><button disabled={busy} type="submit">{busy?'추가 중':form.id?'적용':'추가'}</button><button disabled={busy} type="button" onClick={()=>setForm(null)}>취소</button></div>
       {!form.id && <p className="catalog-note">새 발표는 비공개로 추가됩니다.</p>}
     </form>}
+    {!editing && <p className="catalog-label">Presentations</p>}
     {status && <p className="catalog-status" role="status">{status}</p>}
     {!ready && status !== '불러오는 중' && <button onClick={() => location.reload()}>다시 불러오기</button>}
     <ol className={`presentation-list${editing ? ' managing' : ''}`} aria-label={editing ? '발표 순서와 공개 설정' : '발표 목록'}>
@@ -89,9 +90,10 @@ export function CatalogPage({ editing }: { editing: boolean }) {
           onDragOver={e => { if (!editing || !drag || busy) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; const rect = e.currentTarget.getBoundingClientRect(); setOver({id:item.id,after:e.clientY > rect.top + rect.height/2}); }}
           onDrop={e => {e.preventDefault(); if (drag && over && !busy) move(drag,index + (over.after ? 1 : 0)); setDrag(null); setOver(null);}}>
           {editing && <button className="catalog-handle" draggable={!busy} disabled={busy} aria-label={`${entry.title} 순서 끌기`} onDragStart={e => {setDrag(item.id);e.dataTransfer.setData('text/plain',item.id);e.dataTransfer.effectAllowed='move';}} onDragEnd={() => {setDrag(null);setOver(null);}}>↕</button>}
-          <a className="catalog-entry" href={editing && entry.editHref ? entry.editHref : entry.href}>
-            {entry.date && <time>{entry.date}</time>}<span>{entry.title}</span>
-          </a>
+          {/* Date on a tab column, the title as the link, like the News list on jaeyeonkim.kr. */}
+          <span className="catalog-entry">
+            <time>{entry.date}</time><a href={editing && entry.editHref ? entry.editHref : entry.href}>{entry.title}</a>
+          </span>
           {editing && <div className="catalog-actions">
             <button disabled={busy} aria-pressed={item.public} aria-label={`${entry.title} 공개 여부`} onClick={() => change(items.map(i => i.id === item.id ? {...i,public:!i.public} : i))}>{item.public ? '공개' : '비공개'}</button>
             {entry.editHref && <button disabled={busy || !!form} onClick={()=>openDetails(item)}>설정</button>}

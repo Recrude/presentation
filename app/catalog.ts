@@ -4,12 +4,13 @@ export const presentations = [
   { slug: '2026-11-03-yoon-jaeyoung-graduation-project', shortSlug: '261103-yun', date: '2026.11.03', title: '윤재영 교수님 졸업프로젝트 발표' },
   { slug: LEGACY_SLUG, shortSlug: '260909-ahn', date: '2026.09.09', title: '안병학 교수님 졸업프로젝트 발표' },
 ];
+// Dates as each deck states it was presented (cover or first slide).
 export const olderPresentations = [
-  ['New Media Design 01', 'https://jaeyeonkim.kr/presentation-for-newmediadesign/index.html#1'],
-  ['New Media Design 02', 'https://jaeyeonkim.kr/presentation/nmd02/index.html#1'],
-  ['Physical Workshop and Design Studio (2)', 'https://jaeyeonkim.kr/presentation/mph01/index.html#1'],
-  ['English for Art Major · Mid BEM art', 'https://jaeyeonkim.kr/presentation/eng01/index.html#1'],
-  ['English for Art Major · Writing as Therapy', 'https://docs.google.com/presentation/d/1r25TtjRkMtNOQz7VPuf3iXk6AXaZijrb_6WHgjL9T-o/preview'],
+  ['New Media Design 01', 'https://jaeyeonkim.kr/presentation-for-newmediadesign/index.html#1', '2022.10.14'],
+  ['New Media Design 02', 'https://jaeyeonkim.kr/presentation/nmd02/index.html#1', '2022.10.28'],
+  ['Physical Workshop and Design Studio (2)', 'https://jaeyeonkim.kr/presentation/mph01/index.html#1', '2022.11.03'],
+  ['English for Art Major · Mid BEM art', 'https://jaeyeonkim.kr/presentation/eng01/index.html#1', '2022.11.07'],
+  ['English for Art Major · Writing as Therapy', 'https://docs.google.com/presentation/d/1r25TtjRkMtNOQz7VPuf3iXk6AXaZijrb_6WHgjL9T-o/preview', '2022.12.12'],
 ];
 export function localAsset(path: string) { return path.startsWith('/') && !path.startsWith(BASE) ? BASE + path.slice(1) : path; }
 export function presentationUrl(slug: string, editing = false, shortSlug?: string) {
@@ -18,7 +19,7 @@ export function presentationUrl(slug: string, editing = false, shortSlug?: strin
 }
 export const catalogEntries = [
   ...presentations.map(p => ({ id: p.slug, title: p.title, date: p.date, href: presentationUrl(p.slug), editHref: presentationUrl(p.slug, true) })),
-  ...olderPresentations.map(([title, href], i) => ({ id: `legacy-${i + 1}`, title, date: '', href, editHref: '' })),
+  ...olderPresentations.map(([title, href, date], i) => ({ id: `legacy-${i + 1}`, title, date, href, editHref: '' })),
 ];
 export type PresentationDetails = { title: string; date: string; slug: string };
 export type CatalogItem = { id: string; public: boolean; presentation?: PresentationDetails };

@@ -11,15 +11,15 @@
     },
     {
       "id": "legacy-1",
-      "public": true
+      "public": false
     },
     {
       "id": "legacy-2",
-      "public": true
+      "public": false
     },
     {
       "id": "legacy-3",
-      "public": true
+      "public": false
     },
     {
       "id": "legacy-4",

@@ -168,6 +168,7 @@ function MarginGuides({ typo, height }: { typo: Typography; height: number }) {
     <i style={{ left: 0, right: 0, top: `${typo.top / height * 100}%`, height: 1 }}/>
     <i style={{ top: 0, bottom: 0, left: x(typo.left), width: 1 }}/>
     <i style={{ top: 0, bottom: 0, left: x(1920 - typo.right), width: 1 }}/>
+    {[...new Set([...(typo.tabs || []), ...(typo.indent ? [typo.indent] : [])])].map(stop => <i key={stop} className="tab-stop" style={{ top: 0, bottom: 0, left: x(typo.left + stop), width: 1 }}/>)}
   </div>;
 }
 

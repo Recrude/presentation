@@ -82,3 +82,11 @@ test('Safari toolbar colors belong to web slides and are #rrggbb', () => {
   for (const bad of [{ ...web, tint: 'white' }, { ...web, tint: '#FFFFFF' }, { ...web, tintDark: '#fff' }, { ...text, tint: '#ffffff' }, { ...web, tint: 16777215 }])
     assert.equal(validDeck([bad]), false, JSON.stringify(bad).slice(0, 80));
 });
+
+test('tab stops and hanging indent validate; tabs stay in the text runs', () => {
+  assert.ok(validDeck([{ ...text, text: '전시\t제16회 광주비엔날레', typo: { ...defaultTypography, tabs: [240, 720], indent: 240 } }]));
+  for (const typo of [{ tabs: [720, 240] }, { tabs: [240, 240] }, { tabs: [0] }, { tabs: [1801] }, { tabs: Array.from({ length: 25 }, (_, i) => i + 1) }, { tabs: '240' }, { indent: -1 }, { indent: 1801 }])
+    assert.equal(validDeck([{ ...text, typo: { ...defaultTypography, ...typo } }]), false, JSON.stringify(typo));
+  assert.equal(runs('전시\t제16회\t\tA').map(r => r.text).join(''), '전시\t제16회\t\tA');
+  assert.deepEqual(paragraphs('\t\t오브제는\n\n전시\t광주'), ['\t\t오브제는', '전시\t광주'], 'leading tabs are kept');
+});

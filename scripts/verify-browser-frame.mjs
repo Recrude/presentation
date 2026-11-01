@@ -38,7 +38,7 @@ try {
   editor.on('request', req => new URL(req.url()).pathname.includes('/decks/2026-11-03') ? req.respond({ status: 404, body: '{}' }) : req.continue());
   await editor.goto(base + 'edit/261103-yun/');
   await editor.waitForFunction(() => !document.querySelector('.workspace[inert]'), { timeout: 60000 });
-  const click = label => editor.evaluate(label => [...document.querySelectorAll('button')].find(b => b.textContent.trim() === label && !b.disabled).click(), label);
+  const click = async label => { await editor.waitForFunction(label => [...document.querySelectorAll('button')].some(b => b.textContent.trim() === label && !b.disabled), { timeout: 30000 }, label); await editor.evaluate(label => [...document.querySelectorAll('button')].find(b => b.textContent.trim() === label && !b.disabled).click(), label); };
   await click('추가');
   await editor.type('[aria-label="웹 또는 영상 주소"]', 'https://r777-dice-roll.vercel.app/');
   await click('링크 추가');

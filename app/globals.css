@@ -259,6 +259,7 @@ aside {
 /* Text margins in the editor preview: the first line's ink touches these lines (alignInk). */
 .margin-guides { position: absolute; inset: 0; pointer-events: none; }
 .margin-guides i { position: absolute; background: rgba(255, 255, 255, .28); }
+.margin-guides .tab-stop { background: rgba(255, 255, 255, .14); }
 .properties {
   padding-top: var(--space);
 }
@@ -620,7 +621,9 @@ body.catalog-page { background:#000; color:snow; }
   white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; line-break: strict;
   font-kerning: normal; font-variant-ligatures: none; -webkit-font-smoothing: antialiased;
 }
-.text-body p { margin: 0 0 calc(var(--paragraph) * 100cqw / 1920); }
+.text-body p { margin: 0 0 calc(var(--paragraph) * 100cqw / 1920); padding-left: calc(var(--indent) * 100cqw / 1920); text-indent: calc(var(--indent) * -100cqw / 1920); }
+/* Tab boxes: empty, sized by layoutTabs. */
+.text-body .tab { display: inline-block; height: 0; text-indent: 0; vertical-align: baseline; }
 /* Runs never change the line box: every line is exactly the leading, as in InDesign. */
 .text-body span { position: relative; line-height: 0; }
 .text-editor { width: 100%; min-height: 12em; resize: vertical; padding: var(--half) 0; font: inherit; color: inherit; background: transparent; border: 0; border-bottom: var(--rule) solid var(--line); }
@@ -666,3 +669,9 @@ body.catalog-page { background:#000; color:snow; }
 /* Selects read like the other fields: no box, a rule underneath. */
 select { color: inherit; background: transparent; border: 0; border-bottom: var(--rule) solid var(--line); padding: var(--half) var(--half) var(--half) 0; cursor: pointer; }
 select:disabled { color: var(--muted); cursor: not-allowed; }
+/* Drag: a small copy of the grabbed thumbnail follows the pointer (see beginDrag in page.tsx). */
+.drag-ghost { position: fixed; left: 0; top: 0; z-index: 20; width: 180px; pointer-events: none; }
+.drag-ghost .thumbnail { outline: 1px solid var(--ink); background: var(--black); }
+.drag-ghost > span { position: absolute; right: -8px; top: -8px; padding: 0 6px; background: var(--ink); color: var(--paper); }
+.properties > .row.picked { border-bottom-color: var(--ink); }
+.import-source { display: inline-flex; align-items: center; gap: var(--half); }

@@ -2,7 +2,9 @@ import { chronologicalPages, projectForPage } from './chronology.ts';
 export type Photo = { id: string; name: string; width: number; height: number };
 // Text slide measurements are px on the 1920-wide sheet; tracking is 1/1000 em like InDesign.
 // top and left are measured to the ink of the first line (see alignInk in text-slide.tsx).
-export type Typography = { size: number; leading: number; paragraph: number; tracking: number; top: number; left: number; right: number; composite?: 'bold' };
+// tabs are stops in px from the left margin; indent is a hanging indent: lines after a paragraph's
+// first start there, and it is a tab stop too (InDesign: left indent with a negative first line).
+export type Typography = { size: number; leading: number; paragraph: number; tracking: number; top: number; left: number; right: number; composite?: 'bold'; tabs?: number[]; indent?: number };
 // Sheet formats per presentation. Every measurement stays in px on a 1920-wide sheet; only the height changes.
 export const FORMATS = { '16:9': { label: '16:9', height: 1080 }, '16:10': { label: '16:10', height: 1200 }, '4:3': { label: '4:3', height: 1440 }, iso: { label: '√2 포트폴리오', height: 1358 } } as const;
 export type Format = keyof typeof FORMATS;
@@ -63,6 +65,15 @@ export function reorder(
   const next = [...slides];
   const [slide] = next.splice(from, 1);
   next.splice(insertion > from ? insertion - 1 : insertion, 0, slide);
+  return next.every((s, i) => s === slides[i]) ? slides : next;
+}
+// Moves several slides together to an insertion index of the current order, keeping their order.
+export function reorderMany(slides: Slide[], ids: string[], insertion: number): Slide[] {
+  if (!Number.isInteger(insertion) || insertion < 0 || insertion > slides.length) return slides;
+  const moving = new Set(ids), block = slides.filter(s => moving.has(s.id));
+  if (!block.length) return slides;
+  const rest = (from: number, to: number) => slides.slice(from, to).filter(s => !moving.has(s.id));
+  const next = [...rest(0, insertion), ...block, ...rest(insertion, slides.length)];
   return next.every((s, i) => s === slides[i]) ? slides : next;
 }
 export function numberOf(slides: Slide[], id: string): number | null {
@@ -160,7 +171,9 @@ const within = (v: unknown, min: number, max: number) => typeof v === 'number' &
 export function validTypography(t: Typography | undefined): t is Typography {
   return !!t && within(t.size, 8, 400) && within(t.leading, 8, 800) && within(t.paragraph, 0, 1000) && within(t.tracking, -300, 1000) &&
     within(t.top, 0, 1000) && within(t.left, 0, 1800) && within(t.right, 0, 1800) && t.left + t.right <= 1800 &&
-    (t.composite === undefined || t.composite === 'bold');
+    (t.composite === undefined || t.composite === 'bold') &&
+    (t.tabs === undefined || Array.isArray(t.tabs) && t.tabs.length <= 24 && t.tabs.every((v, i) => within(v, 1, 1800) && (i === 0 || v > t.tabs![i - 1]))) &&
+    (t.indent === undefined || within(t.indent, 0, 1800));
 }
 export function validDeck(value: unknown): value is Slide[] {
   return (

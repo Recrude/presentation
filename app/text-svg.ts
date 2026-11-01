@@ -2,8 +2,8 @@ import { createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 import { flushSync } from 'react-dom';
 import opentype, { type Font } from 'opentype.js';
-import type { Slide } from './model';
-import { TextBody, alignInk } from './text-slide';
+import { defaultTypography, type Slide } from './model';
+import { TextBody, layoutText } from './text-slide';
 import { FONTS, fontsIn, runStyles, styleSample } from './composite';
 import type { FontData } from './fonts';
 // The browser lays out the text exactly as the editor shows it (keep-all, tracking, composite runs).
@@ -33,7 +33,7 @@ export async function textSvg(slide: Slide, data: FontData, height = 1080): Prom
   const probeRoot = mount(probeHost, { ...slide, typo: slide.typo && { ...slide.typo, composite: undefined }, text: runStyles.map((s, i) => s.bold ? `**${styleSample(i)}**` : styleSample(i)).join('\n\n') });
   try {
     await document.fonts.ready;
-    alignInk(host.firstElementChild as HTMLElement);
+    layoutText(host.firstElementChild as HTMLElement, slide.typo || defaultTypography);
     const origin = host.getBoundingClientRect(), range = document.createRange();
     // Baseline offset from the top of a glyph's text box, measured per run style with a baseline marker.
     const ascent = new Map<number, number>();

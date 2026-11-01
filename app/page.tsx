@@ -11,6 +11,7 @@ import {
   embed,
   numberOf,
   reorder,
+  reorderMany,
   validDeck,
   defaultTypography,
   FORMATS,
@@ -33,7 +34,7 @@ import { previewSource } from './previews';
 import { originalSource, warmSlides } from './slide-assets';
 import { sortOriginalSlides, projectForPage } from './chronology';
 import { detectFolioPalette, type FolioPalette } from './folio-palette';
-import { BASE, LEGACY_SLUG, localAsset, presentationUrl } from './catalog';
+import { BASE, LEGACY_SLUG, deckEntry, localAsset, presentationUrl, readCatalog, withLocalDraft } from './catalog';
 import { assetIds, readPublished } from './published';
 import { publishDeck } from './github-publish';
 import { exportBackup, importBackup, receiveLegacy } from './transfer';
@@ -43,7 +44,7 @@ const presets = [
   ['jaeyeonkim.kr', 'https://jaeyeonkim.kr/'],
   ['영상', 'https://www.youtube-nocookie.com/embed/QIAcSGkOLDk'],
 ];
-const typographyFields: [Exclude<keyof Typography, 'composite'>, string, number, number, number][] = [
+const typographyFields: [Exclude<keyof Typography, 'composite' | 'tabs' | 'indent'>, string, number, number, number][] = [
   ['size', '크기', 8, 400, 1], ['leading', '행간', 8, 800, 1], ['paragraph', '문단', 0, 1000, 1], ['tracking', '자간', -300, 1000, 5],
   ['top', '위·왼쪽', 0, 900, 1], ['right', '오른쪽', 0, 900, 1],
 ];
@@ -60,6 +61,20 @@ function NumberField({ label, value, min, max, step = 1, optional = false, onCha
     }}
     onBlur={() => setText(value === undefined ? '' : String(value))}/></label>;
 }
+// Tab stops as typed, e.g. "240, 720" (px from the left margin); kept as typed until it reads as stops.
+const tabList = (text: string) => { const list = text.split(/[,\s]+/).filter(Boolean).map(Number); return list.length ? [...new Set(list)].sort((a, b) => a - b) : undefined; };
+const showTabs = (tabs?: number[]) => tabs?.join(', ') || '';
+function TabsField({ value, onChange }: { value: number[] | undefined; onChange: (tabs: number[] | undefined) => void }) {
+  const [text, setText] = useState(showTabs(value));
+  useEffect(() => { if (showTabs(tabList(text)) !== showTabs(value)) setText(showTabs(value)); }, [value]);
+  return <label>탭<input aria-label="탭 위치" placeholder="12단" value={text}
+    onChange={e => {
+      setText(e.target.value);
+      const stops = tabList(e.target.value);
+      if (!stops || stops.length <= 24 && stops.every(v => Number.isFinite(v) && v >= 1 && v <= 1800)) onChange(stops);
+    }}
+    onBlur={() => setText(showTabs(value))}/></label>;
+}
 async function folderFiles(entry: FileSystemDirectoryEntry): Promise<File[]> {
   const reader = entry.createReader(), entries: FileSystemEntry[] = [];
   for (;;) {
@@ -71,7 +86,10 @@ async function folderFiles(entry: FileSystemDirectoryEntry): Promise<File[]> {
 }
 const byName = (a: File, b: File) => a.name.localeCompare(b.name, undefined, { numeric: true });
 type Drag = {
+  /** The grabbed slide; ids are all slides that move with it, in deck order. */
   id: string;
+  ids: string[];
+  ghost?: HTMLElement;
   startX: number;
   startY: number;
   x: number;
@@ -101,7 +119,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   const [present, setPresent] = useState(publicView),
     [position, setPosition] = useState(0),
     [printing, setPrinting] = useState(false);
-  const [dragUI, setDragUI] = useState<{ id: string; slot: number } | null>(
+  const [dragUI, setDragUI] = useState<{ ids: string[]; slot: number } | null>(
       null,
     ),
     [historyCount, setHistoryCount] = useState(0);
@@ -120,13 +138,22 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   const [fontsMissing, setFontsMissing] = useState<string[]>([]);
   const [shownId, setShownId] = useState('');
   const [fileOver, setFileOver] = useState(false);
+  // Other presentations made in this editor, offered as a source of slides.
+  const [sources, setSources] = useState<{ slug: string; title: string; date: string }[]>([]),
+    [source, setSource] = useState('');
   // 판형 belongs to the presentation; undefined is 16:9. Not part of the slide undo history.
   const [format, setFormat] = useState<Format | undefined>();
   const height = sheetHeight(format);
+  // Picked slides (several with ⌘/Shift); the one shown in the panel is `selected`.
+  const [picked, setPicked] = useState<string[]>([]);
+  const anchorRef = useRef('');
   stateRef.current = slides;
   const visible = slides.filter((s) => !s.hidden),
     active = slides.find((s) => s.id === selected),
     current = visible[position];
+  const selection = picked.includes(selected) ? slides.filter(s => picked.includes(s.id)).map(s => s.id) : selected ? [selected] : [];
+  const selectionRef = useRef(selection);
+  selectionRef.current = selection;
   function change(next: Slide[]) {
     if (next === stateRef.current) return;
     history.current = [...history.current.slice(-39), stateRef.current];
@@ -245,27 +272,44 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     return () => lifecycle.abort();
   }, []);
   useEffect(() => {
+    // The drop slot comes from the card under the pointer, or the nearest card when the pointer is in
+    // a gap, so drops between rows and after the last card land where expected.
     const updateSlot = () => {
-      const d = dragRef.current;
-      if (!d?.active) return;
-      const hit = document
-        .elementFromPoint(d.x, d.y)
-        ?.closest<HTMLElement>('[data-slide-id]');
-      if (hit) {
-        const index = stateRef.current.findIndex(
-            (s) => s.id === hit.dataset.slideId,
-          ),
-          rect = hit.getBoundingClientRect();
-        if (index >= 0) {
-          const singleColumn =
-            rect.width > (gridRef.current?.clientWidth || 0) * 0.7;
-          const after = singleColumn
-            ? d.y > rect.top + rect.height / 2
-            : d.x > rect.left + rect.width / 2;
-          d.slot = index + (after ? 1 : 0);
-          setDragUI({ id: d.id, slot: d.slot });
+      const d = dragRef.current, grid = gridRef.current;
+      if (!d?.active || !grid) return;
+      const under = document.elementFromPoint(d.x, d.y);
+      let hit = under?.closest<HTMLElement>('[data-slide-id]');
+      if (!hit && under && grid.contains(under)) {
+        let best = Infinity;
+        for (const card of grid.querySelectorAll<HTMLElement>('[data-slide-id]')) {
+          const r = card.getBoundingClientRect();
+          const distance = Math.hypot(Math.max(r.left - d.x, 0, d.x - r.right), Math.max(r.top - d.y, 0, d.y - r.bottom));
+          if (distance < best) { best = distance; hit = card; }
         }
       }
+      if (!hit) return;
+      const id = hit.dataset.slideId, index = stateRef.current.findIndex(s => s.id === id), rect = hit.getBoundingClientRect();
+      if (index < 0) return;
+      const singleColumn = rect.width > grid.clientWidth * 0.7;
+      const after = singleColumn ? d.y > rect.top + rect.height / 2 : d.x > rect.left + rect.width / 2;
+      d.slot = index + (after ? 1 : 0);
+      setDragUI({ ids: d.ids, slot: d.slot });
+    };
+    // A small copy of the grabbed thumbnail follows the pointer, with the count when several move.
+    const showGhost = (d: Drag) => {
+      const ghost = document.createElement('div');
+      ghost.className = 'drag-ghost';
+      const thumbnail = gridRef.current?.querySelector(`[data-slide-id="${CSS.escape(d.id)}"] .thumbnail`);
+      if (thumbnail) ghost.append(thumbnail.cloneNode(true));
+      if (d.ids.length > 1) ghost.append(Object.assign(document.createElement('span'), { textContent: `${d.ids.length}장` }));
+      document.body.append(ghost);
+      d.ghost = ghost;
+    };
+    const finish = () => {
+      dragRef.current?.ghost?.remove();
+      dragRef.current = null;
+      setDragUI(null);
+      document.body.classList.remove('dragging');
     };
     const move = (e: PointerEvent) => {
       const d = dragRef.current;
@@ -276,37 +320,38 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
         d.active = true;
         suppressClick.current = true;
         document.body.classList.add('dragging');
+        if (!selectionRef.current.includes(d.id)) select(d.id);
+        showGhost(d);
       }
       if (d.active) {
         e.preventDefault();
+        if (d.ghost) d.ghost.style.transform = `translate(${d.x + 14}px, ${d.y + 14}px)`;
         updateSlot();
       }
     };
     const end = (e: PointerEvent) => {
       const d = dragRef.current;
-      if (d?.active && e.type !== 'pointercancel')
-        change(reorder(stateRef.current, d.id, d.slot));
-      dragRef.current = null;
-      setDragUI(null);
-      document.body.classList.remove('dragging');
+      if (d?.active && e.type !== 'pointercancel') change(reorderMany(stateRef.current, d.ids, d.slot));
+      finish();
       setTimeout(() => {
         suppressClick.current = false;
       }, 0);
     };
     let frame = 0;
+    // Near the top or bottom of the list (or beyond it) the list scrolls, faster the further out.
     const scroll = () => {
       const d = dragRef.current,
         grid = gridRef.current;
       if (d?.active && grid) {
         const rect = grid.getBoundingClientRect(),
-          edge = 64;
+          edge = 96;
         const speed =
           d.y < rect.top + edge
-            ? -Math.min(18, (rect.top + edge - d.y) / 3)
+            ? -Math.min(40, (rect.top + edge - d.y) / 3)
             : d.y > rect.bottom - edge
-              ? Math.min(18, (d.y - rect.bottom + edge) / 3)
+              ? Math.min(40, (d.y - rect.bottom + edge) / 3)
               : 0;
-        if (speed && d.x >= rect.left && d.x <= rect.right) {
+        if (speed && d.x >= rect.left - edge && d.x <= rect.right + edge) {
           grid.scrollTop += speed;
           updateSlot();
         }
@@ -318,11 +363,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     window.addEventListener('pointerup', end);
     window.addEventListener('pointercancel', end);
     const cancel = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        dragRef.current = null;
-        setDragUI(null);
-        document.body.classList.remove('dragging');
-      }
+      if (e.key === 'Escape' && dragRef.current) finish();
     };
     window.addEventListener('keydown', cancel);
     return () => {
@@ -333,17 +374,39 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       window.removeEventListener('keydown', cancel);
     };
   }, []);
+  // Several slides can be picked: ⌘/Ctrl-click adds or removes one, Shift-click a range. Dragging a
+  // picked slide moves all of them together, in their current order.
+  function pick(id: string, e: { shiftKey: boolean; metaKey: boolean; ctrlKey: boolean }) {
+    const order = stateRef.current.map(s => s.id);
+    if (e.shiftKey && order.includes(anchorRef.current)) {
+      const [a, b] = [order.indexOf(anchorRef.current), order.indexOf(id)].sort((x, y) => x - y);
+      setPicked(order.slice(a, b + 1));
+    } else if (e.metaKey || e.ctrlKey) {
+      const set = new Set(selectionRef.current);
+      if (set.has(id) && set.size > 1) set.delete(id); else set.add(id);
+      setPicked(order.filter(x => set.has(x)));
+      anchorRef.current = id;
+      if (!set.has(id)) { select(order.filter(x => set.has(x)).at(-1)!); return; }
+    } else {
+      setPicked([id]);
+      anchorRef.current = id;
+    }
+    select(id);
+  }
   function beginDrag(e: ReactPointerEvent, s: Slide, handle = false) {
     if (
       e.button !== 0 ||
+      e.shiftKey || e.metaKey || e.ctrlKey ||
       !ready ||
       busy ||
       (!handle && e.pointerType !== 'mouse')
     )
       return;
     e.currentTarget.setPointerCapture(e.pointerId);
+    const ids = selection.includes(s.id) ? slides.filter(x => selection.includes(x.id)).map(x => x.id) : [s.id];
     dragRef.current = {
       id: s.id,
+      ids,
       startX: e.clientX,
       startY: e.clientY,
       x: e.clientX,
@@ -745,6 +808,40 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     } catch (e) { setStatus(e instanceof Error ? e.message : '게시 실패 · 편집 내용은 유지됩니다'); }
     finally { setBusy(false); }
   }
+  useEffect(() => {
+    if (!adding || sources.length) return;
+    let cancelled = false;
+    void readCatalog().then(withLocalDraft).then(config => {
+      const list = config.items.map(deckEntry).filter((p): p is NonNullable<typeof p> => !!p && p.slug !== entry.slug);
+      if (!cancelled) { setSources(list); setSource(s => s || list[0]?.slug || ''); }
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [adding, sources.length, entry.slug]);
+  // Appends another presentation's slides, hidden, to pick from: this browser's draft of it when
+  // there is one (it keeps hidden slides and local images), else its published version.
+  // Images are shared by id (they are never rewritten), published files by their URL.
+  async function importSlides(slug: string) {
+    setBusy(true); setStatus('장표 가져오는 중');
+    try {
+      const draft = await readDeck(slug);
+      const snapshot = draft && validDeck(draft.slides) ? null : await readPublished(slug);
+      const from = draft && validDeck(draft.slides) ? draft.slides : snapshot?.slides || [];
+      const present = new Set(stateRef.current.map(s => s.id));
+      const added = from.filter(s => !present.has(s.id)).map(s => ({ ...s, hidden: true }));
+      if (!added.length) throw Error(from.length ? '이미 모두 가져온 장표입니다.' : '가져올 장표가 없습니다.');
+      const known: Record<string, string> = { ...(snapshot?.assets || {}), ...(draft?.assets || {}) };
+      const ids = assetIds(added).filter(id => !assets[id]), blobs = await readImages(ids), urls: Record<string, string> = {};
+      for (const id of ids) {
+        if (blobs[id]) { urls[id] = URL.createObjectURL(blobs[id]); objectUrls.current.set(id, urls[id]); }
+        else if (known[id]) urls[id] = known[id];
+      }
+      setAssets(a => ({ ...a, ...urls }));
+      change([...stateRef.current, ...added]);
+      select(added[0].id);
+      setStatus(`${added.length}장을 숨김으로 맨 뒤에 가져왔습니다 · 저장하세요`);
+    } catch (e) { setStatus(e instanceof Error ? e.message : '가져오지 못했습니다.'); }
+    finally { setBusy(false); }
+  }
   async function restoreBackup(data: unknown) {
     setBusy(true);
     try {
@@ -915,6 +1012,10 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
             <button disabled={busy} onClick={async () => { setBusy(true); try { await exportBackup(entry.slug, slides, assets, format); setStatus('백업 다운로드 완료'); } catch(e) { setStatus(e instanceof Error ? e.message : '백업 실패'); } finally { setBusy(false); } }}>백업 내보내기</button>
             <button disabled={busy} onClick={() => backupRef.current?.click()}>백업 불러오기</button>
             {entry.slug === LEGACY_SLUG && location.hostname === 'jaeyeonkim.kr' && <button disabled={busy} onClick={migrate}>이전 Vercel 작업 가져오기</button>}
+            {sources.length > 0 && <span className="import-source">
+              <select aria-label="가져올 발표" value={source} onChange={e => setSource(e.target.value)}>{sources.map(p => <option key={p.slug} value={p.slug}>{p.date} · {p.title}</option>)}</select>
+              <button disabled={busy || !source} onClick={() => void importSlides(source)}>장표 숨김으로 가져오기</button>
+            </span>}
             <input className="file-input" ref={backupRef} type="file" accept="application/json" onChange={async e => { const file = e.target.files?.[0]; e.target.value = ''; if (!file) return; try { await restoreBackup(JSON.parse(await file.text())); } catch { setStatus('올바른 백업 JSON을 선택하세요.'); } }}/></div>
             <div className="input-row">
               <input
@@ -979,16 +1080,16 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
               <article
                 data-slide-id={s.id}
                 key={s.id}
-                className={`card ${selected === s.id ? 'selected' : ''} ${s.hidden ? 'hidden-slide' : ''} ${dragUI?.id === s.id ? 'drag-source' : ''} ${dragUI?.slot === i ? 'drop-before' : ''} ${dragUI?.slot === slides.length && i === slides.length - 1 ? 'drop-after' : ''}`}
+                className={`card ${selection.includes(s.id) ? 'selected' : ''} ${s.hidden ? 'hidden-slide' : ''} ${dragUI?.ids.includes(s.id) ? 'drag-source' : ''} ${dragUI?.slot === i ? 'drop-before' : ''} ${dragUI?.slot === slides.length && i === slides.length - 1 ? 'drop-after' : ''}`}
               >
                 <button
                   className="thumbnail"
                   onPointerDown={(e) => beginDrag(e, s)}
-                  onClick={() => {
-                    if (!suppressClick.current) select(s.id);
+                  onClick={(e) => {
+                    if (!suppressClick.current) pick(s.id, e);
                   }}
                   aria-label={`${i + 1}. ${s.title}${s.hidden ? ' 숨김' : ''}`}
-                  aria-pressed={selected === s.id}
+                  aria-pressed={selection.includes(s.id)}
                 >
                   <SlideView
                     key={s.id}
@@ -1054,6 +1155,16 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                   />
                 </div>
                 <div className="properties">
+                  {selection.length > 1 && <div className="row picked">
+                    <span>{selection.length}장 선택</span>
+                    <button onClick={() => change(stateRef.current.map(s => selection.includes(s.id) ? { ...s, hidden: true } : s))}>숨김</button>
+                    <button onClick={() => change(stateRef.current.map(s => selection.includes(s.id) ? { ...s, hidden: false } : s))}>표시</button>
+                    <button onClick={() => {
+                      const index = slides.findIndex(s => selection.includes(s.id)), next = slides.filter(s => !selection.includes(s.id));
+                      change(next); select(next[Math.min(index, next.length - 1)]?.id || '');
+                    }}>삭제</button>
+                    <span className="note">드래그하면 함께 옮겨집니다</span>
+                  </div>}
                   <input
                     className="title-input"
                     aria-label="선택한 슬라이드 이름"
@@ -1119,7 +1230,17 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                     <label className="check"><input type="checkbox" checked={active.transition === 'dissolve'} onChange={e => patch(active.id, { transition: e.target.checked ? 'dissolve' : undefined })}/>디졸브</label>
                   </div>
                   {active.kind === 'text' && <>
-                    <textarea className="text-editor" aria-label="텍스트" placeholder="빈 줄로 문단을 나눕니다 · **굵게**" value={active.text || ''} onChange={e => patch(active.id, { text: e.target.value })}/>
+                    <textarea className="text-editor" aria-label="텍스트" placeholder="빈 줄로 문단을 나눕니다 · **굵게** · 탭으로 칸 맞춤" value={active.text || ''} onChange={e => patch(active.id, { text: e.target.value })}
+                      onKeyDown={e => {
+                        // Tab types a tab (the text is laid out on tab stops); Shift-Tab still leaves the field.
+                        if (e.key !== 'Tab' || e.shiftKey || e.nativeEvent.isComposing) return;
+                        e.preventDefault();
+                        if (!document.execCommand('insertText', false, '\t')) {
+                          const el = e.currentTarget, at = el.selectionStart;
+                          patch(active.id, { text: el.value.slice(0, at) + '\t' + el.value.slice(el.selectionEnd) });
+                          requestAnimationFrame(() => el.setSelectionRange(at + 1, at + 1));
+                        }
+                      }}/>
                     <div className="row font-choice">
                       <label>글꼴<select value={active.typo?.composite || 'regular'} onChange={e => patchTypography(active.id, { composite: e.target.value === 'bold' ? 'bold' : undefined })}>
                         {COMPOSITES.map(c => <option key={c.weight} value={c.weight}>{c.name}</option>)}
@@ -1129,6 +1250,8 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                     <div className="number-fields">
                       {typographyFields.map(([key, label, min, max, step]) => <NumberField key={`${active.id}-${key}`} label={label} value={(active.typo || defaultTypography)[key]} min={min} max={max} step={step}
                         onChange={v => { if (v !== undefined) patchTypography(active.id, key === 'top' ? { top: v, left: v } : { [key]: v }); }}/>)}
+                      <NumberField key={`${active.id}-indent`} label="내어쓰기" value={active.typo?.indent} min={0} max={1800} optional onChange={v => patchTypography(active.id, { indent: v || undefined })}/>
+                      <TabsField key={`${active.id}-tabs`} value={active.typo?.tabs} onChange={tabs => patchTypography(active.id, { tabs })}/>
                     </div>
                     {fontsMissing.some(f => fontsIn(active.text || '', active.typo?.composite === 'bold').includes(f)) && <div className="row"><span className="note">글꼴 없음 · {fontsMissing.join(', ')}</span><button disabled={busy} onClick={() => fontFileRef.current?.click()}>글꼴 파일 지정</button></div>}
                   </>}

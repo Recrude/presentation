@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   initial,
   reorder,
+  reorderMany,
   numberOf,
   layoutPhotos,
   embed,
@@ -155,4 +156,20 @@ test('uploaded folios require exactly one valid image and a readable palette', a
   assert.equal(validDeck([{...s,photos:[...s.photos,...s.photos]}]),false);
   assert.equal(validDeck([{...s,folioPalette:{background:'url(x)',foreground:'red'}}]),false);
   assert.equal(contrastingInk(255,255,255),'#000000');assert.equal(contrastingInk(0,0,0),'#ffffff');
+});
+
+test('several picked slides move together, keep their order, and match single moves', () => {
+  const ids = [initial[10].id, initial[3].id, initial[40].id];
+  const moved = reorderMany(initial, ids, 0);
+  assert.deepEqual(moved.slice(0, 3).map(s => s.id), [initial[3].id, initial[10].id, initial[40].id], 'deck order, not pick order');
+  assert.equal(new Set(moved.map(s => s.id)).size, 79);
+  const end = reorderMany(initial, ids, initial.length);
+  assert.deepEqual(end.slice(-3).map(s => s.id), [initial[3].id, initial[10].id, initial[40].id]);
+  // A slot inside the block (between picked slides) gathers them there.
+  const gathered = reorderMany(initial, [initial[2].id, initial[6].id], 4);
+  assert.deepEqual(gathered.slice(2, 5).map(s => s.id), [initial[3].id, initial[2].id, initial[6].id]);
+  for (let slot = 0; slot <= initial.length; slot++) assert.deepEqual(reorderMany(initial, [initial[7].id], slot), reorder(initial, initial[7].id, slot), `slot ${slot}`);
+  assert.strictEqual(reorderMany(initial, [initial[5].id], 6), initial);
+  assert.strictEqual(reorderMany(initial, ['missing'], 3), initial);
+  assert.strictEqual(reorderMany(initial, ids, -1), initial);
 });

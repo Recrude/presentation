@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, type CSSProperties } from 'react';
-import type { Slide } from './model';
+import type { Slide, Typography } from './model';
 import { defaultTypography } from './model';
 import { condenseAdvance, family, paragraphs, runStyles, runs } from './composite';
 // Live text in the editor. The public viewer shows the SVG outlines made from this same layout.
@@ -11,29 +11,62 @@ export function TextBody({ slide }: { slide: Slide }) {
   useLayoutEffect(() => {
     const element = frame.current;
     if (!element) return;
-    const align = () => alignInk(element);
+    const align = () => layoutText(element, t);
     align();
     const observer = new ResizeObserver(align);
     observer.observe(element);
     document.fonts.addEventListener('loadingdone', align);
     return () => { observer.disconnect(); document.fonts.removeEventListener('loadingdone', align); };
   }, [slide.text, t]);
-  const vars = { '--size': t.size, '--leading': t.leading, '--paragraph': t.paragraph, '--tracking': t.tracking, '--top': t.top, '--left': t.left, '--right': t.right } as CSSProperties;
+  const vars = { '--size': t.size, '--leading': t.leading, '--paragraph': t.paragraph, '--tracking': t.tracking, '--top': t.top, '--left': t.left, '--right': t.right, '--indent': t.indent || 0 } as CSSProperties;
   return <div className="text-frame" ref={frame}>
     <div className="text-body" style={vars}>
       {paragraphs(slide.text || '').map((p, i) => <p key={i}>
-        {runs(p, bold).map((r, j) => {
+        {runs(p, bold).flatMap((r, j) => {
           const style = runStyles[r.style];
-          return <span key={j} data-run={r.style} style={{
-            fontFamily: `'${family(style.font)}'`,
-            fontSize: style.scale === 1 ? undefined : `${style.scale}em`,
-            top: style.shift ? `${style.shift}em` : undefined,
-            letterSpacing: style.hscale === 1 ? undefined : `calc(var(--track) + ${((style.hscale - 1) * condenseAdvance(r.style)).toFixed(4)}em)`,
-          }}>{r.text}</span>;
+          // A tab becomes an empty box; layoutTabs sizes it to reach the next tab stop.
+          return r.text.split('\t').flatMap((piece, k) => [
+            ...(k ? [<span key={`${j}-${k}-tab`} className="tab"/>] : []),
+            ...(piece ? [<span key={`${j}-${k}`} data-run={r.style} style={{
+              fontFamily: `'${family(style.font)}'`,
+              fontSize: style.scale === 1 ? undefined : `${style.scale}em`,
+              top: style.shift ? `${style.shift}em` : undefined,
+              letterSpacing: style.hscale === 1 ? undefined : `calc(var(--track) + ${((style.hscale - 1) * condenseAdvance(r.style)).toFixed(4)}em)`,
+            }}>{piece}</span>] : []),
+          ]);
         })}
       </p>)}
     </div>
   </div>;
+}
+
+/** Lays out a text slide after the browser has set it: tabs first (they move text), then the ink margins. */
+export function layoutText(frame: HTMLElement, typo: Typography) {
+  layoutTabs(frame, typo);
+  alignInk(frame);
+}
+/**
+ * Tabs work as in InDesign: each tab reaches the next stop past the text before it. Stops are the
+ * slide's tab positions and its hanging indent, then a 12-column grid of the text width. A tab that
+ * finds no stop on its line stays empty. Measured in sheet px from the left margin.
+ */
+export function layoutTabs(frame: HTMLElement, typo: Typography) {
+  const body = frame.firstElementChild as HTMLElement | null, unit = frame.clientWidth / 1920;
+  const tabs = [...(body?.querySelectorAll<HTMLElement>('.tab') || [])];
+  if (!body || !unit || !tabs.length) return;
+  const width = 1920 - typo.left - typo.right, column = width / 12;
+  const stops = [...new Set([...(typo.tabs || []), ...(typo.indent ? [typo.indent] : [])])].sort((a, b) => a - b);
+  const next = (x: number) => stops.find(stop => stop > x + 0.5) ?? (Math.floor((x + 0.5) / column) + 1) * column;
+  const left = () => body.getBoundingClientRect().left + parseFloat(getComputedStyle(body).paddingLeft);
+  for (const tab of tabs) tab.style.width = '0px';
+  for (const tab of tabs) {
+    // Widening a tab can push it onto the next line; then it measures again from there.
+    for (let pass = 0; pass < 2; pass++) {
+      const x = (tab.getBoundingClientRect().left - left()) / unit, stop = next(x);
+      tab.style.width = stop <= width ? `calc(${(stop - x).toFixed(2)} * 100cqw / 1920)` : '0px';
+      if (Math.abs((tab.getBoundingClientRect().left - left()) / unit - x) < 0.5) break;
+    }
+  }
 }
 
 let canvas: CanvasRenderingContext2D | null | undefined;

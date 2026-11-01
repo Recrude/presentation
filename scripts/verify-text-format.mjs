@@ -133,6 +133,49 @@ try {
   });
   assert.deepEqual(guides, [96, 96, 1920 - 96], 'top, left and right guides');
 
+  // Tabs, typed with the Tab key. Stops 240 and 960 with a hanging indent of 240; then no stops (the
+  // 12-column grid of the text width, 144 here).
+  const tabbed = [
+    { keys: ['전시', 'Tab', '제16회 광주비엔날레 《You Must Change Your Life》에서 디자인 시스템 구축을 돕고 내레이션을 맡았습니다. 줄이 넘어가면 내어쓰기 위치에서 이어집니다.', 'Enter', 'Enter', 'A', 'Tab', 'Tab', 'B'], tabs: '240, 960', indent: 240 },
+    { keys: ['기타', 'Tab', 'Tab', '두 번째', 'Enter', 'Enter', '격자', 'Tab', '열두 칸'], tabs: '', indent: '' },
+  ];
+  const starts = (pieces) => page.$eval('.preview', (box, pieces) => {
+    const body = box.querySelector('.text-body'), unit = box.querySelector('.slide-sheet').getBoundingClientRect().width / 1920;
+    const left = body.getBoundingClientRect().left + parseFloat(getComputedStyle(body).paddingLeft), range = document.createRange();
+    const at = (node, i) => { range.setStart(node, i); range.setEnd(node, i + 1); return range.getClientRects()[0].left; };
+    return pieces.map(piece => {
+      if (piece === 'wrap') {
+        // First character of the first paragraph's second line.
+        let previous = -Infinity;
+        for (const span of body.querySelector('p').querySelectorAll('[data-run]'))
+          for (let j = 0; j < span.firstChild.data.length; j++) { const x = at(span.firstChild, j); if (x < previous - 0.5) return +((x - left) / unit).toFixed(1); previous = x; }
+        return null;
+      }
+      for (const span of body.querySelectorAll('[data-run]')) {
+        const node = span.firstChild, i = node.data.indexOf(piece);
+        if (i >= 0) return +((at(node, i) - left) / unit).toFixed(1);
+      }
+      return null;
+    });
+  }, pieces);
+  for (const t of tabbed) {
+    await button('추가', '.toolbar'); await button('텍스트');
+    await page.focus('.text-editor');
+    for (const key of t.keys) ['Tab', 'Enter'].includes(key) ? await page.keyboard.press(key) : await page.keyboard.type(key);
+    assert.equal(await page.$eval('.text-editor', e => document.activeElement === e), true, 'Tab stays in the text field');
+    await field('탭', t.tabs);
+    await field('내어쓰기', t.indent);
+  }
+  assert.deepEqual(await page.$eval('.text-editor', e => e.value.split('\t').length - 1), 3, 'Tab typed tabs');
+  const tabCards = await page.$$('.card');
+  await tabCards.at(-2).$eval('.thumbnail', e => e.click());
+  const [label, after, wrapped, b] = await starts(['전', '제', 'wrap', 'B']);
+  assert.ok(Math.abs(label) <= 1 && Math.abs(after - 240) <= 1 && Math.abs(wrapped - 240) <= 1 && Math.abs(b - 960) <= 1, `stops and hanging indent: ${[label, after, wrapped, b]}`);
+  assert.equal(await page.$$eval('.preview .margin-guides .tab-stop', g => g.length), 2, 'tab stop guides');
+  await tabCards.at(-1).$eval('.thumbnail', e => e.click());
+  const [second, grid] = await starts(['두', '열']);
+  assert.ok(Math.abs(second - 288) <= 1 && Math.abs(grid - 144) <= 1, `12-column grid stops: ${[second, grid]}`);
+
   await button('저장'); await status('이 브라우저에 저장됨');
   await page.reload(); await page.waitForSelector('.toolbar'); await ready();
   assert.equal(await page.$eval('.toolbar .format select', s => s.value), '4:3', '판형 is saved with the deck');
@@ -166,6 +209,35 @@ try {
     assert.ok(Math.abs(live.top - c.margin) <= 2 && Math.abs(live.left - c.margin) <= 2, `live ink at the margins: ${JSON.stringify(results.at(-1))}`);
   }
   console.table(results);
+
+  // Tabbed slides: published outlines match the live type in presentation mode.
+  for (const i of [cases.length, cases.length + 1]) {
+    const svg = files.get('public/' + deck.assets[deck.slides[i].previewId].slice('/presentations/'.length));
+    assert.ok(safeSvg(svg));
+    await page.click(`.card:nth-child(${i + 1}) .thumbnail`);
+    await button('발표');
+    await page.waitForSelector('.presentation .text-body');
+    await page.evaluate(() => document.fonts.ready);
+    await page.addStyleTag({ content: '.present-controls{display:none!important}' });
+    await new Promise(r => setTimeout(r, 200));
+    const sheet = await page.$eval('.presentation .slide-sheet', e => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; });
+    const shot = await page.screenshot({ encoding: 'base64' });
+    fs.writeFileSync(path.join(out, `tabs-${i}.png`), Buffer.from(shot, 'base64'));
+    await page.keyboard.press('Escape');
+    const diff = await page.evaluate(async (svg, shot, sheet) => {
+      const load = src => new Promise(r => { const image = new Image(); image.onload = () => r(image); image.src = src; });
+      const [outline, live] = await Promise.all([load('data:image/svg+xml;base64,' + svg), load('data:image/png;base64,' + shot)]);
+      const c = document.createElement('canvas'); c.width = Math.round(sheet.width); c.height = Math.round(sheet.height);
+      const g = c.getContext('2d');
+      g.drawImage(live, sheet.x, sheet.y, sheet.width, sheet.height, 0, 0, c.width, c.height); const p = g.getImageData(0, 0, c.width, c.height).data;
+      g.fillStyle = '#000'; g.fillRect(0, 0, c.width, c.height); g.drawImage(outline, 0, 0, c.width, c.height); const q = g.getImageData(0, 0, c.width, c.height).data;
+      let ink = 0, off = 0;
+      for (let k = 0; k < p.length; k += 4) { if (p[k] > 128) ink++; if (Math.abs(p[k] - q[k]) > 128) off++; }
+      return { ink, off };
+    }, svg.toString('base64'), shot, sheet);
+    assert.ok(diff.ink > 2000 && diff.off / diff.ink < 0.03, `tabbed outline matches live type: ${JSON.stringify(diff)}`);
+    console.log('tabs live vs svg', diff);
+  }
 
   // PDF pages follow the 판형 (320mm wide).
   await page.evaluate(() => { window.print = () => { window.__printed = document.querySelector('.print-deck style')?.textContent; }; });

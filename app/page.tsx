@@ -12,16 +12,20 @@ import {
   reorder,
   validDeck,
   defaultTypography,
+  FORMATS,
+  isFormat,
+  sheetHeight,
   SEQUENCE_LIMIT,
   MAX_ASSET,
   type Slide,
   type Photo,
   type Typography,
+  type Format,
 } from './model';
 import { fontData, missingFonts, importFontFiles } from './fonts';
-import { fontsIn } from './composite';
+import { COMPOSITES, fontsIn } from './composite';
 import { readDeck, saveDeck, readImage, readImages, saveImages } from './storage';
-import { SlideView, sequenceSteps } from './slide-view';
+import { SheetHeight, SlideView, sequenceSteps } from './slide-view';
 import { PresentationStage } from './presentation-stage';
 import { exhibitionVideo, prepareVideo } from './video-cache';
 import { previewSource } from './previews';
@@ -38,9 +42,9 @@ const presets = [
   ['jaeyeonkim.kr', 'https://jaeyeonkim.kr/'],
   ['영상', 'https://www.youtube-nocookie.com/embed/QIAcSGkOLDk'],
 ];
-const typographyFields: [keyof Typography, string, number, number, number][] = [
+const typographyFields: [Exclude<keyof Typography, 'composite'>, string, number, number, number][] = [
   ['size', '크기', 8, 400, 1], ['leading', '행간', 8, 800, 1], ['paragraph', '문단', 0, 1000, 1], ['tracking', '자간', -300, 1000, 5],
-  ['top', '위', 0, 1000, 1], ['left', '왼쪽', 0, 900, 1], ['right', '오른쪽', 0, 900, 1],
+  ['top', '위·왼쪽', 0, 900, 1], ['right', '오른쪽', 0, 900, 1],
 ];
 const endings = [['loop', '반복'], ['hold', '멈춤'], ['next', '다음 장']] as const;
 // Keeps the typed text while it is not yet a valid number (e.g. "0." on the way to "0.5").
@@ -115,6 +119,9 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   const [fontsMissing, setFontsMissing] = useState<string[]>([]);
   const [shownId, setShownId] = useState('');
   const [fileOver, setFileOver] = useState(false);
+  // 판형 belongs to the presentation; undefined is 16:9. Not part of the slide undo history.
+  const [format, setFormat] = useState<Format | undefined>();
+  const height = sheetHeight(format);
   stateRef.current = slides;
   const visible = slides.filter((s) => !s.hidden),
     active = slides.find((s) => s.id === selected),
@@ -132,6 +139,15 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     change(
       stateRef.current.map((s) => (s.id === id ? { ...s, ...values } : s)),
     );
+  }
+  function patchTypography(id: string, values: Partial<Typography>) {
+    const typo = stateRef.current.find(s => s.id === id)?.typo || defaultTypography;
+    patch(id, { typo: { ...typo, ...values } });
+  }
+  // A new text slide continues the type of the nearest text slide before it, like a Keynote master.
+  function nearestTypography() {
+    const at = stateRef.current.findIndex(s => s.id === selected);
+    return stateRef.current.slice(0, at + 1).reverse().find(s => s.kind === 'text')?.typo || defaultTypography;
   }
   function undo() {
     const previous = history.current.pop();
@@ -162,7 +178,8 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
           else if (!loaded[id]) missing++;
         }
         if (!cancelled) {
-          stateRef.current = deck; setSlides(deck); select(deck[0]?.id || ''); setAssets(loaded);
+          const saved = draft ? draft.format : snapshot?.format;
+          stateRef.current = deck; setSlides(deck); select(deck[0]?.id || ''); setAssets(loaded); setFormat(isFormat(saved) ? saved : undefined);
           setStatus(missing ? `이미지 ${missing}개 없음 · 다시 추가하세요` : ''); setReady(true);
         }
       } catch (e) {
@@ -473,7 +490,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   function finish(id: string) {
     if (advanceRef.current.id === id) setPosition(p => Math.min(p + 1, advanceRef.current.length - 1));
   }
-  const textFonts = (deck: Slide[]) => [...new Set(deck.filter(s => s.kind === 'text').flatMap(s => fontsIn(s.text || '')))];
+  const textFonts = (deck: Slide[]) => [...new Set(deck.filter(s => s.kind === 'text').flatMap(s => fontsIn(s.text || '', s.typo?.composite === 'bold')))];
   const usedFonts = textFonts(slides).sort().join(',');
   useEffect(() => {
     if (publicView || !usedFonts) return;
@@ -491,7 +508,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     const snapshot = stateRef.current;
     setBusy(true);
     try {
-      await saveDeck(snapshot, entry.slug, assets);
+      await saveDeck(snapshot, entry.slug, assets, format);
       if (stateRef.current === snapshot) {
         setDirty(false);
         setStatus('이 브라우저에 저장됨');
@@ -699,7 +716,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     const { textSvg } = await import('./text-svg');
     const entries: [string, Blob][] = [], urls: Record<string, string> = {}, ids: Record<string, string> = {};
     for (const slide of texts) {
-      const { blob, missing } = await textSvg(slide, data);
+      const { blob, missing } = await textSvg(slide, data, height);
       if (missing.length) throw Error(`${slide.title} · 글꼴에 없는 글자: ${[...new Set(missing)].join(' ')}`);
       const id = crypto.randomUUID();
       entries.push([id, blob]); urls[id] = URL.createObjectURL(blob); ids[slide.id] = id;
@@ -715,9 +732,9 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     setBusy(true);
     try {
       const { deck, assets: prepared } = await outlineTexts(stateRef.current, assets);
-      await saveDeck(deck, entry.slug, prepared);
+      await saveDeck(deck, entry.slug, prepared, format);
       setDirty(false);
-      await publishDeck(entry.slug, deck, prepared, setStatus);
+      await publishDeck(entry.slug, deck, prepared, setStatus, format);
       setStatus('게시됨 · 배포 완료 후 공개 링크에 반영됩니다');
     } catch (e) { setStatus(e instanceof Error ? e.message : '게시 실패 · 편집 내용은 유지됩니다'); }
     finally { setBusy(false); }
@@ -726,7 +743,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     setBusy(true);
     try {
       const restored = await importBackup(data);
-      change(restored.slides); setAssets(a => ({...a, ...restored.assets}));
+      change(restored.slides); setAssets(a => ({...a, ...restored.assets})); setFormat(restored.format);
       for (const [id, url] of Object.entries(restored.assets)) if (url.startsWith('blob:')) objectUrls.current.set(id, url);
       select(restored.slides[0]?.id || ''); setStatus('불러옴 · 저장하거나 게시하세요');
     } catch(e) { setStatus(e instanceof Error ? e.message : '백업을 읽지 못했습니다'); }
@@ -830,7 +847,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     }
   }
   return (
-    <>
+    <SheetHeight.Provider value={height}>
       <input ref={previewFileRef} className="file-input" type="file" accept="image/png,image/jpeg,image/webp" onChange={e => { const file = e.target.files?.[0]; if (file) void captureSelected(file); }}/>
       {!publicView && <div className="editor">
         <div className="deck-label"><a href={`${BASE}edit/`}>목록</a><span>{entry.date} · {entry.title}</span><a href={presentationUrl(entry.slug, false, entry.shortSlug)} target="_blank" rel="noreferrer">공개 링크 ↗</a>{!import.meta.env.DEV && <form method="post" action={`${BASE}logout/`}><button type="submit">로그아웃</button></form>}</div>
@@ -849,6 +866,10 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
           <button disabled={!historyCount || busy} onClick={undo}>
             되돌리기
           </button>
+          <label className="format">판형<select disabled={!ready || busy} value={format || '16:9'} onChange={e => {
+            const next = e.target.value as Format;
+            setFormat(next === '16:9' ? undefined : next); setDirty(true); setStatus('저장되지 않음');
+          }}>{Object.entries(FORMATS).map(([id, f]) => <option key={id} value={id}>{f.label}</option>)}</select></label>
           <span className="spacer" />
           <span className="status" role="status">
             {status || cacheStatus}
@@ -874,13 +895,13 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
         {adding && (
           <section className="add-panel">
             <div className="row">
-              <button disabled={busy} onClick={() => insert([{ id: crypto.randomUUID(), title: '텍스트', kind: 'text', src: '', hidden: false, text: '', typo: { ...defaultTypography } }])}>텍스트</button>
+              <button disabled={busy} onClick={() => insert([{ id: crypto.randomUUID(), title: '텍스트', kind: 'text', src: '', hidden: false, text: '', typo: { ...nearestTypography() } }])}>텍스트</button>
               <button disabled={busy} onClick={() => chooseSequence()}>시퀀스</button>
               <button disabled={busy} onClick={() => clipRef.current?.click()}>클립</button>
               <span className="note">이미지·영상 파일이나 폴더를 목록에 끌어다 놓아도 됩니다.</span>
             </div>
             <div className="row"><button disabled={busy} onClick={() => insert(initial.filter(s => !slides.some(d => d.id === s.id)))}>원본 포트폴리오 가져오기</button>
-            <button disabled={busy} onClick={async () => { setBusy(true); try { await exportBackup(entry.slug, slides, assets); setStatus('백업 다운로드 완료'); } catch(e) { setStatus(e instanceof Error ? e.message : '백업 실패'); } finally { setBusy(false); } }}>백업 내보내기</button>
+            <button disabled={busy} onClick={async () => { setBusy(true); try { await exportBackup(entry.slug, slides, assets, format); setStatus('백업 다운로드 완료'); } catch(e) { setStatus(e instanceof Error ? e.message : '백업 실패'); } finally { setBusy(false); } }}>백업 내보내기</button>
             <button disabled={busy} onClick={() => backupRef.current?.click()}>백업 불러오기</button>
             {entry.slug === LEGACY_SLUG && location.hostname === 'jaeyeonkim.kr' && <button disabled={busy} onClick={migrate}>이전 Vercel 작업 가져오기</button>}
             <input className="file-input" ref={backupRef} type="file" accept="application/json" onChange={async e => { const file = e.target.files?.[0]; e.target.value = ''; if (!file) return; try { await restoreBackup(JSON.parse(await file.text())); } catch { setStatus('올바른 백업 JSON을 선택하세요.'); } }}/></div>
@@ -1087,11 +1108,17 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                   </div>
                   {active.kind === 'text' && <>
                     <textarea className="text-editor" aria-label="텍스트" placeholder="빈 줄로 문단을 나눕니다 · **굵게**" value={active.text || ''} onChange={e => patch(active.id, { text: e.target.value })}/>
+                    <div className="row font-choice">
+                      <label>글꼴<select value={active.typo?.composite || 'regular'} onChange={e => patchTypography(active.id, { composite: e.target.value === 'bold' ? 'bold' : undefined })}>
+                        {COMPOSITES.map(c => <option key={c.weight} value={c.weight}>{c.name}</option>)}
+                      </select></label>
+                      <span className="note">{COMPOSITES.find(c => c.weight === (active.typo?.composite || 'regular'))!.faces.join(' · ')}</span>
+                    </div>
                     <div className="number-fields">
                       {typographyFields.map(([key, label, min, max, step]) => <NumberField key={`${active.id}-${key}`} label={label} value={(active.typo || defaultTypography)[key]} min={min} max={max} step={step}
-                        onChange={v => { const typo = stateRef.current.find(s => s.id === active.id)?.typo || defaultTypography; if (v !== undefined) patch(active.id, { typo: { ...typo, [key]: v } }); }}/>)}
+                        onChange={v => { if (v !== undefined) patchTypography(active.id, key === 'top' ? { top: v, left: v } : { [key]: v }); }}/>)}
                     </div>
-                    {fontsMissing.some(f => fontsIn(active.text || '').includes(f)) && <div className="row"><span className="note">글꼴 없음 · {fontsMissing.join(', ')}</span><button disabled={busy} onClick={() => fontFileRef.current?.click()}>글꼴 파일 지정</button></div>}
+                    {fontsMissing.some(f => fontsIn(active.text || '', active.typo?.composite === 'bold').includes(f)) && <div className="row"><span className="note">글꼴 없음 · {fontsMissing.join(', ')}</span><button disabled={busy} onClick={() => fontFileRef.current?.click()}>글꼴 파일 지정</button></div>}
                   </>}
                   {(active.kind === 'sequence' || active.kind === 'clip') && <div className="row number-fields">
                     {active.kind === 'sequence' && <NumberField key={`${active.id}-interval`} label="간격 ms" value={active.interval} min={40} max={10000} step={10} onChange={v => { if (v !== undefined) patch(active.id, { interval: Math.round(v) }); }}/>}
@@ -1230,12 +1257,14 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
         </div>
       )}
       {printing && <div className="print-deck">
+        {/* PDF pages follow the 판형: 320mm wide, height from the sheet ratio. */}
+        <style>{`@page{size:320mm ${(320 * height / 1920).toFixed(2)}mm}@media print{.print-slide,.print-slide .slide-viewport{height:${(320 * height / 1920).toFixed(2)}mm}}`}</style>
         {visible.map((s, i) => (
           <section key={s.id} className="print-slide">
             <SlideView slide={s} number={i + 1} assets={assets} print />
           </section>
         ))}
       </div>}
-    </>
+    </SheetHeight.Provider>
   );
 }

@@ -22,14 +22,20 @@ export function categoryOf(codePoint: number) {
   return BASE;
 }
 export const styleOf = (codePoint: number, bold = false) => categoryOf(codePoint) + (bold ? CATEGORIES.length : 0);
+export const COMPOSITES = (['regular', 'bold'] as const).map(weight => ({
+  weight, name: (table.composites[weight] as { name: string }).name,
+  // Display names of the Hangul and Latin faces, e.g. for the editor's font note.
+  faces: [...new Set([composites[weight].hangul.font, composites[weight].alphabetic.font])].map(ps => LOCAL_NAMES[ps].at(-1)!),
+}));
 // `**굵게**` switches to the bold composite inside a paragraph; an unmatched `**` stays as typed.
-export function runs(text: string) {
+// A slide set in the bold composite stays bold throughout.
+export function runs(text: string, bold = false) {
   const parts = text.split('**');
   if (parts.length % 2 === 0) parts.splice(-2, 2, parts.at(-2) + '**' + parts.at(-1));
   const result: { style: number; text: string }[] = [];
   parts.forEach((part, i) => {
     for (const char of part) {
-      const style = styleOf(char.codePointAt(0)!, i % 2 === 1), last = result.at(-1);
+      const style = styleOf(char.codePointAt(0)!, bold || i % 2 === 1), last = result.at(-1);
       if (last?.style === style) last.text += char;
       else result.push({ style, text: char });
     }
@@ -40,7 +46,7 @@ export function runs(text: string) {
 export function paragraphs(text: string) {
   return text.split(/\n[ \t]*\n/).map(p => p.replace(/^\n+|\n+$/g, '')).filter(p => p.trim());
 }
-export const fontsIn = (text: string) => [...new Set(paragraphs(text).flatMap(p => runs(p).map(r => runStyles[r.style].font)))];
+export const fontsIn = (text: string, bold = false) => [...new Set(paragraphs(text).flatMap(p => runs(p, bold).map(r => runStyles[r.style].font)))];
 // One character per category, so each style's baseline can be measured on its own line.
 export const styleSample = (style: number) => ['가', '“', '×', 'A', '1', 'ㄱ'][style % CATEGORIES.length];
 // Average advance (em) a condensed run gives back per glyph: Hangul faces are monospaced (1em),

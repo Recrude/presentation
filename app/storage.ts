@@ -1,5 +1,5 @@
 import { LEGACY_SLUG } from './catalog';
-import type { Slide } from './model';
+import type { Format, Slide } from './model';
 function database(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const r = indexedDB.open('jaeyeon-slide-studio', 1);
@@ -51,15 +51,15 @@ async function write(store: string, entries: [string, unknown][]) {
   });
 }
 export async function readDeck(slug: string) {
-  const saved = await read<{ slides: Slide[]; assets: Record<string, string> }>('deck', `presentation:${slug}`);
+  const saved = await read<{ slides: Slide[]; assets: Record<string, string>; format?: Format }>('deck', `presentation:${slug}`);
   if (saved !== undefined) return saved;
   if (slug !== LEGACY_SLUG) return undefined;
   const legacy = await read<unknown>('deck', 'current');
   const slides = legacy === undefined ? JSON.parse(localStorage.getItem('jaeyeon-slides-v1') || 'null') : legacy;
-  return slides === null ? undefined : { slides, assets: {} };
+  return slides === null ? undefined : { slides, assets: {}, format: undefined };
 }
-export const saveDeck = (slides: Slide[], slug: string, assets: Record<string, string>) =>
-  write('deck', [[`presentation:${slug}`, { slides, assets: Object.fromEntries(Object.entries(assets).filter(([, url]) => url.startsWith('/presentations/decks/'))) }]]);
+export const saveDeck = (slides: Slide[], slug: string, assets: Record<string, string>, format?: Format) =>
+  write('deck', [[`presentation:${slug}`, { slides, assets: Object.fromEntries(Object.entries(assets).filter(([, url]) => url.startsWith('/presentations/decks/'))), ...(format ? { format } : {}) }]]);
 export const readImage = (id: string) => read<Blob>('images', id);
 export const saveImages = (entries: [string, Blob][]) =>
   write('images', entries);

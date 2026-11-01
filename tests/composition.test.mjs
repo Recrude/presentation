@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validDeck, assetIds, defaultTypography, assetTypes } from '../app/model.ts';
-import { runs, paragraphs, styleOf, runStyles, fontsIn, styleSample } from '../app/composite.ts';
+import { validDeck, assetIds, defaultTypography, assetTypes, isFormat, sheetHeight, layoutPhotos, FORMATS } from '../app/model.ts';
+import { runs, paragraphs, styleOf, runStyles, fontsIn, styleSample, COMPOSITES } from '../app/composite.ts';
 const photo = id => ({ id, name: id + '.webp', width: 1600, height: 900 });
 const text = { id: 't', title: 'T', kind: 'text', src: '', hidden: false, text: '가 A', typo: { ...defaultTypography } };
 const sequence = { id: 's', title: 'S', kind: 'sequence', src: '', hidden: false, photos: [photo('a'), photo('b'), photo('c')], interval: 400, end: 'loop' };
@@ -51,4 +51,28 @@ test('**bold** uses the 볼드 composite: SM3견출고딕 98% 장평, Pretendard
 test('asset table has no inherited keys', () => {
   assert.equal(assetTypes.constructor, undefined);
   assert.equal(assetTypes['image/svg+xml'], 'svg');
+});
+
+test('a slide set in the 볼드 composite stays bold; ** cannot switch it back', () => {
+  assert.ok(validDeck([{ ...text, typo: { ...defaultTypography, composite: 'bold' } }]));
+  assert.equal(validDeck([{ ...text, typo: { ...defaultTypography, composite: 'italic' } }]), false);
+  assert.ok(runs('본문 **강조** Latin', true).every(r => runStyles[r.style].bold));
+  assert.equal(runs('본문 **강조** Latin', true).map(r => r.text).join(''), '본문 강조 Latin');
+  assert.deepEqual(fontsIn('가 A', true), ['SM3KGothic-Regular', 'SuisseIntl-SemiBold']);
+  assert.deepEqual(COMPOSITES.map(c => [c.weight, c.name, c.faces]), [
+    ['regular', '신중고딕+sfpro-1', ['SM3SJGothic 03', 'SF Pro Display Regular']],
+    ['bold', '볼드', ['SM3KGothic Regular', "Suisse Int'l Semi Bold"]],
+  ]);
+});
+
+test('판형 keeps the 1920-wide sheet and changes only its height', () => {
+  assert.deepEqual(Object.keys(FORMATS), ['16:9', '16:10', '4:3', 'iso']);
+  assert.equal(sheetHeight(), 1080);
+  assert.equal(sheetHeight('iso'), 1358, 'the portfolio page is 1920×1358 pt');
+  assert.ok(isFormat('4:3'));
+  for (const bad of ['3:2', 'toString', '__proto__', 169, undefined]) assert.equal(isFormat(bad), false, String(bad));
+  // A taller sheet places the same photos lower and larger, always inside the sheet.
+  const boxes = layoutPhotos([{ width: 1000, height: 1000 }], 1440);
+  assert.equal(boxes[0].y + boxes[0].height, 1440 - 64);
+  assert.deepEqual(layoutPhotos([{ width: 1600, height: 900 }]), layoutPhotos([{ width: 1600, height: 900 }], 1080));
 });

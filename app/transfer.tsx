@@ -1,29 +1,29 @@
 import { useEffect, useState } from 'react';
 import { BASE, LEGACY_SLUG } from './catalog';
-import { type Slide, validDeck } from './model';
+import { type Format, type Slide, isFormat, validDeck } from './model';
 import { assetIds } from './published';
 import { readDeck, readImages, saveImages } from './storage';
-type Backup = {version: 1; slug: string; slides: Slide[]; images: Record<string,string>};
+type Backup = {version: 1; slug: string; format?: Format; slides: Slide[]; images: Record<string,string>};
 async function encode(blob: Blob): Promise<string> {
   return new Promise((resolve,reject) => { const r = new FileReader(); r.onload = () => resolve(String(r.result)); r.onerror = reject; r.readAsDataURL(blob); });
 }
-async function pack(slug: string, slides: Slide[], assets: Record<string,string>): Promise<Backup> {
+async function pack(slug: string, slides: Slide[], assets: Record<string,string>, format?: Format): Promise<Backup> {
   const images: Record<string,string> = {};
   for (const id of assetIds(slides)) {
     if (!assets[id]) throw Error('누락된 이미지가 있어 백업할 수 없습니다.');
     const r = await fetch(assets[id]); if (!r.ok) throw Error('이미지를 읽지 못했습니다.');
     images[id] = await encode(await r.blob());
   }
-  return {version:1,slug,slides,images};
+  return {version:1,slug,...(format ? {format} : {}),slides,images};
 }
-export async function exportBackup(slug: string, slides: Slide[], assets: Record<string,string>) {
-  const data = await pack(slug,slides,assets);
+export async function exportBackup(slug: string, slides: Slide[], assets: Record<string,string>, format?: Format) {
+  const data = await pack(slug,slides,assets,format);
   const url = URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'}));
   const a = document.createElement('a'); a.href = url; a.download = slug+'.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url),10000);
 }
 export async function importBackup(value: unknown) {
   const b = value as Backup;
-  if (!b || b.version !== 1 || !validDeck(b.slides) || !b.images || typeof b.images !== 'object') throw Error('백업 파일 형식을 확인하세요.');
+  if (!b || b.version !== 1 || !validDeck(b.slides) || b.format !== undefined && !isFormat(b.format) || !b.images || typeof b.images !== 'object') throw Error('백업 파일 형식을 확인하세요.');
   const entries: [string,Blob][] = [], assets: Record<string,string> = {};
   for (const id of assetIds(b.slides)) {
     const data = b.images[id];
@@ -39,7 +39,7 @@ export async function importBackup(value: unknown) {
     ...(s.previewId ? {previewId:remap.get(s.previewId)!} : {}),
     ...(s.media ? {media:{...s.media,id:remap.get(s.media.id)!}} : {}),
   }));
-  return {slides,assets};
+  return {slides,assets,format:b.format};
 }
 const oldOrigin = 'https://presentation-wine-ten.vercel.app';
 export async function receiveLegacy(): Promise<unknown> {
@@ -69,7 +69,7 @@ export function MigrationPage() {
         const assets = {...draft.assets};
         const blobs = await readImages(assetIds(draft.slides));
         for (const [id,blob] of Object.entries(blobs)) { const url = URL.createObjectURL(blob); urls.push(url); assets[id] = url; }
-        const backup = await pack(LEGACY_SLUG,draft.slides,assets);
+        const backup = await pack(LEGACY_SLUG,draft.slides,assets,draft.format);
         window.opener.postMessage({type:'presentation-backup',backup},'https://jaeyeonkim.kr');
         setStatus('전달했습니다. 이 창을 닫으세요.');
       } catch(e) {

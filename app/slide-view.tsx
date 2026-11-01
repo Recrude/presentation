@@ -1,6 +1,6 @@
 import { localAsset } from './catalog';
 'use client';
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { Photo, Slide } from './model';
 import { layoutPhotos, youtubeUrl } from './model';
 import colors from './number-colors.json';
@@ -8,6 +8,8 @@ import { FolioNumber } from './folio';
 import { previewSource } from './previews';
 import { originalSource, thumbnailSource } from './slide-assets';
 import { TextBody } from './text-slide';
+/** Height of the presentation's sheet in px on the 1920-wide sheet (its 판형). */
+export const SheetHeight = createContext(1080);
 export function SlideView({
   slide,
   number,
@@ -32,6 +34,7 @@ export function SlideView({
   onFinish?: () => void;
 }) {
   const preview = previewSource(slide, assets);
+  const height = useContext(SheetHeight);
   const [failed, setFailed] = useState(false);
   const original = slide.kind === 'image';
   const uploadedFolio = slide.kind === 'folio';
@@ -41,10 +44,10 @@ export function SlideView({
   const palette = uploadedFolio ? slide.folioPalette : (
     colors as Record<string, { background: string; foreground: string }>
   )[index];
-  const ratio = original ? 3840 / 2716 : photo ? photo.width / photo.height : slide.kind === 'clip' && slide.media ? slide.media.width / slide.media.height : 16 / 9;
+  const ratio = original ? 3840 / 2716 : photo ? photo.width / photo.height : slide.kind === 'clip' && slide.media ? slide.media.width / slide.media.height : 1920 / height;
   const moving = (live || playing) && !print && !thumbnail;
   const boxes =
-    slide.kind === 'gallery' ? layoutPhotos(slide.photos || []) : [];
+    slide.kind === 'gallery' ? layoutPhotos(slide.photos || [], height) : [];
   return (
     <div className="slide-viewport">
       <div
@@ -96,9 +99,9 @@ export function SlideView({
                 className="photo-placement"
                 style={{
                   left: `${boxes[i].x / 19.2}%`,
-                  top: `${boxes[i].y / 10.8}%`,
+                  top: `${boxes[i].y / height * 100}%`,
                   width: `${boxes[i].width / 19.2}%`,
-                  height: `${boxes[i].height / 10.8}%`,
+                  height: `${boxes[i].height / height * 100}%`,
                 }}
               >
                 {assets[p.id] ? (
@@ -169,7 +172,7 @@ export function sequenceSteps(photos: Photo[], perFrame = 1) {
   return steps;
 }
 function Sequence({ slide, assets, moving, eager, onFinish, onError }: { slide: Slide; assets: Record<string, string>; moving: boolean; eager: boolean; onFinish?: () => void; onError: () => void }) {
-  const steps = sequenceSteps(slide.photos || [], slide.perFrame || 1);
+  const steps = sequenceSteps(slide.photos || [], slide.perFrame || 1), height = useContext(SheetHeight);
   const [index, setIndex] = useState(0);
   const images = useRef(new Map<number, HTMLImageElement[]>());
   const finish = useRef(onFinish);
@@ -188,9 +191,9 @@ function Sequence({ slide, assets, moving, eager, onFinish, onError }: { slide: 
   const mounted = new Set(moving ? [-1, 0, 1, 2, 3].map(d => index + d).map(i => slide.end === 'loop' ? (i + steps.length) % steps.length : i) : [0]);
   return <>{steps.map((step, i) => {
     if (!mounted.has(i)) return null;
-    const boxes = layoutPhotos(step);
+    const boxes = layoutPhotos(step, height);
     return <div key={step[0].id} className="sequence-step" style={{ visibility: i === index ? 'visible' : 'hidden' }}>
-      {step.map((p, j) => <div key={p.id} className="photo-placement" style={{ left: `${boxes[j].x / 19.2}%`, top: `${boxes[j].y / 10.8}%`, width: `${boxes[j].width / 19.2}%`, height: `${boxes[j].height / 10.8}%` }}>
+      {step.map((p, j) => <div key={p.id} className="photo-placement" style={{ left: `${boxes[j].x / 19.2}%`, top: `${boxes[j].y / height * 100}%`, width: `${boxes[j].width / 19.2}%`, height: `${boxes[j].height / height * 100}%` }}>
         {assets[p.id] ? <img draggable={false} src={assets[p.id]} alt={p.name} loading={eager ? 'eager' : 'lazy'} onError={onError}
           ref={node => { const list = images.current.get(i) || []; if (node) images.current.set(i, [...list.filter(n => n.isConnected), node]); }}/> : <span>이미지 불러오는 중</span>}
       </div>)}

@@ -1,7 +1,13 @@
 import { chronologicalPages, projectForPage } from './chronology.ts';
 export type Photo = { id: string; name: string; width: number; height: number };
-// Text slide measurements are px on the 1920×1080 sheet; tracking is 1/1000 em like InDesign.
-export type Typography = { size: number; leading: number; paragraph: number; tracking: number; top: number; left: number; right: number };
+// Text slide measurements are px on the 1920-wide sheet; tracking is 1/1000 em like InDesign.
+// top and left are measured to the ink of the first line (see alignInk in text-slide.tsx).
+export type Typography = { size: number; leading: number; paragraph: number; tracking: number; top: number; left: number; right: number; composite?: 'bold' };
+// Sheet formats per presentation. Every measurement stays in px on a 1920-wide sheet; only the height changes.
+export const FORMATS = { '16:9': { label: '16:9', height: 1080 }, '16:10': { label: '16:10', height: 1200 }, '4:3': { label: '4:3', height: 1440 }, iso: { label: '√2 포트폴리오', height: 1358 } } as const;
+export type Format = keyof typeof FORMATS;
+export const isFormat = (value: unknown): value is Format => typeof value === 'string' && Object.hasOwn(FORMATS, value);
+export const sheetHeight = (format?: Format) => FORMATS[format || '16:9'].height;
 export type Slide = {
   id: string;
   title: string;
@@ -103,9 +109,8 @@ export function youtubeUrl(s: Slide, playing: boolean) {
   return u.href;
 }
 // Try all grid shapes; maximize visible, uncropped image area. Center incomplete rows.
-export function layoutPhotos(photos: Pick<Photo, 'width' | 'height'>[]) {
+export function layoutPhotos(photos: Pick<Photo, 'width' | 'height'>[], H = 1080) {
   const W = 1920,
-    H = 1080,
     padding = 64,
     gap = 24;
   if (!photos.length) return [];
@@ -151,7 +156,8 @@ const validPhoto = (p: Photo) =>
 const within = (v: unknown, min: number, max: number) => typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
 export function validTypography(t: Typography | undefined): t is Typography {
   return !!t && within(t.size, 8, 400) && within(t.leading, 8, 800) && within(t.paragraph, 0, 1000) && within(t.tracking, -300, 1000) &&
-    within(t.top, 0, 1000) && within(t.left, 0, 1800) && within(t.right, 0, 1800) && t.left + t.right <= 1800;
+    within(t.top, 0, 1000) && within(t.left, 0, 1800) && within(t.right, 0, 1800) && t.left + t.right <= 1800 &&
+    (t.composite === undefined || t.composite === 'bold');
 }
 export function validDeck(value: unknown): value is Slide[] {
   return (

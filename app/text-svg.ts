@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { flushSync } from 'react-dom';
 import opentype, { type Font } from 'opentype.js';
 import type { Slide } from './model';
-import { TextBody } from './text-slide';
+import { TextBody, alignInk } from './text-slide';
 import { FONTS, fontsIn, runStyles, styleSample } from './composite';
 import type { FontData } from './fonts';
 // The browser lays out the text exactly as the editor shows it (keep-all, tracking, composite runs).
@@ -17,22 +17,23 @@ function mount(host: HTMLElement, slide: Slide) {
   flushSync(() => root.render(createElement(TextBody, { slide })));
   return root;
 }
-export async function textSvg(slide: Slide, data: FontData): Promise<{ blob: Blob; missing: string[] }> {
+export async function textSvg(slide: Slide, data: FontData, height = 1080): Promise<{ blob: Blob; missing: string[] }> {
   const fonts: Record<string, Font> = {};
-  for (const postscript of fontsIn(slide.text || '')) {
+  for (const postscript of fontsIn(slide.text || '', slide.typo?.composite === 'bold')) {
     if (!data[postscript]) throw Error(`글꼴 파일을 지정하세요 · ${postscript}`);
     fonts[postscript] = font(data[postscript]);
   }
   const host = document.createElement('div');
-  host.style.cssText = 'position:fixed;left:-30000px;top:0;width:1920px;height:1080px;visibility:hidden;pointer-events:none';
+  host.style.cssText = `position:fixed;left:-30000px;top:0;width:1920px;height:${height}px;visibility:hidden;pointer-events:none`;
   document.body.append(host);
   const root = mount(host, slide);
   const probeHost = document.createElement('div');
   probeHost.style.cssText = host.style.cssText;
   document.body.append(probeHost);
-  const probeRoot = mount(probeHost, { ...slide, text: runStyles.map((s, i) => s.bold ? `**${styleSample(i)}**` : styleSample(i)).join('\n\n') });
+  const probeRoot = mount(probeHost, { ...slide, typo: slide.typo && { ...slide.typo, composite: undefined }, text: runStyles.map((s, i) => s.bold ? `**${styleSample(i)}**` : styleSample(i)).join('\n\n') });
   try {
     await document.fonts.ready;
+    alignInk(host.firstElementChild as HTMLElement);
     const origin = host.getBoundingClientRect(), range = document.createRange();
     // Baseline offset from the top of a glyph's text box, measured per run style with a baseline marker.
     const ascent = new Map<number, number>();
@@ -65,7 +66,7 @@ export async function textSvg(slide: Slide, data: FontData): Promise<{ blob: Blo
       }
     }
     const paths = [...defs].filter(([, d]) => d).map(([id, d]) => `<path id="${id}" d="${d}"/>`).join('');
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080"><defs>${paths}</defs><g fill="#ffffff">${uses.join('')}</g></svg>\n`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 ${height}" width="1920" height="${height}"><defs>${paths}</defs><g fill="#ffffff">${uses.join('')}</g></svg>\n`;
     return { blob: new Blob([svg], { type: 'image/svg+xml' }), missing };
   } finally {
     root.unmount(); probeRoot.unmount(); host.remove(); probeHost.remove();

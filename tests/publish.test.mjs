@@ -107,6 +107,10 @@ test('text outlines and clips publish; scripted or external SVG never does',asyn
   await assert.rejects(()=>executePublish({action:'deck',slug:LEGACY_SLUG,slides:[text],assets:{}},git,secret),/윤곽/);
   const result=await executePublish({action:'deck',slug:LEGACY_SLUG,slides:[{...text,previewId:'o'},{id:'c',title:'C',kind:'clip',src:'',hidden:false,media:{id:'m',name:'c.mp4',width:1280,height:720},previewId:'o',end:'loop'}],assets:{o:svgProof,m:mp4Proof}},git,secret);
   assert.match(result.snapshot.assets.o,/\.svg$/);assert.match(result.snapshot.assets.m,/\.mp4$/);
+  assert.equal(result.snapshot.format,undefined,'16:9 stays implicit');
+  const framed=await executePublish({action:'deck',slug:LEGACY_SLUG,format:'4:3',slides:[{...text,previewId:'o'}],assets:{o:result.snapshot.assets.o}},git,secret);
+  assert.equal(framed.snapshot.format,'4:3');
+  for(const format of ['3:2','__proto__',43])await assert.rejects(()=>executePublish({action:'deck',slug:LEGACY_SLUG,format,slides:[{...text,previewId:'o'}],assets:{o:result.snapshot.assets.o}},git,secret),/형식/);
   const bad=Buffer.from('<svg onload="x"></svg>');
   await assert.rejects(()=>executePublish({action:'upload',slug:LEGACY_SLUG,mime:'image/svg+xml',hash:hash(bad),count:1,index:0,content:bad.toString('base64')},git,secret));
   await assert.rejects(()=>executePublish({action:'upload',slug:LEGACY_SLUG,mime:'constructor',hash:hash(svg),count:1,index:0,content:svg.toString('base64')},git,secret));

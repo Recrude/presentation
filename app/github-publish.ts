@@ -1,6 +1,6 @@
 import { BASE, validDeckId, validCatalog, type CatalogItem, type CatalogConfig } from './catalog';
 import { assetIds, type Snapshot } from './published';
-import { type Slide, validDeck, assetTypes, MAX_ASSET } from './model';
+import { type Format, type Slide, validDeck, assetTypes, MAX_ASSET } from './model';
 const CHUNK_SIZE = 2 * 1024 * 1024;
 async function api(body: unknown) {
   const r=await fetch(`${BASE}api/publish/`,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Presentation-Publish':'1'},body:JSON.stringify(body),signal:AbortSignal.timeout(90000)});
@@ -8,7 +8,7 @@ async function api(body: unknown) {
   if(!r.ok)throw Error(r.status===401 ? '로그인이 만료되었습니다. 다시 로그인한 뒤 게시하세요.' : result?.error || '게시하지 못했습니다. 편집 내용은 유지됩니다.');
   return result;
 }
-export async function publishDeck(slug: string, slides: Slide[], assets: Record<string,string>, progress: (s:string)=>void) {
+export async function publishDeck(slug: string, slides: Slide[], assets: Record<string,string>, progress: (s:string)=>void, format?: Format) {
   if(!validDeckId(slug) || !validDeck(slides))throw Error('발표 형식을 확인하세요.');
   const visible=slides.filter(s=>!s.hidden), uploaded:Record<string,unknown>={}, dedupe=new Map<string,unknown>();
   const ids=assetIds(visible);
@@ -33,7 +33,7 @@ export async function publishDeck(slug: string, slides: Slide[], assets: Record<
     uploaded[id]=proof;dedupe.set(hash,proof);
   }
   progress('게시 중');
-  const result=await api({action:'deck',slug,slides:visible,assets:uploaded});
+  const result=await api({action:'deck',slug,format,slides:visible,assets:uploaded});
   return result.snapshot as Snapshot;
 }
 export async function publishCatalog(config: CatalogConfig) {

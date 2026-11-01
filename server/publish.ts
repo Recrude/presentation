@@ -1,6 +1,6 @@
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { validDeckId, validCatalog, validDetails, type CatalogConfig } from '../app/catalog.ts';
-import { validDeck, assetIds, assetTypes, MAX_ASSET, type Slide } from '../app/model.ts';
+import { validDeck, assetIds, assetTypes, isFormat, MAX_ASSET, type Slide } from '../app/model.ts';
 export const CHUNK_SIZE = 2 * 1024 * 1024;
 const MAX_IMAGE = MAX_ASSET;
 const extensions = assetTypes;
@@ -104,9 +104,9 @@ export async function executePublish(input: any, git: GitApi, secret: string) {
     if(input.action==='create' && (!validDeckId(input.item?.id) || !input.item.id.startsWith('deck-') || input.item.public!==false || !validDetails(input.item.presentation)))throw new PublishError('새 발표의 제목·날짜·슬러그를 확인하세요.');
     message=input.action==='create'?'Create presentation':'Update presentation order and visibility';
   } else if(input.action==='deck') {
-    if(!validDeckId(input.slug) || !validDeck(input.slides))throw new PublishError('발표 형식을 확인하세요.');
+    if(!validDeckId(input.slug) || !validDeck(input.slides) || input.format!==undefined && !isFormat(input.format))throw new PublishError('발표 형식을 확인하세요.');
     if(input.slides.some((s:Slide)=>!s.hidden && s.kind==='text' && !s.previewId))throw new PublishError('텍스트 장표의 윤곽 이미지가 없습니다. 다시 게시하세요.');
-    snapshot={version:1,slug:input.slug,slides:input.slides.filter((s:Slide)=>!s.hidden),assets:Object.create(null),publishedAt:new Date().toISOString()};
+    snapshot={version:1,slug:input.slug,...(input.format?{format:input.format}:{}),slides:input.slides.filter((s:Slide)=>!s.hidden),assets:Object.create(null),publishedAt:new Date().toISOString()};
     const paths=new Set<string>();
     for(const id of assetIds(snapshot.slides)) {
       const value=input.assets?.[id];

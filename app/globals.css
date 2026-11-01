@@ -602,6 +602,8 @@ body.catalog-page { background:#000; color:snow; }
 .text-body {
   position: absolute; inset: 0; margin: 0; color: #fff; text-align: left;
   padding: calc(var(--top) * 100cqw / 1920) calc(var(--right) * 100cqw / 1920) 0 calc(var(--left) * 100cqw / 1920);
+  /* Moves the first line's ink onto the top and left margins (alignInk); a shift, so the wrap never changes. */
+  translate: calc(var(--ink-x, 0) * -100cqw / 1920) calc(var(--ink-y, 0) * -100cqw / 1920);
   font-family: 'JK SFProDisplay-Regular', 'JK SM3SJGothic-03'; font-weight: 400; font-style: normal; font-synthesis: none;
   font-size: calc(var(--size) * 100cqw / 1920);
   line-height: calc(var(--leading) * 100cqw / 1920);
@@ -650,3 +652,9 @@ body.catalog-page { background:#000; color:snow; }
 .browser-page iframe, .browser-page .capture-slide, .browser-page .embed-placeholder { width: 100%; height: 100%; }
 .browser-page iframe { background: var(--tint); }
 .browser-page .capture-preview, .browser-page .capture-slide img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.toolbar .format, .font-choice label { display: flex; align-items: center; gap: var(--half); }
+.toolbar .format { padding: 0 var(--half); }
+.font-choice { flex-wrap: wrap; column-gap: var(--space); }
+/* Selects read like the other fields: no box, a rule underneath. */
+select { color: inherit; background: transparent; border: 0; border-bottom: var(--rule) solid var(--line); padding: var(--half) var(--half) var(--half) 0; cursor: pointer; }
+select:disabled { color: var(--muted); cursor: not-allowed; }

@@ -88,6 +88,14 @@ export function reorderMany(slides: Slide[], ids: string[], insertion: number): 
   const next = [...rest(0, insertion), ...block, ...rest(insertion, slides.length)];
   return next.every((s, i) => s === slides[i]) ? slides : next;
 }
+// Copies slides (deck order) right after the last of them. A copy is the same slide under a new id;
+// its images stay the same files, so editing or removing an image in one leaves the other intact.
+export function duplicate(slides: Slide[], ids: string[], id = () => crypto.randomUUID()): { slides: Slide[]; copies: string[] } {
+  const picked = new Set(ids), copies = slides.filter(s => picked.has(s.id)).map(s => ({ ...structuredClone(s), id: id() }));
+  if (!copies.length) return { slides, copies: [] };
+  const at = slides.findLastIndex(s => picked.has(s.id)) + 1;
+  return { slides: [...slides.slice(0, at), ...copies, ...slides.slice(at)], copies: copies.map(s => s.id) };
+}
 export function numberOf(slides: Slide[], id: string): number | null {
   const i = slides.filter((s) => !s.hidden).findIndex((s) => s.id === id);
   return i < 0 ? null : i + 1;

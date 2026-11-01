@@ -4,6 +4,7 @@ import {
   initial,
   reorder,
   reorderMany,
+  duplicate,
   numberOf,
   layoutPhotos,
   embed,
@@ -172,4 +173,29 @@ test('several picked slides move together, keep their order, and match single mo
   assert.strictEqual(reorderMany(initial, [initial[5].id], 6), initial);
   assert.strictEqual(reorderMany(initial, ['missing'], 3), initial);
   assert.strictEqual(reorderMany(initial, ids, -1), initial);
+});
+
+test('duplicating puts copies with new ids after the last picked slide, sharing images', () => {
+  let n = 0;
+  const id = () => `copy-${++n}`;
+  const one = duplicate(initial, [initial[4].id], id);
+  assert.deepEqual(one.copies, ['copy-1']);
+  assert.equal(one.slides.length, 80);
+  assert.equal(one.slides[5].id, 'copy-1');
+  assert.deepEqual({ ...one.slides[5], id: initial[4].id }, initial[4], 'same content');
+  assert.strictEqual(one.slides[4], initial[4], 'original untouched');
+  const set = { id: 's', title: '묶음', kind: 'gallery', src: '', hidden: true, photos: [{ id: 'p', name: 'a.webp', width: 2, height: 1 }], layout: 'rows', margin: 80 };
+  const deck = [initial[0], set, initial[1]];
+  const copied = duplicate(deck, ['s'], id);
+  copied.slides[2].photos[0].name = 'changed';
+  assert.equal(set.photos[0].name, 'a.webp', 'a deep copy');
+  assert.equal(copied.slides[2].photos[0].id, 'p', 'the same image file');
+  assert.equal(copied.slides[2].hidden, true);
+  assert.equal(validDeck(copied.slides), true);
+  // Several, picked out of order: copies follow the last picked one, in deck order.
+  const many = duplicate(initial, [initial[10].id, initial[3].id], id);
+  assert.deepEqual(many.slides.slice(11, 13).map(s => s.title), [initial[3].title, initial[10].title]);
+  assert.deepEqual(many.slides.slice(0, 11), initial.slice(0, 11));
+  assert.equal(new Set(many.slides.map(s => s.id)).size, 81);
+  assert.strictEqual(duplicate(initial, ['missing'], id).slides, initial);
 });

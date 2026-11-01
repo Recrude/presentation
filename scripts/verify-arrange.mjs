@@ -129,8 +129,39 @@ try {
     assert.deepEqual(await inset(), [120, 120, 120, 120], `${kind} margin`);
   }
 
+  // Duplicating: ⌘D copies the text slide right after it and picks the copy; editing the copy leaves
+  // the original; ⌘D inside the text field types nothing special; two picked slides copy as a block.
+  const count = async () => (await cards()).length;
+  const textAt = await page.$$eval('.card .card-title', ts => ts.findIndex(t => t.textContent === '텍스트')) + 1;
+  await page.$eval(`.card:nth-child(${textAt}) .thumbnail`, e => e.click());
+  await page.waitForSelector('.text-editor');
+  const before = await count();
+  await page.keyboard.down('Meta'); await page.keyboard.press('KeyD'); await page.keyboard.up('Meta');
+  list = await cards();
+  assert.equal(list.length, before + 1, '⌘D adds one');
+  assert.deepEqual([list[textAt - 1].title, list[textAt].title], ['텍스트', '텍스트']);
+  assert.ok(list[textAt].picked && !list[textAt - 1].picked, 'the copy is picked');
+  assert.equal(await page.$eval('.text-editor', e => e.value), '11/3 첫 장');
+  await page.click('.text-editor', { clickCount: 3 }); await page.keyboard.press('End'); await page.type('.text-editor', ' 사본');
+  await page.keyboard.down('Meta'); await page.keyboard.press('KeyD'); await page.keyboard.up('Meta');
+  assert.equal(await count(), before + 1, '⌘D in the text field does not duplicate');
+  await page.$eval(`.card:nth-child(${textAt}) .thumbnail`, e => e.click());
+  assert.equal(await page.$eval('.text-editor', e => e.value), '11/3 첫 장', 'the original keeps its text');
+  await page.$eval(`.card:nth-child(${textAt + 1}) .thumbnail`, e => e.click());
+  assert.equal(await page.$eval('.text-editor', e => e.value), '11/3 첫 장 사본');
+  await page.click(`.card:nth-child(1) .thumbnail`);
+  await page.keyboard.down('Shift'); await page.click(`.card:nth-child(2) .thumbnail`); await page.keyboard.up('Shift');
+  const pair = (await cards()).slice(0, 2).map(c => c.title);
+  await click('복제');
+  list = await cards();
+  assert.equal(list.length, before + 3);
+  assert.deepEqual(list.slice(0, 4).map(c => c.title), [...pair, ...pair], 'a block of two after the second');
+  assert.deepEqual(list.slice(0, 4).map(c => c.picked), [false, false, true, true], 'the copies are picked');
+  await click('되돌리기');
+  assert.equal(await count(), before + 1, 'undo removes the copies');
+
   assert.deepEqual(errors, []);
-  console.log('arrange: 격자 rows by default, cover, 120 margin on a page and a Safari window; 넘김 ↔ 격자 switch keeps timing; 92 slides imported hidden, 4-slide block and far single drag with autoscroll, batch show, saved order');
+  console.log('arrange: ⌘D and 복제 copy after the picked slides, the copy edits apart, undo; 격자 rows by default, cover, 120 margin on a page and a Safari window; 넘김 ↔ 격자 switch keeps timing; 92 slides imported hidden, 4-slide block and far single drag with autoscroll, batch show, saved order');
 } finally {
   await browser.close();
 }

@@ -12,6 +12,7 @@ import {
   numberOf,
   reorder,
   reorderMany,
+  duplicate,
   validDeck,
   defaultTypography,
   defaultMargin,
@@ -406,6 +407,28 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       slot: stateRef.current.findIndex((x) => x.id === s.id),
     };
   }
+  // Copies slides (the picked ones by default) right after the last of them and picks the copies,
+  // ready to edit or drag.
+  function duplicateSlides(ids = selectionRef.current) {
+    const { slides: next, copies } = duplicate(stateRef.current, ids);
+    if (!copies.length) return;
+    change(next);
+    setPicked(copies);
+    anchorRef.current = copies[0];
+    select(copies[0]);
+  }
+  // ⌘D / Ctrl+D duplicates while editing, outside text fields.
+  useEffect(() => {
+    if (present || !ready || busy) return;
+    const key = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.shiftKey || e.altKey || e.key.toLowerCase() !== 'd') return;
+      if (e.target instanceof HTMLElement && e.target.closest('input, select, textarea, [contenteditable]')) return;
+      e.preventDefault();
+      duplicateSlides();
+    };
+    window.addEventListener('keydown', key);
+    return () => window.removeEventListener('keydown', key);
+  }, [present, ready, busy]);
   useEffect(() => {
     if (!present) return;
     const key = (e: KeyboardEvent) => {
@@ -1157,6 +1180,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                     <span>{selection.length}장 선택</span>
                     <button onClick={() => change(stateRef.current.map(s => selection.includes(s.id) ? { ...s, hidden: true } : s))}>숨김</button>
                     <button onClick={() => change(stateRef.current.map(s => selection.includes(s.id) ? { ...s, hidden: false } : s))}>표시</button>
+                    <button title="⌘D" onClick={() => duplicateSlides()}>복제</button>
                     <button onClick={() => {
                       const index = slides.findIndex(s => selection.includes(s.id)), next = slides.filter(s => !selection.includes(s.id));
                       change(next); select(next[Math.min(index, next.length - 1)]?.id || '');
@@ -1179,6 +1203,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                     >
                       {active.hidden ? '표시' : '숨김'}
                     </button>
+                    <button title={selection.length > 1 ? undefined : '⌘D'} onClick={() => duplicateSlides([active.id])}>복제</button>
                     <button
                       onClick={() => {
                         const index = slides.indexOf(active),

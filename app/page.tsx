@@ -18,6 +18,7 @@ import {
   isFormat,
   sheetHeight,
   SEQUENCE_LIMIT,
+  GALLERY_LIMIT,
   MAX_ASSET,
   type Slide,
   type Photo,
@@ -669,6 +670,12 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     return { photos, palettes };
   }
   const sequence = (photos: Photo[], title: string): Slide => ({ id: crypto.randomUUID(), title, kind: 'sequence', src: '', hidden: false, photos, interval: 400, end: 'loop' });
+  // Several images either flip in place (넘김, a sequence) or sit together on one sheet in the automatic
+  // grid (격자, an image set). The sequence timing stays on the slide for switching back.
+  function arrange(slide: Slide, kind: 'sequence' | 'gallery') {
+    if (kind === 'gallery' && (slide.photos?.length || 0) > GALLERY_LIMIT) { setStatus(`격자는 ${GALLERY_LIMIT}장까지입니다 · 넘김으로 두세요`); return; }
+    patch(slide.id, kind === 'sequence' ? { kind, interval: slide.interval ?? 400, end: slide.end ?? 'loop' } : { kind });
+  }
   async function importPhotos(files: File[]) {
     if (!files.length) return;
     const mode = importMode.current;
@@ -678,7 +685,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     if (mode === 'folio' && target && files.length !== 1) { setStatus('교체할 이미지 한 장을 선택하세요.'); return; }
     const targetSlide = target ? stateRef.current.find((s) => s.id === target) : undefined;
     const existing = targetSlide?.photos || [];
-    const limit = mode === 'sequence' || targetSlide?.kind === 'sequence' ? SEQUENCE_LIMIT : 60;
+    const limit = mode === 'sequence' || targetSlide?.kind === 'sequence' ? SEQUENCE_LIMIT : GALLERY_LIMIT;
     if (files.length + existing.length > limit) {
       setStatus(`한 번에 최대 ${limit}장까지 선택할 수 있습니다.`);
       return;
@@ -1255,11 +1262,15 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                     </div>
                     {fontsMissing.some(f => fontsIn(active.text || '', active.typo?.composite === 'bold').includes(f)) && <div className="row"><span className="note">글꼴 없음 · {fontsMissing.join(', ')}</span><button disabled={busy} onClick={() => fontFileRef.current?.click()}>글꼴 파일 지정</button></div>}
                   </>}
-                  {(active.kind === 'sequence' || active.kind === 'clip') && <div className="row number-fields">
+                  {(active.kind === 'sequence' || active.kind === 'clip' || active.kind === 'gallery') && <div className="row number-fields">
+                    {active.kind !== 'clip' && <label>배열<select value={active.kind} onChange={e => arrange(active, e.target.value as 'sequence' | 'gallery')}>
+                      <option value="sequence">넘김</option>
+                      <option value="gallery" disabled={(active.photos?.length || 0) > GALLERY_LIMIT}>격자</option>
+                    </select></label>}
                     {active.kind === 'sequence' && <NumberField key={`${active.id}-interval`} label="간격 ms" value={active.interval} min={40} max={10000} step={10} onChange={v => { if (v !== undefined) patch(active.id, { interval: Math.round(v) }); }}/>}
                     {active.kind === 'sequence' && <NumberField key={`${active.id}-per`} label="한 번에" value={active.perFrame || 1} min={1} max={12} onChange={v => { if (v !== undefined && Number.isInteger(v)) patch(active.id, { perFrame: v === 1 ? undefined : v }); }}/>}
-                    <label>끝나면<select value={active.end || 'loop'} onChange={e => patch(active.id, { end: e.target.value as Slide['end'] })}>{endings.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-                    <button onClick={() => setLive(v => !v)}>{live ? '미리보기 닫기' : '미리보기'}</button>
+                    {active.kind !== 'gallery' && <label>끝나면<select value={active.end || 'loop'} onChange={e => patch(active.id, { end: e.target.value as Slide['end'] })}>{endings.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>}
+                    {active.kind !== 'gallery' && <button onClick={() => setLive(v => !v)}>{live ? '미리보기 닫기' : '미리보기'}</button>}
                   </div>}
                   {['web', 'youtube', 'video'].includes(active.kind) && (
                     <div className="row">

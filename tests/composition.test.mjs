@@ -90,3 +90,12 @@ test('tab stops and hanging indent validate; tabs stay in the text runs', () => 
   assert.equal(runs('전시\t제16회\t\tA').map(r => r.text).join(''), '전시\t제16회\t\tA');
   assert.deepEqual(paragraphs('\t\t오브제는\n\n전시\t광주'), ['\t\t오브제는', '전시\t광주'], 'leading tabs are kept');
 });
+
+test('a picture slide switches between 넘김 (sequence) and 격자 (one-sheet grid) and keeps its timing', () => {
+  const grid = { ...sequence, kind: 'gallery' };
+  assert.ok(validDeck([grid]), 'sequence timing left on a grid slide is harmless');
+  assert.ok(validDeck([{ ...grid, kind: 'sequence' }]));
+  const many = Array.from({ length: 61 }, (_, i) => photo('p' + i));
+  assert.ok(validDeck([{ ...sequence, photos: many }]), 'a sequence takes more than 60');
+  assert.equal(validDeck([{ ...grid, photos: many }]), false, 'a grid takes at most 60');
+});

@@ -39,6 +39,8 @@ export type Slide = {
 };
 export const defaultTypography: Typography = { size: 48, leading: 80, paragraph: 80, tracking: -40, top: 96, left: 96, right: 96 };
 export const SEQUENCE_LIMIT = 200;
+/** Images laid out together on one sheet (an image set, or a sequence switched to 격자). */
+export const GALLERY_LIMIT = 60;
 // Published asset formats. Text slides publish as SVG outlines, clips as MP4/WebM.
 export const assetTypes: Record<string, string> = Object.assign(Object.create(null), { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif', 'image/avif': 'avif', 'image/svg+xml': 'svg', 'video/mp4': 'mp4', 'video/webm': 'webm' });
 export const MAX_ASSET = 40 * 1024 * 1024;
@@ -209,7 +211,7 @@ export function validDeck(value: unknown): value is Slide[] {
           (s.kind !== 'folio' || (s.photos?.length === 1 && /^#[0-9a-fA-F]{6}$/.test(s.folioPalette?.background || '') && /^#[0-9a-fA-F]{6}$/.test(s.folioPalette?.foreground || ''))) &&
           Array.isArray(s.photos) &&
           s.photos.length > 0 &&
-          s.photos.length <= 60 &&
+          s.photos.length <= GALLERY_LIMIT &&
           s.photos.every(validPhoto)
         );
       if (s.kind === 'video') return s.src === '/media/audio-morphology.mp4';

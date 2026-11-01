@@ -83,8 +83,28 @@ try {
   // Imported originals still show their images.
   await page.$eval('.card:nth-child(3) .thumbnail', e => e.scrollIntoView());
   await page.waitForFunction(() => [...document.querySelectorAll('.card:nth-child(-n+4) .thumbnail img')].some(i => i.complete && i.naturalWidth > 0), { timeout: 20000 });
+  // 넘김 ↔ 격자: five images as a sequence, then all on one sheet in the automatic grid, then back.
+  const imageDir = new URL('../../261103-yun/portfolio-images/2025.12-audio-morphology/', import.meta.url).pathname;
+  const fs = await import('node:fs');
+  const images = fs.readdirSync(imageDir).filter(n => n.endsWith('.webp')).sort().slice(0, 5).map(n => imageDir + n);
+  await click('추가');
+  const [chooser] = await Promise.all([page.waitForFileChooser(), click('시퀀스')]);
+  await chooser.accept(images);
+  await page.waitForFunction(() => document.querySelectorAll('.card').length === 94, { timeout: 30000 }); await ready();
+  const setNumber = async (label, value) => page.evaluate((label, value) => { const input = [...document.querySelectorAll('.properties label')].find(l => l.textContent.startsWith(label)).querySelector('input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, value); input.dispatchEvent(new Event('input', { bubbles: true })); }, label, value);
+  await setNumber('간격', '700');
+  const arrangement = await page.evaluateHandle(() => [...document.querySelectorAll('.properties label')].find(l => l.textContent.startsWith('배열')).querySelector('select'));
+  await arrangement.select('gallery');
+  await page.waitForFunction(() => document.querySelectorAll('.preview .photo-placement').length === 5 && !document.querySelector('.preview .sequence-step'));
+  assert.equal(await page.$$eval('.properties label', ls => ls.some(l => l.textContent.startsWith('간격'))), false, 'grid has no timing fields');
+  const boxes = await page.$$eval('.preview .photo-placement', ps => ps.map(p => { const r = p.getBoundingClientRect(); return [Math.round(r.top), Math.round(r.width)]; }));
+  assert.ok(new Set(boxes.map(b => b[1])).size === 1, 'equal cells in the automatic grid');
+  await (await page.evaluateHandle(() => [...document.querySelectorAll('.properties label')].find(l => l.textContent.startsWith('배열')).querySelector('select'))).select('sequence');
+  await page.waitForFunction(() => document.querySelector('.preview .sequence-step'));
+  assert.equal(await page.evaluate(() => [...document.querySelectorAll('.properties label')].find(l => l.textContent.startsWith('간격')).querySelector('input').value), '700', 'timing is kept');
+
   assert.deepEqual(errors, []);
-  console.log('arrange: 92 slides imported hidden, 4-slide block and far single drag with autoscroll, batch show, saved order');
+  console.log('arrange: 넘김 ↔ 격자 switch keeps timing; 92 slides imported hidden, 4-slide block and far single drag with autoscroll, batch show, saved order');
 } finally {
   await browser.close();
 }

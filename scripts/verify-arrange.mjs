@@ -97,14 +97,40 @@ try {
   await arrangement.select('gallery');
   await page.waitForFunction(() => document.querySelectorAll('.preview .photo-placement').length === 5 && !document.querySelector('.preview .sequence-step'));
   assert.equal(await page.$$eval('.properties label', ls => ls.some(l => l.textContent.startsWith('간격'))), false, 'grid has no timing fields');
-  const boxes = await page.$$eval('.preview .photo-placement', ps => ps.map(p => { const r = p.getBoundingClientRect(); return [Math.round(r.top), Math.round(r.width)]; }));
-  assert.ok(new Set(boxes.map(b => b[1])).size === 1, 'equal cells in the automatic grid');
+  const boxes = await page.$$eval('.preview .photo-placement', ps => ps.map(p => Math.round(p.getBoundingClientRect().height)));
+  assert.equal(new Set(boxes).size, 1, 'one height in the automatic grid');
   await (await page.evaluateHandle(() => [...document.querySelectorAll('.properties label')].find(l => l.textContent.startsWith('배열')).querySelector('select'))).select('sequence');
   await page.waitForFunction(() => document.querySelector('.preview .sequence-step'));
   assert.equal(await page.evaluate(() => [...document.querySelectorAll('.properties label')].find(l => l.textContent.startsWith('간격')).querySelector('input').value), '700', 'timing is kept');
 
+  // Grid options on the image slide: one height (rows) by default for new slides, equal gaps.
+  const option = (label, value) => page.evaluate((label, value) => { const s = [...document.querySelectorAll('.properties label')].find(l => l.textContent.startsWith(label)).querySelector('select'); s.value = value; s.dispatchEvent(new Event('change', { bubbles: true })); }, label, value);
+  await (await page.evaluateHandle(() => [...document.querySelectorAll('.properties label')].find(l => l.textContent.startsWith('배열')).querySelector('select'))).select('gallery');
+  assert.equal(await page.evaluate(() => [...document.querySelectorAll('.properties label')].find(l => l.textContent.startsWith('정렬')).querySelector('select').value), 'rows', 'new image slides default to one height');
+  const heights = await page.$$eval('.preview .photo-placement', ps => ps.map(p => Math.round(p.getBoundingClientRect().height)));
+  assert.equal(new Set(heights).size, 1, 'one height');
+  await option('맞춤', 'cover');
+  assert.equal(await page.$eval('.preview .photo-placement img', i => getComputedStyle(i).objectFit), 'cover');
+  // Outer margin: a portfolio page and a Safari window inset by 120 px of the 1920 sheet.
+  const inset = async () => page.$eval('.preview', box => {
+    const sheet = box.querySelector('.slide-sheet').getBoundingClientRect(), unit = sheet.width / 1920;
+    const inner = (box.querySelector('.slide-inset') || box.querySelector('.browser-window')).getBoundingClientRect();
+    return [inner.left - sheet.left, inner.top - sheet.top, sheet.right - inner.right, sheet.bottom - inner.bottom].map(v => Math.round(v / unit));
+  });
+  for (const kind of ['image', 'web']) {
+    const n = await page.$$eval('.card .card-title', (titles, kind) => titles.findIndex(t => (kind === 'image' ? /\d{4}\.\d{2} · /.test(t.textContent) : t.textContent === 'VED')), kind) + 1;
+    await page.$eval(`.card:nth-child(${n}) .thumbnail`, e => e.click());
+    if (kind === 'web') {
+      await page.evaluate(() => { const box = [...document.querySelectorAll('.properties label')].find(l => l.textContent.includes('브라우저 창')).querySelector('input'); if (!box.checked) box.click(); });
+      await page.waitForSelector('.preview .browser-window');
+      assert.deepEqual(await inset(), [48, 48, 48, 48], 'the Safari window keeps 48 by default');
+    }
+    await setNumber('바깥 여백', '120');
+    assert.deepEqual(await inset(), [120, 120, 120, 120], `${kind} margin`);
+  }
+
   assert.deepEqual(errors, []);
-  console.log('arrange: 넘김 ↔ 격자 switch keeps timing; 92 slides imported hidden, 4-slide block and far single drag with autoscroll, batch show, saved order');
+  console.log('arrange: 격자 rows by default, cover, 120 margin on a page and a Safari window; 넘김 ↔ 격자 switch keeps timing; 92 slides imported hidden, 4-slide block and far single drag with autoscroll, batch show, saved order');
 } finally {
   await browser.close();
 }

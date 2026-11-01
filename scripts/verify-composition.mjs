@@ -95,6 +95,8 @@ try {
   await button('추가', '.toolbar'); await button('텍스트');
   const text = '시각 공학 디자인 Visual Engineering Design은 제가 추구하는 디자인의 개념을 정립해 가는 디자인 실천의 과정입니다. 2026년 4월 “Human Signal” — 전시.\n\n두 번째 문단: 동작하는 것을 좋아하는, 구성된 형태와 시각에 생명력을 불어넣는 작업들.';
   await page.type('.text-editor', text);
+  // Regular composite: its outlines must match the live type closely (bold is condensed only in the SVG).
+  await field('글꼴', 'regular');
   await field('크기', 64);
   await field('자동 넘김', 1.5);
 

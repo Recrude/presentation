@@ -99,3 +99,44 @@ test('a picture slide switches between 넘김 (sequence) and 격자 (one-sheet g
   assert.ok(validDeck([{ ...sequence, photos: many }]), 'a sequence takes more than 60');
   assert.equal(validDeck([{ ...grid, photos: many }]), false, 'a grid takes at most 60');
 });
+
+test('격자 layouts: one height (rows) or one width (columns), equal gaps, inside the margin; cover fills', () => {
+  const photos = [{ width: 1600, height: 900 }, { width: 900, height: 1600 }, { width: 1000, height: 1000 }, { width: 1200, height: 800 }, { width: 800, height: 1200 }];
+  const close = (a, b, d = 0.01) => Math.abs(a - b) < d;
+  const inside = (b, m, H) => b.x >= m - 0.01 && b.y >= m - 0.01 && b.x + b.width <= 1920 - m + 0.01 && b.y + b.height <= H - m + 0.01;
+  const lines = (boxes, key) => Object.values(Object.groupBy(boxes, b => Math.round(b[key])));
+  for (const [H, m, gap] of [[1080, 96, 24], [1440, 64, 40], [1080, 160, 0]]) {
+    const rows = layoutPhotos(photos, H, { layout: 'rows', gap }, m);
+    assert.ok(rows.every(b => close(b.height, rows[0].height)), 'one height');
+    assert.ok(rows.every((b, i) => close(b.width / b.height, photos[i].width / photos[i].height)), 'contain keeps each aspect');
+    assert.ok(rows.every(b => inside(b, m, H)), 'inside the margin');
+    for (const row of lines(rows, 'y')) for (let i = 1; i < row.length; i++) assert.ok(close(row[i].x - row[i - 1].x - row[i - 1].width, gap), 'equal gaps in a row');
+    const ys = [...new Set(rows.map(b => Math.round(b.y)))];
+    for (let i = 1; i < ys.length; i++) assert.ok(close(ys[i] - ys[i - 1] - rows[0].height, gap, 1), 'equal gaps between rows');
+    assert.ok(rows.some(b => close(b.x, m, 0.5) || close(b.y, m, 0.5)), 'as large as the margin allows');
+    const columns = layoutPhotos(photos, H, { layout: 'columns', gap }, m);
+    assert.ok(columns.every(b => close(b.width, columns[0].width)), 'one width');
+    assert.ok(columns.every((b, i) => close(b.width / b.height, photos[i].width / photos[i].height)));
+    assert.ok(columns.every(b => inside(b, m, H)));
+    for (const column of lines(columns, 'x')) { column.sort((a, b) => a.y - b.y); for (let i = 1; i < column.length; i++) assert.ok(close(column[i].y - column[i - 1].y - column[i - 1].height, gap), 'equal gaps in a column'); }
+    for (const layout of ['rows', 'columns']) {
+      const cover = layoutPhotos(photos, H, { layout, fit: 'cover', gap }, m);
+      assert.ok(close(Math.min(...cover.map(b => b.x)), m) && close(Math.max(...cover.map(b => b.x + b.width)), 1920 - m), `${layout} cover fills the width`);
+      assert.ok(close(Math.min(...cover.map(b => b.y)), m) && close(Math.max(...cover.map(b => b.y + b.height)), H - m), `${layout} cover fills the height`);
+    }
+    const cells = layoutPhotos(photos, H, { layout: 'cells', fit: 'cover', gap }, m);
+    assert.ok(cells.every(b => close(b.width, cells[0].width) && close(b.height, cells[0].height) && inside(b, m, H)), 'cover cells are equal');
+  }
+  const [one] = layoutPhotos([photos[0]], 1080, { layout: 'rows' }, 64);
+  assert.ok(close(one.height, 952) && close(one.width, 952 * 16 / 9) && close(one.x, 64 + (1792 - 952 * 16 / 9) / 2) && close(one.y, 64), 'one image: as large as the 1792×952 box allows, centred');
+  assert.equal(layoutPhotos(photos, 1080, { layout: 'rows' }, 600).length, 0, 'no room');
+});
+
+test('slide margin, image arrangement and tab interval validate', () => {
+  assert.ok(validDeck([{ ...sequence, margin: 120, layout: 'columns', fit: 'cover', gap: 0 }, { ...web, margin: 0 }]));
+  assert.ok(validDeck([{ ...text, typo: { ...defaultTypography, tabSize: 240 } }]));
+  for (const bad of [{ ...sequence, margin: -1 }, { ...sequence, margin: 481 }, { ...sequence, layout: 'masonry' }, { ...sequence, fit: 'fill' }, { ...sequence, gap: 401 },
+    { ...web, layout: 'rows' }, { ...text, fit: 'cover' }, { ...text, typo: { ...defaultTypography, tabSize: 4 } }])
+    assert.equal(validDeck([bad]), false, JSON.stringify(bad).slice(0, 90));
+  assert.deepEqual({ ...defaultTypography }, { size: 64, leading: 100, paragraph: 100, tracking: -25, top: 96, left: 96, right: 96, composite: 'bold' }, 'new text default');
+});

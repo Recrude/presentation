@@ -14,6 +14,10 @@ import {
   reorderMany,
   validDeck,
   defaultTypography,
+  defaultMargin,
+  DEFAULT_TAB,
+  DEFAULT_GAP,
+  ARRANGEMENTS,
   FORMATS,
   isFormat,
   sheetHeight,
@@ -51,30 +55,16 @@ const typographyFields: [Exclude<keyof Typography, 'composite' | 'tabs' | 'inden
 ];
 const endings = [['loop', '반복'], ['hold', '멈춤'], ['next', '다음 장']] as const;
 // Keeps the typed text while it is not yet a valid number (e.g. "0." on the way to "0.5").
-function NumberField({ label, value, min, max, step = 1, optional = false, onChange }: { label: string; value: number | undefined; min: number; max: number; step?: number; optional?: boolean; onChange: (value: number | undefined) => void }) {
+function NumberField({ label, value, min, max, step = 1, optional = false, placeholder = '—', onChange }: { label: string; value: number | undefined; min: number; max: number; step?: number; optional?: boolean; placeholder?: string; onChange: (value: number | undefined) => void }) {
   const [text, setText] = useState(value === undefined ? '' : String(value));
   useEffect(() => { if ((text === '' ? undefined : Number(text)) !== value) setText(value === undefined ? '' : String(value)); }, [value]);
-  return <label>{label}<input type="number" inputMode="decimal" min={min} max={max} step={step} value={text} placeholder="—"
+  return <label>{label}<input type="number" inputMode="decimal" min={min} max={max} step={step} value={text} placeholder={placeholder}
     onChange={e => {
       setText(e.target.value);
       const next = e.target.value === '' ? undefined : Number(e.target.value);
       if (next === undefined ? optional : Number.isFinite(next) && next >= min && next <= max) onChange(next);
     }}
     onBlur={() => setText(value === undefined ? '' : String(value))}/></label>;
-}
-// Tab stops as typed, e.g. "240, 720" (px from the left margin); kept as typed until it reads as stops.
-const tabList = (text: string) => { const list = text.split(/[,\s]+/).filter(Boolean).map(Number); return list.length ? [...new Set(list)].sort((a, b) => a - b) : undefined; };
-const showTabs = (tabs?: number[]) => tabs?.join(', ') || '';
-function TabsField({ value, onChange }: { value: number[] | undefined; onChange: (tabs: number[] | undefined) => void }) {
-  const [text, setText] = useState(showTabs(value));
-  useEffect(() => { if (showTabs(tabList(text)) !== showTabs(value)) setText(showTabs(value)); }, [value]);
-  return <label>탭<input aria-label="탭 위치" placeholder="12단" value={text}
-    onChange={e => {
-      setText(e.target.value);
-      const stops = tabList(e.target.value);
-      if (!stops || stops.length <= 24 && stops.every(v => Number.isFinite(v) && v >= 1 && v <= 1800)) onChange(stops);
-    }}
-    onBlur={() => setText(showTabs(value))}/></label>;
 }
 async function folderFiles(entry: FileSystemDirectoryEntry): Promise<File[]> {
   const reader = entry.createReader(), entries: FileSystemEntry[] = [];
@@ -669,12 +659,13 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     setAssets((a) => ({ ...a, ...newUrls }));
     return { photos, palettes };
   }
-  const sequence = (photos: Photo[], title: string): Slide => ({ id: crypto.randomUUID(), title, kind: 'sequence', src: '', hidden: false, photos, interval: 400, end: 'loop' });
+  // New image slides lay several images out with one height and equal gaps (layout 'rows').
+  const sequence = (photos: Photo[], title: string): Slide => ({ id: crypto.randomUUID(), title, kind: 'sequence', src: '', hidden: false, photos, interval: 400, end: 'loop', layout: 'rows' });
   // Several images either flip in place (넘김, a sequence) or sit together on one sheet in the automatic
   // grid (격자, an image set). The sequence timing stays on the slide for switching back.
   function arrange(slide: Slide, kind: 'sequence' | 'gallery') {
     if (kind === 'gallery' && (slide.photos?.length || 0) > GALLERY_LIMIT) { setStatus(`격자는 ${GALLERY_LIMIT}장까지입니다 · 넘김으로 두세요`); return; }
-    patch(slide.id, kind === 'sequence' ? { kind, interval: slide.interval ?? 400, end: slide.end ?? 'loop' } : { kind });
+    patch(slide.id, kind === 'sequence' ? { kind, interval: slide.interval ?? 400, end: slide.end ?? 'loop' } : { kind, layout: slide.layout ?? 'rows' });
   }
   async function importPhotos(files: File[]) {
     if (!files.length) return;
@@ -705,7 +696,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
             id: crypto.randomUUID(),
             title: ps[0].name.replace(/\.[^.]+$/, ''),
             kind: mode,
-            ...(mode === 'folio' ? { folioPalette: palettes[ps[0].id] } : {}),
+            ...(mode === 'folio' ? { folioPalette: palettes[ps[0].id] } : { layout: 'rows' as const }),
             src: '',
             hidden: false,
             photos: ps,
@@ -774,7 +765,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       if (images.length > SEQUENCE_LIMIT) throw Error(`시퀀스는 최대 ${SEQUENCE_LIMIT}장입니다.`);
       if (images.length) {
         const { photos } = await loadPhotos(images), title = photos[0].name.replace(/\.[^.]+$/, '');
-        added.push(photos.length > 1 ? sequence(photos, title) : { id: crypto.randomUUID(), title, kind: 'gallery', src: '', hidden: false, photos });
+        added.push(photos.length > 1 ? sequence(photos, title) : { id: crypto.randomUUID(), title, kind: 'gallery', src: '', hidden: false, photos, layout: 'rows' });
       }
       for (const file of files.filter(video).sort(byName)) added.push(await loadClip(file));
       if (!added.length) throw Error('이미지·영상 파일이나 폴더를 놓으세요.');
@@ -1234,6 +1225,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                   </div>
                   <div className="row number-fields">
                     <NumberField key={`${active.id}-advance`} label="자동 넘김 초" value={active.advance} min={0.1} max={3600} step={0.1} optional onChange={v => patch(active.id, { advance: v })}/>
+                    {active.kind !== 'text' && <NumberField key={`${active.id}-margin`} label="바깥 여백" value={active.margin} min={0} max={480} optional placeholder={String(defaultMargin(active))} onChange={v => patch(active.id, { margin: v })}/>}
                     <label className="check"><input type="checkbox" checked={active.transition === 'dissolve'} onChange={e => patch(active.id, { transition: e.target.checked ? 'dissolve' : undefined })}/>디졸브</label>
                   </div>
                   {active.kind === 'text' && <>
@@ -1258,7 +1250,8 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                       {typographyFields.map(([key, label, min, max, step]) => <NumberField key={`${active.id}-${key}`} label={label} value={(active.typo || defaultTypography)[key]} min={min} max={max} step={step}
                         onChange={v => { if (v !== undefined) patchTypography(active.id, key === 'top' ? { top: v, left: v } : { [key]: v }); }}/>)}
                       <NumberField key={`${active.id}-indent`} label="내어쓰기" value={active.typo?.indent} min={0} max={1800} optional onChange={v => patchTypography(active.id, { indent: v || undefined })}/>
-                      <TabsField key={`${active.id}-tabs`} value={active.typo?.tabs} onChange={tabs => patchTypography(active.id, { tabs })}/>
+                      <NumberField key={`${active.id}-tab`} label="탭 간격" value={active.typo?.tabSize} min={8} max={1800} optional placeholder={String(DEFAULT_TAB)}
+                        onChange={v => patchTypography(active.id, { tabSize: v, tabs: undefined })}/>
                     </div>
                     {fontsMissing.some(f => fontsIn(active.text || '', active.typo?.composite === 'bold').includes(f)) && <div className="row"><span className="note">글꼴 없음 · {fontsMissing.join(', ')}</span><button disabled={busy} onClick={() => fontFileRef.current?.click()}>글꼴 파일 지정</button></div>}
                   </>}
@@ -1267,6 +1260,9 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                       <option value="sequence">넘김</option>
                       <option value="gallery" disabled={(active.photos?.length || 0) > GALLERY_LIMIT}>격자</option>
                     </select></label>}
+                    {active.kind !== 'clip' && <label>정렬<select value={active.layout || 'cells'} onChange={e => patch(active.id, { layout: e.target.value as Slide['layout'] })}>{ARRANGEMENTS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>}
+                    {active.kind !== 'clip' && <label>맞춤<select value={active.fit || 'contain'} onChange={e => patch(active.id, { fit: e.target.value === 'cover' ? 'cover' : undefined })}><option value="contain">contain</option><option value="cover">cover</option></select></label>}
+                    {active.kind !== 'clip' && <NumberField key={`${active.id}-gap`} label="이미지 간격" value={active.gap} min={0} max={400} optional placeholder={String(DEFAULT_GAP)} onChange={v => patch(active.id, { gap: v })}/>}
                     {active.kind === 'sequence' && <NumberField key={`${active.id}-interval`} label="간격 ms" value={active.interval} min={40} max={10000} step={10} onChange={v => { if (v !== undefined) patch(active.id, { interval: Math.round(v) }); }}/>}
                     {active.kind === 'sequence' && <NumberField key={`${active.id}-per`} label="한 번에" value={active.perFrame || 1} min={1} max={12} onChange={v => { if (v !== undefined && Number.isInteger(v)) patch(active.id, { perFrame: v === 1 ? undefined : v }); }}/>}
                     {active.kind !== 'gallery' && <label>끝나면<select value={active.end || 'loop'} onChange={e => patch(active.id, { end: e.target.value as Slide['end'] })}>{endings.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>}

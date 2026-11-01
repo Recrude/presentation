@@ -129,15 +129,15 @@ try {
   // Margin guides sit on the margins (last case: 96 on a 1440-high sheet).
   const guides = await page.$eval('.preview', box => {
     const sheet = box.querySelector('.slide-sheet').getBoundingClientRect(), unit = sheet.width / 1920;
-    return [...box.querySelectorAll('.margin-guides i')].map((g, i) => { const r = g.getBoundingClientRect(); return Math.round((i ? r.left - sheet.left : r.top - sheet.top) / unit); });
+    return [...box.querySelectorAll('.margin-guides i:not(.tab-stop)')].map((g, i) => { const r = g.getBoundingClientRect(); return Math.round((i ? r.left - sheet.left : r.top - sheet.top) / unit); });
   });
   assert.deepEqual(guides, [96, 96, 1920 - 96], 'top, left and right guides');
 
-  // Tabs, typed with the Tab key. Stops 240 and 960 with a hanging indent of 240; then no stops (the
-  // 12-column grid of the text width, 144 here).
+  // Tabs, typed with the Tab key. A 480 px tab interval with a hanging indent of 240 (also a stop);
+  // then the default interval (240).
   const tabbed = [
-    { keys: ['전시', 'Tab', '제16회 광주비엔날레 《You Must Change Your Life》에서 디자인 시스템 구축을 돕고 내레이션을 맡았습니다. 줄이 넘어가면 내어쓰기 위치에서 이어집니다.', 'Enter', 'Enter', 'A', 'Tab', 'Tab', 'B'], tabs: '240, 960', indent: 240 },
-    { keys: ['기타', 'Tab', 'Tab', '두 번째', 'Enter', 'Enter', '격자', 'Tab', '열두 칸'], tabs: '', indent: '' },
+    { keys: ['전시', 'Tab', '제16회 광주비엔날레 《You Must Change Your Life》에서 디자인 시스템 구축을 돕고 내레이션을 맡았습니다. 줄이 넘어가면 내어쓰기 위치에서 이어집니다.', 'Enter', 'Enter', 'A', 'Tab', 'Tab', 'B'], tabSize: 480, indent: 240 },
+    { keys: ['기타', 'Tab', 'Tab', '두 번째', 'Enter', 'Enter', '격자', 'Tab', '열두 칸'], tabSize: '', indent: '' },
   ];
   const starts = (pieces) => page.$eval('.preview', (box, pieces) => {
     const body = box.querySelector('.text-body'), unit = box.querySelector('.slide-sheet').getBoundingClientRect().width / 1920;
@@ -163,18 +163,18 @@ try {
     await page.focus('.text-editor');
     for (const key of t.keys) ['Tab', 'Enter'].includes(key) ? await page.keyboard.press(key) : await page.keyboard.type(key);
     assert.equal(await page.$eval('.text-editor', e => document.activeElement === e), true, 'Tab stays in the text field');
-    await field('탭', t.tabs);
+    await field('탭 간격', t.tabSize);
     await field('내어쓰기', t.indent);
   }
   assert.deepEqual(await page.$eval('.text-editor', e => e.value.split('\t').length - 1), 3, 'Tab typed tabs');
   const tabCards = await page.$$('.card');
   await tabCards.at(-2).$eval('.thumbnail', e => e.click());
   const [label, after, wrapped, b] = await starts(['전', '제', 'wrap', 'B']);
-  assert.ok(Math.abs(label) <= 1 && Math.abs(after - 240) <= 1 && Math.abs(wrapped - 240) <= 1 && Math.abs(b - 960) <= 1, `stops and hanging indent: ${[label, after, wrapped, b]}`);
-  assert.equal(await page.$$eval('.preview .margin-guides .tab-stop', g => g.length), 2, 'tab stop guides');
+  assert.ok(Math.abs(label) <= 1 && Math.abs(after - 240) <= 1 && Math.abs(wrapped - 240) <= 1 && Math.abs(b - 480) <= 1, `stops and hanging indent: ${[label, after, wrapped, b]}`);
+  assert.equal(await page.$$eval('.preview .margin-guides .tab-stop', g => g.length), 4, 'tab stop guides: 240 (indent), 480, 960, 1440');
   await tabCards.at(-1).$eval('.thumbnail', e => e.click());
   const [second, grid] = await starts(['두', '열']);
-  assert.ok(Math.abs(second - 288) <= 1 && Math.abs(grid - 144) <= 1, `12-column grid stops: ${[second, grid]}`);
+  assert.ok(Math.abs(second - 480) <= 1 && Math.abs(grid - 240) <= 1, `default 240 px tab interval: ${[second, grid]}`);
 
   await button('저장'); await status('이 브라우저에 저장됨');
   await page.reload(); await page.waitForSelector('.toolbar'); await ready();

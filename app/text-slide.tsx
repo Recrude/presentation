@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, type CSSProperties } from 'react';
 import type { Slide, Typography } from './model';
-import { defaultTypography } from './model';
+import { DEFAULT_TAB, defaultTypography } from './model';
 import { condenseAdvance, family, paragraphs, runStyles, runs } from './composite';
 // Live text in the editor. The public viewer shows the SVG outlines made from this same layout.
 // 장평 cannot scale inline glyphs in CSS, so a condensed run only gives back the advance it would
@@ -47,16 +47,16 @@ export function layoutText(frame: HTMLElement, typo: Typography) {
 }
 /**
  * Tabs work as in InDesign: each tab reaches the next stop past the text before it. Stops are the
- * slide's tab positions and its hanging indent, then a 12-column grid of the text width. A tab that
- * finds no stop on its line stays empty. Measured in sheet px from the left margin.
+ * slide's explicit stops and its hanging indent, then every tabSize px (default 240). A tab that finds
+ * no stop on its line stays empty. Measured in sheet px from the left margin.
  */
 export function layoutTabs(frame: HTMLElement, typo: Typography) {
   const body = frame.firstElementChild as HTMLElement | null, unit = frame.clientWidth / 1920;
   const tabs = [...(body?.querySelectorAll<HTMLElement>('.tab') || [])];
   if (!body || !unit || !tabs.length) return;
-  const width = 1920 - typo.left - typo.right, column = width / 12;
+  const width = 1920 - typo.left - typo.right, interval = typo.tabSize || DEFAULT_TAB;
   const stops = [...new Set([...(typo.tabs || []), ...(typo.indent ? [typo.indent] : [])])].sort((a, b) => a - b);
-  const next = (x: number) => stops.find(stop => stop > x + 0.5) ?? (Math.floor((x + 0.5) / column) + 1) * column;
+  const next = (x: number) => stops.find(stop => stop > x + 0.5) ?? (Math.floor((x + 0.5) / interval) + 1) * interval;
   const left = () => body.getBoundingClientRect().left + parseFloat(getComputedStyle(body).paddingLeft);
   for (const tab of tabs) tab.style.width = '0px';
   for (const tab of tabs) {

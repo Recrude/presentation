@@ -2,7 +2,7 @@ import { localAsset } from './catalog';
 'use client';
 import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { Photo, Slide } from './model';
-import { defaultTypography, layoutPhotos, youtubeUrl, type Typography } from './model';
+import { DEFAULT_TAB, defaultMargin, defaultTypography, layoutPhotos, youtubeUrl, type Typography } from './model';
 import colors from './number-colors.json';
 import { FolioNumber } from './folio';
 import { previewSource } from './previews';
@@ -49,15 +49,20 @@ export function SlideView({
   )[index];
   const ratio = original ? 3840 / 2716 : photo ? photo.width / photo.height : slide.kind === 'clip' && slide.media ? slide.media.width / slide.media.height : 1920 / height;
   const moving = (live || playing) && !print && !thumbnail;
+  const margin = slide.margin ?? defaultMargin(slide);
   const boxes =
-    slide.kind === 'gallery' ? layoutPhotos(slide.photos || [], height) : [];
+    slide.kind === 'gallery' ? layoutPhotos(slide.photos || [], height, slide, margin) : [];
+  // Media, single images and plain embeds sit inside the slide's margin (px on its own 1920-wide sheet).
+  const inset = (content: ReactNode) => margin > 0 && !['text', 'gallery', 'sequence'].includes(slide.kind) && !(slide.kind === 'web' && slide.frame === 'browser')
+    ? <div className="slide-inset" style={{ left: `${margin / 19.2}%`, right: `${margin / 19.2}%`, top: `${margin * ratio / 19.2}%`, bottom: `${margin * ratio / 19.2}%` }}>{content}</div>
+    : content;
   return (
     <div className="slide-viewport">
       <div
         className="slide-sheet"
         style={{ '--ratio': ratio } as CSSProperties}
       >
-        {original || uploadedFolio ? (
+        {inset(original || uploadedFolio ? (
           <>
             <img
               decoding="async"
@@ -114,6 +119,7 @@ export function SlideView({
                   <img
                     draggable={false}
                     src={assets[p.id]}
+                    style={{ objectFit: slide.fit || 'contain' }}
                     alt={p.name}
                     loading={live || print ? 'eager' : 'lazy'}
                     onError={() => setFailed(true)}
@@ -151,7 +157,7 @@ export function SlideView({
             <span>{slide.kind === 'youtube' ? '영상' : '웹'}</span>
             <span>{slide.title}</span>
           </div>
-        ))}
+        )))}
         {failed && (
           <div className="image-failure" role="alert">
             이미지 로딩 실패
@@ -162,13 +168,19 @@ export function SlideView({
   );
 }
 
+// Tab stops inside the text width: explicit stops and the hanging indent, then every tabSize px.
+function tabStops(typo: Typography) {
+  const width = 1920 - typo.left - typo.right, size = typo.tabSize || DEFAULT_TAB;
+  const every = Array.from({ length: Math.floor(width / size) }, (_, i) => (i + 1) * size).filter(x => x < width);
+  return [...new Set([...(typo.tabs || []), ...(typo.indent ? [typo.indent] : []), ...every])].sort((a, b) => a - b);
+}
 function MarginGuides({ typo, height }: { typo: Typography; height: number }) {
   const x = (px: number) => `${px / 19.2}%`;
   return <div className="margin-guides" aria-hidden="true">
     <i style={{ left: 0, right: 0, top: `${typo.top / height * 100}%`, height: 1 }}/>
     <i style={{ top: 0, bottom: 0, left: x(typo.left), width: 1 }}/>
     <i style={{ top: 0, bottom: 0, left: x(1920 - typo.right), width: 1 }}/>
-    {[...new Set([...(typo.tabs || []), ...(typo.indent ? [typo.indent] : [])])].map(stop => <i key={stop} className="tab-stop" style={{ top: 0, bottom: 0, left: x(typo.left + stop), width: 1 }}/>)}
+    {tabStops(typo).map(stop => <i key={stop} className="tab-stop" style={{ top: 0, bottom: 0, left: x(typo.left + stop), width: 1 }}/>)}
   </div>;
 }
 
@@ -207,10 +219,10 @@ function Sequence({ slide, assets, moving, eager, onFinish, onError }: { slide: 
   const mounted = new Set(moving ? [-1, 0, 1, 2, 3].map(d => index + d).map(i => slide.end === 'loop' ? (i + steps.length) % steps.length : i) : [0]);
   return <>{steps.map((step, i) => {
     if (!mounted.has(i)) return null;
-    const boxes = layoutPhotos(step, height);
+    const boxes = layoutPhotos(step, height, slide, slide.margin ?? 64);
     return <div key={step[0].id} className="sequence-step" style={{ visibility: i === index ? 'visible' : 'hidden' }}>
       {step.map((p, j) => <div key={p.id} className="photo-placement" style={{ left: `${boxes[j].x / 19.2}%`, top: `${boxes[j].y / height * 100}%`, width: `${boxes[j].width / 19.2}%`, height: `${boxes[j].height / height * 100}%` }}>
-        {assets[p.id] ? <img draggable={false} src={assets[p.id]} alt={p.name} loading={eager ? 'eager' : 'lazy'} onError={onError}
+        {assets[p.id] ? <img draggable={false} src={assets[p.id]} style={{ objectFit: slide.fit || 'contain' }} alt={p.name} loading={eager ? 'eager' : 'lazy'} onError={onError}
           ref={node => { const list = images.current.get(i) || []; if (node) images.current.set(i, [...list.filter(n => n.isConnected), node]); }}/> : <span>이미지 불러오는 중</span>}
       </div>)}
     </div>;
@@ -270,7 +282,7 @@ function BrowserFrame({ slide, live, preview, children }: { slide: Slide; live: 
   const tint = stored || sampled || '#000000';
   const channels = [1, 3, 5].map(i => parseInt(tint.slice(i, i + 2), 16));
   const light = (0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]) / 255 > 0.55;
-  return <div className={`browser-stage${live ? ' is-live' : ''}`}>
+  return <div className={`browser-stage${live ? ' is-live' : ''}`} style={{ '--frame-margin': slide.margin ?? 48 } as CSSProperties}>
     <div className={`browser-window${light ? ' is-light' : ''}`} style={{ '--tint': tint } as CSSProperties}>
       <div className="browser-bar" aria-hidden="true">
         <span className="browser-light"/><span className="browser-light"/><span className="browser-light"/>

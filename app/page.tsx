@@ -776,8 +776,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       await Promise.all(Array.from({ length: Math.min(4, count) }, async () => { while (next < count) { const i = next++; await download(post.items[i], i); } }));
       // One slide in the post's order: images and videos alike are items of one sequence (a lone image
       // is a picture slide).
-      const title = name.trim() || post.title, items: Photo[] = [];
-      for (const file of files) items.push(file.type.startsWith('video/') ? await loadVideoItem(file) : (await loadPhotos([file])).photos[0]);
+      const title = name.trim() || post.title, items = await loadItems(files);
       insert([items.length === 1 && !items[0].video
         ? { id: crypto.randomUUID(), title, kind: 'gallery', src: '', hidden: false, photos: items, layout: 'rows' }
         : { ...sequence(items, title), interval: 2000 }]);
@@ -917,6 +916,12 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     const { media, posterId, length } = await storeVideo(file);
     return { ...media, video: true, poster: posterId, length };
   }
+  // Images and videos as items of one sequence, in the order given.
+  async function loadItems(files: File[]) {
+    const items: Photo[] = [];
+    for (const file of files) items.push(file.type.startsWith('video/') ? await loadVideoItem(file) : (await loadPhotos([file])).photos[0]);
+    return items;
+  }
   async function importClips(files: File[]) {
     if (!files.length) return;
     setBusy(true); setStatus('영상 불러오는 중');
@@ -936,11 +941,14 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       const files = entries.length ? loose.filter(f => entries.some(e => e.isFile && e.name === f.name)) : loose;
       const image = (f: File) => /^image\/(png|jpeg|webp|gif|avif)$/.test(f.type), video = (f: File) => /^video\//.test(f.type);
       const added: Slide[] = [];
+      // A folder with images is one sequence, its videos among them in name order and its images 2 s each
+      // then, like an Instagram post; a folder of videos alone gives clips.
       for (const folder of folders) {
-        const images = folder.files.filter(image).sort(byName);
-        if (images.length > SEQUENCE_LIMIT) throw Error(`${folder.name} · 시퀀스는 최대 ${SEQUENCE_LIMIT}장입니다.`);
-        if (images.length) added.push(sequence((await loadPhotos(images)).photos, folder.name));
-        for (const file of folder.files.filter(video).sort(byName)) added.push(await loadClip(file));
+        const images = folder.files.filter(image), videos = folder.files.filter(video).sort(byName);
+        if (!images.length) { for (const file of videos) added.push(await loadClip(file)); continue; }
+        const items = [...images, ...videos].sort(byName);
+        if (items.length > SEQUENCE_LIMIT) throw Error(`${folder.name} · 시퀀스는 최대 ${SEQUENCE_LIMIT}장입니다.`);
+        added.push(videos.length ? { ...sequence(await loadItems(items), folder.name), interval: 2000 } : sequence((await loadPhotos(items)).photos, folder.name));
       }
       const images = files.filter(image).sort(byName);
       if (images.length > SEQUENCE_LIMIT) throw Error(`시퀀스는 최대 ${SEQUENCE_LIMIT}장입니다.`);

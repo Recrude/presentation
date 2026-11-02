@@ -1,5 +1,7 @@
 import { lookup } from 'node:dns/promises';
 import path from 'node:path';
+import os from 'node:os';
+import { copyFile, mkdir } from 'node:fs/promises';
 import { isIP, BlockList } from 'node:net';
 import puppeteer from 'puppeteer-core';
 import { instagramHandler } from '../server/instagram.mjs';
@@ -56,8 +58,11 @@ export async function capture(raw) {
   }
   const local=process.env.CHROME_EXECUTABLE_PATH || (process.platform==='darwin'?'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome':null);
   const chromium=local?null:(await import('@sparticuz/chromium')).default;
-  if (chromium) await chromium.font(path.join(process.cwd(), 'api/fonts/NotoSansKR.ttf'));
-  const browser=await puppeteer.launch({executablePath:local || await chromium.executablePath(),args:local?[]:await puppeteer.defaultArgs({args:chromium.args,headless:'shell'}),headless:local?true:'shell'});
+  const executablePath=local || await chromium.executablePath();
+  // Serverless Chromium reads fonts from /tmp/fonts, which executablePath() has just unpacked (with its
+  // fonts.conf); Korean pages need Noto Sans KR there before launch.
+  if (chromium) { const fonts=path.join(os.tmpdir(),'fonts'); await mkdir(fonts,{recursive:true}); await copyFile(path.join(process.cwd(),'api/fonts/NotoSansKR.ttf'),path.join(fonts,'NotoSansKR.ttf')); }
+  const browser=await puppeteer.launch({executablePath,args:local?[]:await puppeteer.defaultArgs({args:chromium.args,headless:'shell'}),headless:local?true:'shell'});
   try {
     // The preview and the toolbar color are both the page's light color scheme, whatever the viewer uses.
     const page=await browser.newPage(); await page.setViewport({width:1920,height:1080,deviceScaleFactor:1});

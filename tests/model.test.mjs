@@ -99,9 +99,21 @@ test('youtube inputs normalize, autoplay is presentation-only and controls remai
       '1',
     );
   }
+  const ranged = new URL(youtubeUrl({ ...initial[0], ...embed('https://youtu.be/QIAcSGkOLDk'), from: 12.6, to: 30.2 }, true));
+  assert.deepEqual([ranged.searchParams.get('start'), ranged.searchParams.get('end')], ['12', '31'], 'YouTube takes whole seconds, widened');
+  assert.equal(new URL(youtubeUrl({ ...initial[0], ...embed('https://youtu.be/QIAcSGkOLDk') }, true)).searchParams.has('start'), false);
   assert.throws(() => embed('javascript:alert(1)'));
   assert.throws(() => embed('https://youtube.com/watch?v=bad'));
   assert.throws(() => embed('https://user:password@example.com'));
+});
+
+test('Vimeo page links become its player; player embeds stay as pasted', () => {
+  assert.deepEqual(embed('https://vimeo.com/22439234'), { kind: 'web', src: 'https://player.vimeo.com/video/22439234' });
+  assert.equal(embed('https://vimeo.com/123456789/abcdef1234').src, 'https://player.vimeo.com/video/123456789?h=abcdef1234', 'an unlisted video keeps its hash');
+  assert.equal(embed('https://vimeo.com/channels/staffpicks/22439234').src, 'https://player.vimeo.com/video/22439234');
+  const code = '<iframe src="https://player.vimeo.com/video/22439234?h=abc&amp;badge=0&amp;autopause=0" frameborder="0"></iframe>';
+  assert.equal(embed(code).src, 'https://player.vimeo.com/video/22439234?h=abc&badge=0&autopause=0');
+  assert.equal(embed('https://vimeo.com/about').src, 'https://vimeo.com/about', 'other Vimeo pages are pages');
 });
 
 test('previous decks including empty decks restore; malformed or duplicate slides fail', () => {

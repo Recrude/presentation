@@ -1,5 +1,6 @@
 'use client';
 import {
+  Fragment,
   useEffect,
   useRef,
   useState,
@@ -29,6 +30,9 @@ import {
   SEQUENCE_LIMIT,
   GALLERY_LIMIT,
   MAX_ASSET,
+  stepDuration,
+  vimeoPlayer,
+  type Range,
   type Slide,
   type Photo,
   type Typography,
@@ -72,6 +76,31 @@ function NumberField({ label, heading, value, min, max, step = 1, optional = fal
     }}
     onBlur={() => setText(value === undefined ? '' : String(value))}/>;
   return heading ? <div className="field">{heading}{input}</div> : <label>{label}{input}</label>;
+}
+// A video's range in seconds: empty is its start and its end. The start stays before the end and
+// inside the length when it is known; an end at or past the length is the end.
+function RangeFields({ id, range, length, step = 0.1, labels = ['시작 초', '끝 초'], onChange }: { id: string; range: Range; length?: number; step?: number; labels?: [string, string]; onChange: (range: Range) => void }) {
+  const end = Math.min(range.to ?? Infinity, length ?? 3600);
+  return <>
+    <NumberField key={`${id}-from`} label={labels[0]} value={range.from} min={0} max={Math.max(0, end - 0.05)} step={step} optional placeholder="0"
+      onChange={v => onChange({ ...range, from: v || undefined })}/>
+    <NumberField key={`${id}-to`} label={labels[1]} value={range.to} min={(range.from || 0) + 0.05} max={length ?? 3600} step={step} optional placeholder={length ? String(Math.round(length * 10) / 10) : '끝'}
+      onChange={v => onChange({ ...range, to: v === undefined || length !== undefined && v >= length ? undefined : v })}/>
+  </>;
+}
+// One frame of a video as a WebP still at most 1920 wide: the frame at `at` seconds, else one just
+// after the start (the very first is often black).
+async function grabFrame(src: string, at?: number) {
+  const video = document.createElement('video');
+  video.muted = true; video.playsInline = true; video.preload = 'auto'; video.src = src;
+  await new Promise<void>((resolve, reject) => { video.onloadeddata = () => resolve(); video.onerror = () => reject(Error('이 브라우저에서 재생할 수 없는 영상입니다.')); });
+  if (!video.videoWidth || !video.videoHeight) throw Error('영상 크기를 읽지 못했습니다.');
+  await new Promise<void>(resolve => { const timer = setTimeout(resolve, 5000); video.onseeked = () => { clearTimeout(timer); resolve(); }; video.currentTime = at ?? Math.min(0.1, (video.duration || 0.2) / 2); });
+  const scale = Math.min(1, 1920 / video.videoWidth), canvas = document.createElement('canvas');
+  canvas.width = Math.round(video.videoWidth * scale); canvas.height = Math.round(video.videoHeight * scale);
+  canvas.getContext('2d')!.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const still = await new Promise<Blob>((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(Error('미리보기 프레임을 만들지 못했습니다.')), 'image/webp', 0.86));
+  return { still, width: video.videoWidth, height: video.videoHeight, duration: video.duration };
 }
 async function folderFiles(entry: FileSystemDirectoryEntry): Promise<File[]> {
   const reader = entry.createReader(), entries: FileSystemEntry[] = [];
@@ -176,6 +205,44 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   function patchTypography(id: string, values: Partial<Typography>) {
     const typo = stateRef.current.find(s => s.id === id)?.typo || defaultTypography;
     patch(id, { typo: { ...typo, ...values } });
+  }
+  // A change that follows from earlier edits (a still redrawn for a range start) applies to the undo
+  // steps too, so undoing never shows the start with another still.
+  function amend(update: (slides: Slide[]) => Slide[]) {
+    history.current = history.current.map(update);
+    const next = update(stateRef.current);
+    stateRef.current = next;
+    setSlides(next);
+    setDirty(true);
+    setStatus('저장되지 않음');
+  }
+  // Sets the range of a slide's video: a clip's media, one video of a sequence or grid (photoId), or the
+  // slide itself (YouTube, the exhibition video, Vimeo). A clip's or item's still is redrawn at the new
+  // start a moment after it stops changing, so thumbnails, PDF and the frame before playback match it.
+  const stillTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  function setRange(slide: Slide, range: Range, photoId?: string) {
+    const { from, to } = range;
+    if (!photoId && slide.kind !== 'clip') { if (slide.from !== from || slide.to !== to) patch(slide.id, { from, to }); return; }
+    const item = photoId ? slide.photos?.find(p => p.id === photoId) : slide.media;
+    if (!item || item.from === from && item.to === to) return;
+    patch(slide.id, photoId ? { photos: slide.photos!.map(p => p.id === photoId ? { ...p, from, to } : p) } : { media: { ...item, from, to } });
+    const src = objectUrls.current.get(item.id) || assets[item.id], key = `${slide.id}:${item.id}`;
+    if (from === item.from || !src) return;
+    clearTimeout(stillTimers.current.get(key));
+    stillTimers.current.set(key, setTimeout(async () => {
+      stillTimers.current.delete(key);
+      const find = (slides: Slide[]) => { const s = slides.find(x => x.id === slide.id); return photoId ? s?.photos?.find(p => p.id === photoId) : s?.media; };
+      try {
+        const { still } = await grabFrame(src, from);
+        if (find(stateRef.current)?.from !== from) return; // undone or changed again meanwhile
+        const id = crypto.randomUUID(), url = URL.createObjectURL(still);
+        await saveImages([[id, still]]);
+        objectUrls.current.set(id, url); setAssets(a => ({ ...a, [id]: url }));
+        if (find(stateRef.current)?.from !== from) return;
+        // Every state (now and in the undo history) where this video starts there gets the new still.
+        amend(slides => find(slides)?.from !== from ? slides : slides.map(s => s.id !== slide.id ? s : photoId ? { ...s, photos: s.photos!.map(p => p.id === photoId ? { ...p, poster: id } : p) } : { ...s, previewId: id }));
+      } catch { /* the earlier still stays */ }
+    }, 600));
   }
   // A new text slide continues the type of the nearest text slide before it, like a Keynote master.
   function nearestTypography() {
@@ -800,25 +867,17 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     if (file.size > MAX_ASSET) throw Error(`${file.name} · 영상 한 개는 40MB 이하여야 합니다. 짧게 자르거나 압축하세요.`);
     const src = URL.createObjectURL(file);
     try {
-      const video = document.createElement('video');
-      video.muted = true; video.playsInline = true; video.preload = 'auto'; video.src = src;
-      await new Promise<void>((resolve, reject) => { video.onloadeddata = () => resolve(); video.onerror = () => reject(Error(`${file.name} · 이 브라우저에서 재생할 수 없는 영상입니다.`)); });
-      if (!video.videoWidth || !video.videoHeight) throw Error(`${file.name} · 영상 크기를 읽지 못했습니다.`);
-      await new Promise<void>(resolve => { const timer = setTimeout(resolve, 5000); video.onseeked = () => { clearTimeout(timer); resolve(); }; video.currentTime = Math.min(0.1, (video.duration || 0.2) / 2); });
-      const scale = Math.min(1, 1920 / video.videoWidth), canvas = document.createElement('canvas');
-      canvas.width = Math.round(video.videoWidth * scale); canvas.height = Math.round(video.videoHeight * scale);
-      canvas.getContext('2d')!.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const poster = await new Promise<Blob>((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(Error('미리보기 프레임을 만들지 못했습니다.')), 'image/webp', 0.86));
+      const { still: poster, width, height, duration } = await grabFrame(src).catch(e => { throw Error(`${file.name} · ${e instanceof Error ? e.message : '영상을 읽지 못했습니다.'}`); });
       const mediaId = crypto.randomUUID(), posterId = crypto.randomUUID(), posterUrl = URL.createObjectURL(poster);
       await saveImages([[mediaId, file], [posterId, poster]]);
       objectUrls.current.set(mediaId, src); objectUrls.current.set(posterId, posterUrl);
       setAssets(a => ({ ...a, [mediaId]: src, [posterId]: posterUrl }));
-      return { media: { id: mediaId, name: file.name, width: video.videoWidth, height: video.videoHeight }, posterId, length: Math.max(0.04, Math.round((video.duration || 0) * 100) / 100) };
+      return { media: { id: mediaId, name: file.name, width, height }, posterId, length: Math.max(0.04, Math.round((duration || 0) * 100) / 100) };
     } catch (e) { URL.revokeObjectURL(src); throw e; }
   }
   async function loadClip(file: File): Promise<Slide> {
-    const { media, posterId } = await storeVideo(file);
-    return { id: crypto.randomUUID(), title: file.name.replace(/\.[^.]+$/, ''), kind: 'clip', src: '', hidden: false, media, previewId: posterId, end: 'loop', muted: true };
+    const { media, posterId, length } = await storeVideo(file);
+    return { id: crypto.randomUUID(), title: file.name.replace(/\.[^.]+$/, ''), kind: 'clip', src: '', hidden: false, media: { ...media, length }, previewId: posterId, end: 'loop', muted: true };
   }
   // A video as one item of a sequence: laid out like an image, its length is its default time.
   async function loadVideoItem(file: File): Promise<Photo> {
@@ -1366,6 +1425,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                     {active.kind !== 'clip' && <NumberField key={`${active.id}-gap`} label="이미지 간격" value={active.gap} min={0} max={400} optional placeholder={String(DEFAULT_GAP)} onChange={v => patch(active.id, { gap: v })}/>}
                     {active.kind === 'sequence' && <NumberField key={`${active.id}-interval`} label="간격 ms" value={active.interval} min={40} max={10000} step={10} onChange={v => { if (v !== undefined) patch(active.id, { interval: Math.round(v) }); }}/>}
                     {active.kind === 'sequence' && <NumberField key={`${active.id}-per`} label="한 번에" value={active.perFrame || 1} min={1} max={12} onChange={v => { if (v !== undefined && Number.isInteger(v)) patch(active.id, { perFrame: v === 1 ? undefined : v }); }}/>}
+                    {active.kind === 'clip' && active.media && <RangeFields id={active.id} range={active.media} length={active.media.length} onChange={r => setRange(active, r)}/>}
                     {active.kind !== 'gallery' && <label>끝나면<select value={active.end || 'loop'} onChange={e => patch(active.id, { end: e.target.value as Slide['end'] })}>{endings.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>}
                     {active.kind !== 'gallery' && <button onClick={() => setLive(v => !v)}>{live ? '미리보기 닫기' : '미리보기'}</button>}
                   </div>}
@@ -1381,6 +1441,9 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                       <button disabled={busy} onClick={() => previewFileRef.current?.click()}>캡처 이미지 지정</button>
                     </div>
                   )}
+                  {(active.kind === 'youtube' || active.kind === 'video' || active.kind === 'web' && vimeoPlayer(active.src)) && <div className="row number-fields">
+                    <RangeFields id={active.id} range={active} step={active.kind === 'youtube' ? 1 : 0.1} onChange={r => setRange(active, r)}/>
+                  </div>}
                   {active.kind === 'web' && <div className="row"><label className="check"><input type="checkbox" checked={active.frame === 'browser'} onChange={e => patch(active.id, { frame: e.target.checked ? 'browser' : undefined })}/>브라우저 창</label></div>}
                   {(active.kind === 'youtube' || active.kind === 'video') && (
                     <div className="video-settings">
@@ -1417,9 +1480,10 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                         이미지 더 넣기
                       </button>
                       {active.photos?.map((p, i) => (
-                        <div className="photo-row" key={p.id}>
+                        <Fragment key={p.id}>
+                        <div className="photo-row">
                           <span>{p.name}</span>
-                          {active.kind === 'sequence' && <NumberField key={`${p.id}-duration`} label="초" value={p.duration} min={0.04} max={600} step={0.1} optional placeholder={String(p.video && p.length ? Math.round(p.length * 10) / 10 : (active.interval || 400) / 1000)}
+                          {active.kind === 'sequence' && <NumberField key={`${p.id}-duration`} label="초" value={p.duration} min={0.04} max={600} step={0.1} optional placeholder={String(Math.round(stepDuration([{ ...p, duration: undefined }], active.interval || 400) / 100) / 10)}
                             onChange={v => patch(active.id, { photos: active.photos!.map(x => x.id === p.id ? { ...x, duration: v } : x) })}/>}
                           <button
                             disabled={i === 0}
@@ -1457,6 +1521,8 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                             삭제
                           </button>
                         </div>
+                        {p.video && <div className="photo-range"><RangeFields id={p.id} range={p} length={p.length} labels={['초부터', '초까지']} onChange={r => setRange(active, r, p.id)}/></div>}
+                        </Fragment>
                       ))}
                     </div>
                   )}

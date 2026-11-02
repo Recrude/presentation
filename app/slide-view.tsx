@@ -1,8 +1,8 @@
 import { localAsset } from './catalog';
 'use client';
-import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import type { Photo, Slide } from './model';
-import { DEFAULT_TAB, defaultTypography, layoutPhotos, marginOf, stepDuration, youtubeUrl, type Typography } from './model';
+import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
+import type { Photo, Range, Slide } from './model';
+import { DEFAULT_TAB, defaultTypography, layoutPhotos, marginOf, ranged, stepDuration, vimeoPlayer, youtubeUrl, type Typography } from './model';
 import colors from './number-colors.json';
 import { FolioNumber } from './folio';
 import { previewSource } from './previews';
@@ -100,7 +100,7 @@ export function SlideView({
           <Sequence key={slide.id} slide={slide} assets={assets} moving={moving} eager={live || print || playing} onFinish={playing ? onFinish : undefined} onError={() => setFailed(true)}/>
         ) : slide.kind === 'clip' ? (
           moving && slide.media && assets[slide.media.id]
-            ? <Clip key={slide.id} slide={slide} src={assets[slide.media.id]} poster={preview} onFinish={playing ? onFinish : undefined}/>
+            ? <Clip key={slide.id} slide={slide} range={slide.media} src={assets[slide.media.id]} poster={preview} onFinish={playing ? onFinish : undefined}/>
             : preview ? <img draggable={false} className="capture-preview" src={preview} alt={slide.title}/> : <div className="embed-placeholder"><span>영상</span><span>{slide.title}</span></div>
         ) : slide.kind === 'gallery' ? (
           <>
@@ -124,21 +124,7 @@ export function SlideView({
         ) : live && slide.kind === 'video' ? (
           <LocalVideo key={slide.id} slide={slide} src={assets[slide.src] || localAsset(slide.src)} preview={preview} playing={playing}/>
         ) : live ? (
-          <>
-            <iframe
-              key={`${slide.id}-${playing}`}
-              src={
-                slide.kind === 'youtube'
-                  ? youtubeUrl(slide, playing)
-                  : slide.src
-              }
-              title={slide.title}
-              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-              allowFullScreen
-              referrerPolicy="strict-origin-when-cross-origin"
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
-            />
-          </>
+          <EmbedFrame key={`${slide.id}-${playing}`} slide={slide} playing={playing}/>
         ) : preview ? (
           <img draggable={false} className="capture-preview" src={preview} alt={slide.title}/>
         ) : (
@@ -176,7 +162,9 @@ function MarginGuides({ typo, height }: { typo: Typography; height: number }) {
 function LocalVideo({ slide, src, preview, playing }: { slide: Slide; src: string; preview: string; playing: boolean }) {
   // Finishing a background download must never restart an already playing video.
   const [playbackSource] = useState(src);
-  return <video className="local-video" src={playbackSource} poster={preview}
+  const ref = useRef<HTMLVideoElement>(null);
+  useRange(ref, slide, 'hold');
+  return <video ref={ref} className="local-video" src={playbackSource} poster={preview}
     autoPlay={playing && slide.autoplay !== false} muted={slide.muted !== false}
     controls playsInline preload="auto" aria-label={slide.title}/>;
 }
@@ -225,26 +213,103 @@ function Sequence({ slide, assets, moving, eager, onFinish, onError }: { slide: 
 // longer); in thumbnails and print it is its still frame.
 function PhotoMedia({ photo, assets, fit, moving, active = moving, eager, onError, imageRef }: { photo: Photo; assets: Record<string, string>; fit?: Slide['fit']; moving: boolean; active?: boolean; eager: boolean; onError: () => void; imageRef?: (node: HTMLImageElement | null) => void }) {
   const still = photo.video ? photo.poster && assets[photo.poster] : assets[photo.id];
-  if (photo.video && moving && assets[photo.id]) return <StepVideo src={assets[photo.id]} poster={still || undefined} fit={fit} name={photo.name} active={active} onError={onError}/>;
+  if (photo.video && moving && assets[photo.id]) return <StepVideo src={assets[photo.id]} range={photo} poster={still || undefined} fit={fit} name={photo.name} active={active} onError={onError}/>;
   return still ? <img draggable={false} src={still} style={{ objectFit: fit || 'contain' }} alt={photo.name} loading={eager ? 'eager' : 'lazy'} onError={onError} ref={imageRef}/> : <span>이미지 불러오는 중</span>;
 }
-function StepVideo({ src, poster, fit, name, active, onError }: { src: string; poster?: string; fit?: Slide['fit']; name: string; active: boolean; onError: () => void }) {
+function StepVideo({ src, range, poster, fit, name, active, onError }: { src: string; range: Range; poster?: string; fit?: Slide['fit']; name: string; active: boolean; onError: () => void }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [playbackSource] = useState(src);
+  useRange(ref, range, 'loop');
   useEffect(() => {
     const video = ref.current;
     if (!video) return;
-    if (active) { video.currentTime = 0; void video.play().catch(() => undefined); }
+    if (active) { video.currentTime = range.from || 0; void video.play().catch(() => undefined); }
     else video.pause();
   }, [active]);
-  return <video ref={ref} src={playbackSource} poster={poster} muted loop playsInline preload="auto" style={{ objectFit: fit || 'contain' }} aria-label={name} onError={onError}/>;
+  return <video ref={ref} src={playbackSource} poster={poster} muted loop={!ranged(range)} playsInline preload="auto" style={{ objectFit: fit || 'contain' }} aria-label={name} onError={onError}/>;
 }
 
-function Clip({ slide, src, poster, onFinish }: { slide: Slide; src: string; poster: string; onFinish?: () => void }) {
+function Clip({ slide, range = {}, src, poster, onFinish }: { slide: Slide; range?: Range; src: string; poster: string; onFinish?: () => void }) {
   // Short muted clips play like a GIF: no controls, loop, hold on the last frame, or move on.
   const [playbackSource] = useState(src);
-  return <video className="local-video" src={playbackSource} poster={poster} autoPlay muted playsInline preload="auto"
-    loop={slide.end === 'loop'} onEnded={() => { if (slide.end === 'next') onFinish?.(); }} aria-label={slide.title}/>;
+  const ref = useRef<HTMLVideoElement>(null), end = slide.end || 'loop';
+  useRange(ref, range, end, onFinish);
+  return <video ref={ref} className="local-video" src={playbackSource} poster={poster} autoPlay muted playsInline preload="auto"
+    loop={end === 'loop' && !ranged(range)} aria-label={slide.title}/>;
+}
+
+// Keeps a video inside its range: it starts at from, and on reaching to (or the file's end) loops back
+// to from, holds there, or moves on. Playing from outside the range starts it again at from. Without a
+// range the element plays by itself (loop attribute) and only its end is reported.
+function useRange(ref: RefObject<HTMLVideoElement | null>, { from = 0, to }: Range, end: 'loop' | 'hold' | 'next', onFinish?: () => void) {
+  const finish = useRef(onFinish);
+  finish.current = onFinish;
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+    const limited = ranged({ from, to });
+    let frame = 0;
+    const seek = () => { video.currentTime = from; };
+    const reach = () => {
+      if (end === 'loop' && limited) { seek(); void video.play().catch(() => undefined); return; }
+      video.pause();
+      if (end === 'next') finish.current?.();
+    };
+    // Checked every frame while playing, so the end lands within a frame (timeupdate comes every 250 ms).
+    const watch = () => {
+      cancelAnimationFrame(frame);
+      if (to !== undefined && video.currentTime >= to) reach();
+      if (!video.paused) frame = requestAnimationFrame(watch);
+    };
+    const play = () => { if (video.currentTime < from - 0.05 || to !== undefined && video.currentTime >= to) seek(); watch(); };
+    if (limited) {
+      if (video.readyState >= 1) { if (video.currentTime < from || to !== undefined && video.currentTime >= to) seek(); }
+      else video.addEventListener('loadedmetadata', seek, { once: true });
+      video.addEventListener('play', play);
+      if (!video.paused) watch();
+    }
+    video.addEventListener('ended', reach);
+    return () => { cancelAnimationFrame(frame); video.removeEventListener('loadedmetadata', seek); video.removeEventListener('play', play); video.removeEventListener('ended', reach); };
+  }, [from, to, end]);
+}
+
+// A live embed. Vimeo's player keeps a range through its postMessage API: it starts at from and at to
+// goes back to from when the player loops (loop=1 or background=1 in its address), else pauses.
+function EmbedFrame({ slide, playing }: { slide: Slide; playing: boolean }) {
+  const ref = useRef<HTMLIFrameElement>(null);
+  const vimeo = slide.kind === 'web' && vimeoPlayer(slide.src) && ranged(slide);
+  const { from = 0, to } = slide;
+  useEffect(() => {
+    const player = ref.current?.contentWindow;
+    if (!vimeo || !player) return;
+    const send = (method: string, value?: unknown) => player.postMessage(value === undefined ? { method } : { method, value }, 'https://player.vimeo.com');
+    let loops = false;
+    try { const q = new URL(slide.src).searchParams; loops = q.get('loop') === '1' || q.get('background') === '1'; } catch {}
+    const listen = () => { send('addEventListener', 'timeupdate'); if (from) send('setCurrentTime', from); };
+    const message = (e: MessageEvent) => {
+      if (e.origin !== 'https://player.vimeo.com' || e.source !== player) return;
+      let data = e.data;
+      try { if (typeof data === 'string') data = JSON.parse(data); } catch { return; }
+      if (data?.event === 'ready') listen();
+      if (data?.event !== 'timeupdate') return;
+      const seconds = Number(data.data?.seconds);
+      // The player's own loop goes back to 0; the range takes it back to from.
+      if (seconds < from - 0.5) send('setCurrentTime', from);
+      else if (to !== undefined && seconds >= to) { if (loops) send('setCurrentTime', from); else send('pause'); }
+    };
+    addEventListener('message', message);
+    // A range set while the player is already up applies at once (before that, its ready event does).
+    listen();
+    return () => removeEventListener('message', message);
+  }, [vimeo, from, to, slide.src]);
+  // The start also goes into the address, so the player opens there before its API answers.
+  const src = slide.kind === 'youtube' ? youtubeUrl(slide, playing) : vimeo && from ? `${slide.src.split('#')[0]}#t=${Math.floor(from)}s` : slide.src;
+  return <iframe ref={ref} src={src} title={slide.title}
+    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+    allowFullScreen
+    referrerPolicy="strict-origin-when-cross-origin"
+    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-presentation"
+  />;
 }
 
 function browserFrame(slide: Slide, live: boolean, preview: string, content: ReactNode) {

@@ -186,3 +186,24 @@ test('videos are items of a sequence or grid: still frame, length as their defau
     assert.equal(validDeck([{ ...sequence, photos: [bad] }]), false, JSON.stringify(bad));
   assert.equal(validDeck([{ id: 'f', title: 'F', kind: 'folio', src: '', hidden: false, photos: [clipItem], folioPalette: { background: '#000000', foreground: '#ffffff' } }]), false, 'no video in a folio');
 });
+
+test('a video plays a range: from its start and to its end when unset, inside its length', () => {
+  const clipItem = { ...photo('v'), name: 'v.mp4', video: true, poster: 'v-still', length: 6.5 };
+  assert.equal(stepDuration([{ ...clipItem, from: 1.5 }], 2000), 5000, 'the range is the step’s default time');
+  assert.equal(stepDuration([{ ...clipItem, from: 1, to: 3.25 }], 2000), 2250);
+  assert.equal(stepDuration([{ ...clipItem, to: 9 }], 2000), 6500, 'never past the file');
+  assert.equal(stepDuration([{ ...clipItem, from: 1, to: 2, duration: 4 }], 2000), 4000, 'its own seconds still win');
+  assert.ok(validDeck([{ ...sequence, photos: [{ ...clipItem, from: 0, to: 6.5 }, { ...clipItem, id: 'w', from: 6.4 }] }]));
+  for (const bad of [{ ...clipItem, from: 3, to: 3 }, { ...clipItem, from: 6.5 }, { ...clipItem, from: -1 }, { ...clipItem, to: 0 }, { ...clipItem, to: '2' }, { ...photo('a'), from: 1 }, { ...photo('a'), to: 2 }])
+    assert.equal(validDeck([{ ...sequence, photos: [bad] }]), false, JSON.stringify(bad));
+  // A clip's video keeps its range (and its length, newer clips) on the clip's media.
+  const clip = { id: 'c', title: 'C', kind: 'clip', src: '', hidden: false, media: { ...photo('m'), length: 12 }, previewId: 'm-still', end: 'hold' };
+  assert.ok(validDeck([clip, { ...clip, id: 'd', media: { ...photo('n'), from: 2, to: 4 } }, { ...clip, id: 'e', media: { ...clip.media, from: 2, to: 30 } }]));
+  assert.equal(validDeck([{ ...clip, media: { ...clip.media, from: 12 } }]), false, 'a start inside the length');
+  assert.equal(validDeck([{ ...clip, media: { ...clip.media, poster: 'x' } }]), false);
+  // Embeds keep their range on the slide: YouTube, the exhibition video and Vimeo's player.
+  const vimeo = { id: 'vi', title: 'V', kind: 'web', src: 'https://player.vimeo.com/video/22439234', hidden: false, from: 10, to: 20.5 };
+  assert.ok(validDeck([vimeo, { id: 'y', title: 'Y', kind: 'youtube', src: 'https://www.youtube-nocookie.com/embed/QIAcSGkOLDk', hidden: false, from: 3 }, { id: 'lv', title: 'L', kind: 'video', src: '/media/audio-morphology.mp4', hidden: false, to: 60 }]));
+  assert.equal(validDeck([{ ...vimeo, from: 20.5 }]), false);
+  assert.equal(validDeck([{ ...sequence, from: 1 }]), false, 'a sequence’s videos keep their own ranges');
+});

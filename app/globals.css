@@ -302,6 +302,10 @@ aside {
 /* A sequence image's own duration: "1.5 초", empty shows the slide's interval. */
 .photo-row label { display: flex; flex-direction: row-reverse; align-items: center; gap: var(--half); }
 .photo-row input { width: 5.5em; text-align: right; }
+/* A video item's range under its row: "3 초부터 12.5 초까지". */
+.photo-range { display: flex; justify-content: flex-end; gap: var(--space); padding-bottom: var(--half); }
+.photo-range label { display: flex; flex-direction: row-reverse; align-items: center; gap: var(--half); }
+.photo-range input { width: 5.5em; text-align: right; }
 .slide-viewport {
   width: 100%;
   height: 100%;

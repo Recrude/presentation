@@ -3,8 +3,16 @@ import { chronologicalPages, projectForPage } from './chronology.ts';
  * duration: in a sequence, seconds this image stays before the next one (the slide's interval when unset).
  * video: a muted video laid out like an image in a sequence or grid; its file is under id, a still frame
  * under poster (thumbnails, PDF, before playback) and its length in seconds is the step's default time.
+ * from/to: the part of a video that plays (see Range); a clip's video keeps its range here too.
  */
-export type Photo = { id: string; name: string; width: number; height: number; duration?: number; video?: true; poster?: string; length?: number };
+export type Photo = { id: string; name: string; width: number; height: number; duration?: number; video?: true; poster?: string; length?: number } & Range;
+/** The part of a video that plays, in seconds: from its start (0) and to its end when unset. */
+export type Range = { from?: number; to?: number };
+export const ranged = (r: Range) => !!r.from || r.to !== undefined;
+/** Vimeo's player (player.vimeo.com/video/<id>), the one web page whose range the editor controls. */
+export function vimeoPlayer(src: string) {
+  try { const u = new URL(src); return u.hostname === 'player.vimeo.com' && /^\/video\/\d+/.test(u.pathname); } catch { return false; }
+}
 // Text slide measurements are px on the 1920-wide sheet; tracking is 1/1000 em like InDesign.
 // top and left are measured to the ink of the first line (see alignInk in text-slide.tsx).
 // tabSize is the distance between tab stops in px from the left margin (default 240); indent is a
@@ -49,6 +57,9 @@ export type Slide = {
   end?: 'loop' | 'hold' | 'next';
   advance?: number;
   transition?: 'dissolve';
+  /** YouTube, the exhibition video and a Vimeo player: the part that plays (clips and sequence videos keep it on their Photo). */
+  from?: number;
+  to?: number;
 };
 export const defaultTypography: Typography = { size: 64, leading: 100, paragraph: 100, tracking: -25, top: 96, left: 96, right: 96, composite: 'bold' };
 /** Outer margin when a slide sets none: image sets and sequences keep 64, the Safari window 48, the rest bleed. */
@@ -112,9 +123,9 @@ export function duplicate(slides: Slide[], ids: string[], id = () => crypto.rand
   const at = slides.findLastIndex(s => picked.has(s.id)) + 1;
   return { slides: [...slides.slice(0, at), ...copies, ...slides.slice(at)], copies: copies.map(s => s.id) };
 }
-/** How long a sequence step stays, in ms: the longest of its items, each its own duration, else a video's length, else the slide's interval. */
-export const stepDuration = (step: Pick<Photo, 'duration' | 'video' | 'length'>[], interval = 400) =>
-  Math.max(...step.map(p => p.duration !== undefined ? p.duration * 1000 : p.video && p.length ? p.length * 1000 : interval));
+/** How long a sequence step stays, in ms: the longest of its items, each its own duration, else a video's range (its length when unset), else the slide's interval. */
+export const stepDuration = (step: Pick<Photo, 'duration' | 'video' | 'length' | 'from' | 'to'>[], interval = 400) =>
+  Math.max(...step.map(p => p.duration !== undefined ? p.duration * 1000 : p.video && p.length ? Math.max(0.04, Math.min(p.to ?? p.length, p.length) - (p.from ?? 0)) * 1000 : interval));
 export function numberOf(slides: Slide[], id: string): number | null {
   const i = slides.filter((s) => !s.hidden).findIndex((s) => s.id === id);
   return i < 0 ? null : i + 1;
@@ -150,6 +161,11 @@ export function embed(raw: string) {
       src: `https://www.youtube-nocookie.com/embed/${id}`,
     };
   }
+  // A Vimeo page link (vimeo.com/<id>, an unlisted one with its hash) becomes its player.
+  if (host === 'vimeo.com') {
+    const parts = u.pathname.split('/').filter(Boolean), at = parts.findIndex(p => /^\d+$/.test(p));
+    if (at >= 0) return { kind: 'web' as const, src: `https://player.vimeo.com/video/${parts[at]}${/^[\da-f]{6,}$/.test(parts[at + 1] || '') ? `?h=${parts[at + 1]}` : ''}` };
+  }
   return { kind: 'web' as const, src: u.href };
 }
 export function youtubeUrl(s: Slide, playing: boolean) {
@@ -159,6 +175,9 @@ export function youtubeUrl(s: Slide, playing: boolean) {
   u.searchParams.set('mute', playing && s.muted !== false ? '1' : '0');
   u.searchParams.set('playsinline', '1');
   u.searchParams.set('rel', '0');
+  // YouTube takes whole seconds; the range is widened to them.
+  if (s.from) u.searchParams.set('start', String(Math.floor(s.from)));
+  if (s.to !== undefined) u.searchParams.set('end', String(Math.ceil(s.to)));
   return u.href;
 }
 /** How several images share a sheet. Missing values keep the original image-set layout (equal cells). */
@@ -258,7 +277,9 @@ function packColumns(a: number[], across: number, along: number, gap: number) {
   }
   return best;
 }
-const validPhoto = (p: Photo) =>
+// A video item of a sequence or grid has its still and length; a clip's video may keep its length; an
+// image has neither, nor a range.
+const validPhoto = (p: Photo, clip = false) =>
   !!p &&
   typeof p.id === 'string' &&
   typeof p.name === 'string' &&
@@ -267,7 +288,13 @@ const validPhoto = (p: Photo) =>
   Number.isFinite(p.height) &&
   p.height > 0 &&
   (p.duration === undefined || within(p.duration, 0.04, 600)) &&
-  (p.video === undefined ? p.poster === undefined && p.length === undefined : p.video === true && typeof p.poster === 'string' && within(p.length, 0.04, 3600));
+  (p.length === undefined || within(p.length, 0.04, 3600)) && validRange(p, p.length) &&
+  (p.video === true ? typeof p.poster === 'string' && p.length !== undefined
+    : p.video === undefined && p.poster === undefined && (clip || p.length === undefined && p.from === undefined && p.to === undefined));
+const validRange = (r: Range, length?: number) =>
+  (r.from === undefined || within(r.from, 0, 3600) && (length === undefined || r.from < length)) &&
+  (r.to === undefined || within(r.to, 0.04, 3600)) &&
+  (r.from === undefined || r.to === undefined || r.from < r.to);
 const within = (v: unknown, min: number, max: number) => typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
 export function validTypography(t: Typography | undefined): t is Typography {
   return !!t && within(t.size, 8, 400) && within(t.leading, 8, 800) && within(t.paragraph, 0, 1000) && within(t.tracking, -300, 1000) &&
@@ -301,7 +328,8 @@ export function validDeck(value: unknown): value is Slide[] {
         (Array.isArray(s.photos) && s.photos.some((p: Photo) => p?.video) && s.kind !== 'gallery' && s.kind !== 'sequence') ||
         (s.layout !== undefined && !['rows', 'columns', 'cells'].includes(s.layout)) ||
         (s.fit !== undefined && !['contain', 'cover'].includes(s.fit)) ||
-        (s.gap !== undefined && !within(s.gap, 0, 400))
+        (s.gap !== undefined && !within(s.gap, 0, 400)) ||
+        ((s.from !== undefined || s.to !== undefined) && (!['web', 'youtube', 'video'].includes(s.kind) || !validRange(s)))
       )
         return false;
       if (s.kind === 'image')
@@ -309,18 +337,18 @@ export function validDeck(value: unknown): value is Slide[] {
       if (s.kind === 'text')
         return typeof s.text === 'string' && s.text.length <= 10000 && validTypography(s.typo);
       if (s.kind === 'sequence')
-        return Array.isArray(s.photos) && s.photos.length > 0 && s.photos.length <= SEQUENCE_LIMIT && s.photos.every(validPhoto) &&
+        return Array.isArray(s.photos) && s.photos.length > 0 && s.photos.length <= SEQUENCE_LIMIT && s.photos.every((p: Photo) => validPhoto(p)) &&
           Number.isInteger(s.interval) && within(s.interval, 40, 10000) && ['loop', 'hold', 'next'].includes(s.end) &&
           (s.perFrame === undefined || Number.isInteger(s.perFrame) && within(s.perFrame, 1, 12));
       if (s.kind === 'clip')
-        return validPhoto(s.media) && ['loop', 'hold', 'next'].includes(s.end);
+        return validPhoto(s.media, true) && ['loop', 'hold', 'next'].includes(s.end);
       if (s.kind === 'gallery' || s.kind === 'folio')
         return (
           (s.kind !== 'folio' || (s.photos?.length === 1 && /^#[0-9a-fA-F]{6}$/.test(s.folioPalette?.background || '') && /^#[0-9a-fA-F]{6}$/.test(s.folioPalette?.foreground || ''))) &&
           Array.isArray(s.photos) &&
           s.photos.length > 0 &&
           s.photos.length <= GALLERY_LIMIT &&
-          s.photos.every(validPhoto)
+          s.photos.every((p: Photo) => validPhoto(p))
         );
       if (s.kind === 'video') return s.src === '/media/audio-morphology.mp4';
       if (s.kind === 'web' || s.kind === 'youtube') {

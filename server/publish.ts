@@ -106,6 +106,7 @@ export async function executePublish(input: any, git: GitApi, secret: string) {
   } else if(input.action==='deck') {
     if(!validDeckId(input.slug) || !validDeck(input.slides) || input.format!==undefined && !isFormat(input.format))throw new PublishError('발표 형식을 확인하세요.');
     if(input.slides.some((s:Slide)=>!s.hidden && s.kind==='text' && !s.previewId))throw new PublishError('텍스트 장표의 윤곽 이미지가 없습니다. 다시 게시하세요.');
+    if(input.slides.some((s:Slide)=>!s.hidden && s.photos?.some(p=>p.caption && !p.captionId)))throw new PublishError('캡션의 윤곽 이미지가 없습니다. 다시 게시하세요.');
     snapshot={version:1,slug:input.slug,...(input.format?{format:input.format}:{}),slides:input.slides.filter((s:Slide)=>!s.hidden),assets:Object.create(null),publishedAt:new Date().toISOString()};
     const paths=new Set<string>();
     for(const id of assetIds(snapshot.slides)) {

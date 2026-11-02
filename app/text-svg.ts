@@ -12,12 +12,13 @@ import type { FontData } from './fonts';
 const parsed = new WeakMap<ArrayBuffer, Font>();
 const font = (data: ArrayBuffer) => parsed.get(data) || parsed.set(data, opentype.parse(data)).get(data)!;
 const n = (v: number) => String(Math.round(v * 100) / 100);
-function mount(host: HTMLElement, slide: Slide) {
+function mount(host: HTMLElement, slide: Slide, caption?: 'left' | 'center' | 'right') {
   const root = createRoot(host);
-  flushSync(() => root.render(createElement(TextBody, { slide })));
+  flushSync(() => root.render(createElement(TextBody, { slide, caption })));
   return root;
 }
-export async function textSvg(slide: Slide, data: FontData, height = 1080): Promise<{ blob: Blob; missing: string[] }> {
+/** A text slide's outlines on the whole sheet; a caption (a text slide from captionTypography) too, in its place under its image. */
+export async function textSvg(slide: Slide, data: FontData, height = 1080, caption?: 'left' | 'center' | 'right'): Promise<{ blob: Blob; missing: string[] }> {
   const fonts: Record<string, Font> = {};
   for (const postscript of fontsIn(slide.text || '', slide.typo?.composite === 'bold')) {
     if (!data[postscript]) throw Error(`글꼴 파일을 지정하세요 · ${postscript}`);
@@ -26,7 +27,7 @@ export async function textSvg(slide: Slide, data: FontData, height = 1080): Prom
   const host = document.createElement('div');
   host.style.cssText = `position:fixed;left:-30000px;top:0;width:1920px;height:${height}px;visibility:hidden;pointer-events:none`;
   document.body.append(host);
-  const root = mount(host, slide);
+  const root = mount(host, slide, caption);
   const probeHost = document.createElement('div');
   probeHost.style.cssText = host.style.cssText;
   document.body.append(probeHost);

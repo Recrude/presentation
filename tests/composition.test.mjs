@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validDeck, assetIds, defaultTypography, assetTypes, isFormat, sheetHeight, layoutPhotos, FORMATS, marginOf, storedMargin, stepDuration, sequenceSteps, groupSteps, joinOrSplit } from '../app/model.ts';
+import { validDeck, assetIds, defaultTypography, assetTypes, isFormat, sheetHeight, layoutPhotos, FORMATS, marginOf, storedMargin, stepDuration, sequenceSteps, groupSteps, joinOrSplit, captionRoom, captionTypography } from '../app/model.ts';
 import { runs, paragraphs, styleOf, runStyles, fontsIn, styleSample, COMPOSITES } from '../app/composite.ts';
 const photo = id => ({ id, name: id + '.webp', width: 1600, height: 900 });
 const text = { id: 't', title: 'T', kind: 'text', src: '', hidden: false, text: '가 A', typo: { ...defaultTypography } };
@@ -235,4 +235,40 @@ test('sequence steps: 한 번에 groups evenly, images joined by hand make steps
   assert.equal(validDeck([{ ...clip, media: { ...photo('m'), joined: true } }]), false);
   assert.equal(validDeck([{ ...sequence, photos: Array.from({ length: 61 }, (_, i) => i ? { ...photo('p' + i), joined: true } : photo('p0')) }]), false);
   assert.ok(validDeck([{ ...sequence, photos: Array.from({ length: 61 }, (_, i) => i && i !== 30 ? { ...photo('p' + i), joined: true } : photo('p' + i)) }]));
+});
+
+test('captions: every image keeps the room of the longest one inside the margin, and its caption lines up under it', () => {
+  assert.equal(captionRoom([photo('a')]), 0, 'no caption, no room');
+  assert.equal(captionRoom([photo('a'), { ...photo('b'), caption: '「낯선 접점」, 2025' }]), 30, 'one line: 12 gap + 18');
+  assert.equal(captionRoom([{ ...photo('a'), caption: '첫 줄\n\n둘째 줄\n셋째 줄' }]), 90, 'blank lines are not lines: 12 + 18 + 2 × 30');
+  const photos = [{ width: 1600, height: 900 }, { width: 900, height: 1600 }, { width: 1000, height: 1000 }, { width: 1200, height: 800 }, { width: 800, height: 1200 }];
+  const overlap = (a, b) => a.x < b.x + b.width - 0.01 && b.x < a.x + a.width - 0.01 && a.y < b.y + b.height - 0.01 && b.y < a.y + a.height - 0.01;
+  for (const below of [30, 90]) for (const layout of ['rows', 'columns', 'cells']) for (const fit of ['contain', 'cover']) for (const n of [1, 3, 5]) {
+    const m = { top: 64, right: 64, bottom: 96, left: 64 }, boxes = layoutPhotos(photos.slice(0, n), 1080, { layout, fit, gap: 24 }, m, below);
+    const blocks = boxes.map(b => ({ ...b, height: b.height + below })), name = `${layout} ${fit} ${n} below ${below}`;
+    assert.ok(blocks.every(b => b.x >= 63.99 && b.y >= 63.99 && b.x + b.width <= 1856.01 && b.y + b.height <= 984.01), `${name}: image and caption room inside the margin`);
+    assert.ok(blocks.every((a, i) => blocks.every((b, j) => i === j || !overlap(a, b))), `${name}: no caption room under another image`);
+    if (fit === 'contain') assert.ok(boxes.every((b, i) => Math.abs(b.width / b.height - photos[i].width / photos[i].height) < 0.001), `${name}: aspect kept`);
+    if (layout !== 'cells' && fit === 'cover') assert.ok(Math.abs(Math.max(...blocks.map(b => b.y + b.height)) - 984) < 0.01, `${name}: cover fills to the bottom margin with the room`);
+  }
+  assert.deepEqual(layoutPhotos(photos, 1080, { layout: 'rows' }, 64, 0), layoutPhotos(photos, 1080, { layout: 'rows' }, 64), 'no room, the layout as before');
+  const box = { x: 300, y: 100, width: 400, height: 300 };
+  assert.deepEqual(captionTypography(box), { size: 18, leading: 30, paragraph: 0, tracking: -40, top: 412, left: 300, right: 0 }, 'left: from the image’s left edge, 12 under it');
+  const centre = captionTypography(box, 'center');
+  assert.equal((centre.left + 1920 - centre.right) / 2, 500, 'centre: margins around the image’s centre');
+  assert.equal(captionTypography(box, 'right').right, 1220, 'right: to the image’s right edge');
+});
+
+test('captions validate on grid and sequence images only, with their outlines published as assets', () => {
+  const captioned = { ...sequence, captionAlign: 'center', photos: [{ ...photo('a'), caption: '캡션\n둘째 줄', captionId: 'outline' }, photo('b')] };
+  assert.ok(validDeck([captioned, { ...captioned, id: 'g', kind: 'gallery', captionAlign: 'right' }]));
+  assert.deepEqual(assetIds([captioned]), ['a', 'outline', 'b']);
+  for (const bad of [
+    { ...captioned, captionAlign: 'left' }, { ...text, captionAlign: 'center' },
+    { ...captioned, photos: [{ ...photo('a'), captionId: 'outline' }] },
+    { ...captioned, photos: [{ ...photo('a'), caption: '1\n2\n3\n4\n5' }] },
+    { ...captioned, photos: [{ ...photo('a'), caption: 'x'.repeat(501) }] },
+    { ...captioned, photos: [{ ...photo('a'), caption: 1 }] },
+    { ...clip, media: { ...photo('m'), caption: '영상' } },
+  ]) assert.equal(validDeck([bad]), false, JSON.stringify(bad).slice(0, 120));
 });

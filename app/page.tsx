@@ -35,6 +35,11 @@ import {
   sequenceSteps,
   groupSteps,
   joinOrSplit,
+  CAPTION,
+  captionLines,
+  captionRoom,
+  captionTypography,
+  layoutPhotos,
   vimeoPlayer,
   type Range,
   type Slide,
@@ -195,6 +200,8 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   // The outer margin's four sides open below it; a slide that has different sides opens with them.
   const [sidesOpen, setSidesOpen] = useState(false);
   useEffect(() => setSidesOpen(typeof active?.margin === 'object'), [active?.id]);
+  // An image's caption field shows once it has a caption, or after its 캡션 button.
+  const [captionsOpen, setCaptionsOpen] = useState<string[]>([]);
   const selection = picked.includes(selected) ? slides.filter(s => picked.includes(s.id)).map(s => s.id) : selected ? [selected] : [];
   const selectionRef = useRef(selection);
   selectionRef.current = selection;
@@ -262,6 +269,12 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     const steps = edit(sequenceSteps(slide.photos, slide.perFrame));
     if (steps.some(step => step.length > GALLERY_LIMIT)) { setStatus(`한 순번은 ${GALLERY_LIMIT}장까지입니다.`); return; }
     patch(id, groupSteps(steps, slide.perFrame));
+  }
+  // A caption is kept as typed, at most CAPTION.lines lines; emptied, it goes. Its outlines (captionId)
+  // are made again when publishing.
+  function setCaption(slide: Slide, photoId: string, value: string) {
+    if (captionLines(value) > CAPTION.lines) { setStatus(`캡션은 ${CAPTION.lines}줄까지입니다.`); return; }
+    patch(slide.id, { photos: slide.photos!.map(p => { if (p.id !== photoId) return p; const { caption, captionId, ...rest } = p; return value ? { ...rest, caption: value } : rest; }) });
   }
   function swapPhotos(id: string, a: number, b: number) {
     regroup(id, steps => { const ps = steps.flat(); [ps[a], ps[b]] = [ps[b], ps[a]]; let at = 0; return steps.map(step => ps.slice(at, at += step.length)); });
@@ -694,7 +707,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   function finish(id: string) {
     if (advanceRef.current.id === id) setPosition(p => Math.min(p + 1, advanceRef.current.length - 1));
   }
-  const textFonts = (deck: Slide[]) => [...new Set(deck.filter(s => s.kind === 'text').flatMap(s => fontsIn(s.text || '', s.typo?.composite === 'bold')))];
+  const textFonts = (deck: Slide[]) => [...new Set(deck.flatMap(s => s.kind === 'text' ? fontsIn(s.text || '', s.typo?.composite === 'bold') : (s.photos || []).flatMap(p => p.caption ? fontsIn(p.caption) : [])))];
   const usedFonts = textFonts(slides).sort().join(',');
   useEffect(() => {
     if (publicView || !usedFonts) return;
@@ -976,24 +989,36 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     } catch (e) { setStatus(e instanceof Error ? e.message : '파일을 추가하지 못했습니다.'); }
     finally { setBusy(false); }
   }
-  // Text slides are published as SVG outlines (fonts stay in this browser). Regenerated on every publish.
+  // Text slides and captions are published as SVG outlines (fonts stay in this browser). Regenerated on
+  // every publish; a caption's outlines sit where the slide's layout puts it in each step.
   async function outlineTexts(deck: Slide[], current: Record<string, string>) {
     const texts = deck.filter(s => !s.hidden && s.kind === 'text');
-    if (!texts.length) return { deck, assets: current };
+    const captioned = deck.filter(s => !s.hidden && (s.kind === 'gallery' || s.kind === 'sequence') && s.photos?.some(p => p.caption));
+    if (!texts.length && !captioned.length) return { deck, assets: current };
     setStatus('텍스트 윤곽 만드는 중');
-    const data = await fontData(textFonts(texts));
+    const data = await fontData(textFonts([...texts, ...captioned]));
     const { textSvg } = await import('./text-svg');
     const entries: [string, Blob][] = [], urls: Record<string, string> = {}, ids: Record<string, string> = {};
-    for (const slide of texts) {
-      const { blob, missing } = await textSvg(slide, data, height);
-      if (missing.length) throw Error(`${slide.title} · 글꼴에 없는 글자: ${[...new Set(missing)].join(' ')}`);
+    const outline = async (key: string, slide: Slide, title: string, caption?: 'left' | 'center' | 'right') => {
+      const { blob, missing } = await textSvg(slide, data, height, caption);
+      if (missing.length) throw Error(`${title} · 글꼴에 없는 글자: ${[...new Set(missing)].join(' ')}`);
       const id = crypto.randomUUID();
-      entries.push([id, blob]); urls[id] = URL.createObjectURL(blob); ids[slide.id] = id;
+      entries.push([id, blob]); urls[id] = URL.createObjectURL(blob); ids[key] = id;
+    };
+    for (const slide of texts) await outline(slide.id, slide, slide.title);
+    for (const slide of captioned) {
+      const below = captionRoom(slide.photos);
+      for (const step of slide.kind === 'sequence' ? sequenceSteps(slide.photos!, slide.perFrame) : [slide.photos!]) {
+        const boxes = layoutPhotos(step, height, slide, marginOf(slide), below);
+        for (const [j, p] of step.entries())
+          if (p.caption) await outline(`${slide.id}/${p.id}`, { id: p.id, title: p.name, kind: 'text', src: '', hidden: false, text: p.caption, typo: captionTypography(boxes[j], slide.captionAlign) }, `${slide.title} · ${p.name} 캡션`, slide.captionAlign || 'left');
+      }
     }
     await saveImages(entries);
     Object.entries(urls).forEach(([id, src]) => objectUrls.current.set(id, src));
     setAssets(a => ({ ...a, ...urls }));
-    const next = deck.map(s => ids[s.id] ? { ...s, previewId: ids[s.id] } : s);
+    const next = deck.map(s => ids[s.id] ? { ...s, previewId: ids[s.id] }
+      : s.photos?.some(p => ids[`${s.id}/${p.id}`]) ? { ...s, photos: s.photos.map(p => ids[`${s.id}/${p.id}`] ? { ...p, captionId: ids[`${s.id}/${p.id}`] } : p) } : s);
     if (stateRef.current === deck) { stateRef.current = next; setSlides(next); }
     return { deck: next, assets: { ...current, ...urls } };
   }
@@ -1477,6 +1502,9 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                     {active.kind !== 'clip' && <label>정렬<select value={active.layout || 'cells'} onChange={e => patch(active.id, { layout: e.target.value as Slide['layout'] })}>{ARRANGEMENTS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>}
                     {active.kind !== 'clip' && <label>맞춤<select value={active.fit || 'contain'} onChange={e => patch(active.id, { fit: e.target.value === 'cover' ? 'cover' : undefined })}><option value="contain">contain</option><option value="cover">cover</option></select></label>}
                     {active.kind !== 'clip' && <NumberField key={`${active.id}-gap`} label="이미지 간격" value={active.gap} min={0} max={400} optional placeholder={String(DEFAULT_GAP)} onChange={v => patch(active.id, { gap: v })}/>}
+                    {active.photos?.some(p => p.caption) && <label>캡션 정렬<select value={active.captionAlign || 'left'} onChange={e => patch(active.id, { captionAlign: e.target.value === 'center' || e.target.value === 'right' ? e.target.value : undefined })}>
+                      <option value="left">왼쪽</option><option value="center">가운데</option><option value="right">오른쪽</option>
+                    </select></label>}
                     {active.kind === 'sequence' && <NumberField key={`${active.id}-interval`} label="간격 ms" value={active.interval} min={40} max={10000} step={10} onChange={v => { if (v !== undefined) patch(active.id, { interval: Math.round(v) }); }}/>}
                     {active.kind === 'sequence' && <NumberField key={`${active.id}-per`} label="한 번에" value={byHand ? undefined : active.perFrame || 1} min={1} max={PER_FRAME_LIMIT}
                       onChange={v => { if (v !== undefined && Number.isInteger(v)) patch(active.id, { perFrame: v === 1 ? undefined : v, ...byHand && { photos: active.photos!.map(({ joined, ...p }) => p) } }); }}/>}
@@ -1526,6 +1554,8 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                   )}
                   {active.kind === 'image' && <div className="note">{projectForPage(Number(active.src.match(/page-(\d+)/)?.[1]))?.period}</div>}
                   {active.kind === 'folio' && <div className="row"><button disabled={busy} onClick={() => chooseFolioFiles(active.id)}>조판면 이미지 교체</button></div>}
+                  {(active.kind === 'gallery' || active.kind === 'sequence') && fontsMissing.some(f => active.photos?.some(p => p.caption && fontsIn(p.caption).includes(f))) &&
+                    <div className="row"><span className="note">캡션 글꼴 없음 · {fontsMissing.join(', ')}</span><button disabled={busy} onClick={() => fontFileRef.current?.click()}>글꼴 파일 지정</button></div>}
                   {(active.kind === 'gallery' || active.kind === 'sequence') && (
                     <div className="photo-list">
                       <button
@@ -1541,6 +1571,11 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                           <span>{p.name}</span>
                           {active.kind === 'sequence' && <NumberField key={`${p.id}-duration`} label="초" value={p.duration} min={0.04} max={600} step={0.1} optional placeholder={String(Math.round(stepDuration([{ ...p, duration: undefined }], active.interval || 400) / 100) / 10)}
                             onChange={v => patch(active.id, { photos: active.photos!.map(x => x.id === p.id ? { ...x, duration: v } : x) })}/>}
+                          <button aria-label={`${p.name} 캡션`} aria-expanded={p.caption !== undefined || captionsOpen.includes(p.id)} onClick={() => {
+                            if (p.caption === undefined && captionsOpen.includes(p.id)) { setCaptionsOpen(o => o.filter(x => x !== p.id)); return; }
+                            setCaptionsOpen(o => [...o, p.id]);
+                            requestAnimationFrame(() => document.querySelector<HTMLTextAreaElement>(`[data-caption="${CSS.escape(p.id)}"]`)?.focus());
+                          }}>캡션</button>
                           {stepStarts && <button disabled={i === 0} aria-label={`${p.name} ${stepStarts.has(p.id) ? '앞 순번과 묶기' : '여기서 순번 나누기'}`}
                             onClick={() => regroup(active.id, steps => joinOrSplit(steps, p.id))}>{stepStarts.has(p.id) ? '묶기' : '풀기'}</button>}
                           <button disabled={i === 0} aria-label={`${p.name} 앞으로`} onClick={() => swapPhotos(active.id, i - 1, i)}>←</button>
@@ -1555,6 +1590,8 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                           </button>
                         </div>
                         {p.video && <div className="photo-range"><RangeFields id={p.id} range={p} length={p.length} labels={['초부터', '초까지']} onChange={r => setRange(active, r, p.id)}/></div>}
+                        {(p.caption !== undefined || captionsOpen.includes(p.id)) && <textarea className="caption-field" data-caption={p.id} aria-label={`${p.name} 캡션`} placeholder="캡션"
+                          rows={Math.max(1, (p.caption || '').split('\n').length)} maxLength={500} value={p.caption || ''} onChange={e => setCaption(active, p.id, e.target.value)}/>}
                         </Fragment>
                       ))}
                     </div>

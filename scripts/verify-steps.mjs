@@ -66,7 +66,7 @@ try {
   const letters = Object.fromEntries(names.map((n, i) => [n, 'abcdef'[i]]));
   const panel = () => page.$$eval('.photo-row', (rows, letters) => {
     let steps = '', labels = '';
-    rows.forEach((r, i) => { steps += (i && !r.classList.contains('joined') ? ' ' : '') + letters[r.querySelector('span').textContent]; labels += r.querySelector('button').textContent === '풀기' ? '+' : '·'; });
+    rows.forEach((r, i) => { steps += (i && !r.classList.contains('joined') ? ' ' : '') + letters[r.querySelector('span').textContent]; labels += [...r.querySelectorAll('button')].some(b => b.textContent === '풀기') ? '+' : '·'; });
     return [steps, labels];
   }, letters);
   const assertPanel = async (steps, message) => {

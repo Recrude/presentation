@@ -5,7 +5,8 @@ import { condenseAdvance, family, paragraphs, runStyles, runs } from './composit
 // Live text in the editor. The public viewer shows the SVG outlines made from this same layout.
 // 장평 cannot scale inline glyphs in CSS, so a condensed run only gives back the advance it would
 // lose (exact for monospaced Hangul); the published outlines are condensed exactly.
-export function TextBody({ slide }: { slide: Slide }) {
+// A caption (see captionTypography) is set the same way, aligned within its margins and never wrapped.
+export function TextBody({ slide, caption }: { slide: Slide; caption?: 'left' | 'center' | 'right' }) {
   const t = slide.typo || defaultTypography, bold = t.composite === 'bold';
   const frame = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -19,8 +20,8 @@ export function TextBody({ slide }: { slide: Slide }) {
     return () => { observer.disconnect(); document.fonts.removeEventListener('loadingdone', align); };
   }, [slide.text, t]);
   const vars = { '--size': t.size, '--leading': t.leading, '--paragraph': t.paragraph, '--tracking': t.tracking, '--top': t.top, '--left': t.left, '--right': t.right, '--indent': t.indent || 0 } as CSSProperties;
-  return <div className="text-frame" ref={frame}>
-    <div className="text-body" style={vars}>
+  return <div className={caption ? 'text-frame caption' : 'text-frame'} ref={frame}>
+    <div className="text-body" style={caption ? { ...vars, textAlign: caption } : vars}>
       {paragraphs(slide.text || '').map((p, i) => <p key={i}>
         {runs(p, bold).flatMap((r, j) => {
           const style = runStyles[r.style];

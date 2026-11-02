@@ -5,8 +5,10 @@ import { chronologicalPages, projectForPage } from './chronology.ts';
  * under poster (thumbnails, PDF, before playback) and its length in seconds is the step's default time.
  * from/to: the part of a video that plays (see Range); a clip's video keeps its range here too.
  * joined: in a sequence, shown in the same step as the image before it (see sequenceSteps).
+ * caption: small text under the image in a grid or sequence (see CAPTION); captionId is its SVG
+ * outlines for the public viewer, made again on every publish like a text slide's.
  */
-export type Photo = { id: string; name: string; width: number; height: number; duration?: number; video?: true; poster?: string; length?: number; joined?: true } & Range;
+export type Photo = { id: string; name: string; width: number; height: number; duration?: number; video?: true; poster?: string; length?: number; joined?: true; caption?: string; captionId?: string } & Range;
 /** The part of a video that plays, in seconds: from its start (0) and to its end when unset. */
 export type Range = { from?: number; to?: number };
 export const ranged = (r: Range) => !!r.from || r.to !== undefined;
@@ -50,6 +52,8 @@ export type Slide = {
   margin?: number | Sides;
   /** Several images: how they share the sheet (see layoutPhotos). */
   layout?: Arrangement['layout'];
+  /** Grid or sequence: where captions line up under their images (left edge when unset). */
+  captionAlign?: 'center' | 'right';
   fit?: Arrangement['fit'];
   gap?: number;
   /** Web: the browser window's toolbar color (light scheme, read when captured); tintDark is from older captures and unused. */
@@ -85,7 +89,7 @@ export const GALLERY_LIMIT = 60;
 export const assetTypes: Record<string, string> = Object.assign(Object.create(null), { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif', 'image/avif': 'avif', 'image/svg+xml': 'svg', 'video/mp4': 'mp4', 'video/webm': 'webm' });
 export const MAX_ASSET = 40 * 1024 * 1024;
 export function assetIds(slides: Slide[]) {
-  return [...new Set(slides.flatMap(s => [...(s.photos?.flatMap(p => p.poster ? [p.id, p.poster] : [p.id]) || []), ...(s.media ? [s.media.id] : []), ...(s.previewId ? [s.previewId] : [])]))];
+  return [...new Set(slides.flatMap(s => [...(s.photos?.flatMap(p => [p.id, ...(p.poster ? [p.poster] : []), ...(p.captionId ? [p.captionId] : [])]) || []), ...(s.media ? [s.media.id] : []), ...(s.previewId ? [s.previewId] : [])]))];
 }
 export const initial: Slide[] = chronologicalPages.map(i => {
   const project = projectForPage(i);
@@ -213,7 +217,7 @@ export function youtubeUrl(s: Slide, playing: boolean) {
 export type Arrangement = { layout?: 'rows' | 'columns' | 'cells'; fit?: 'contain' | 'cover'; gap?: number };
 export const ARRANGEMENTS = [['rows', '높이 통일'], ['columns', '너비 통일'], ['cells', '칸']] as const;
 export const DEFAULT_GAP = 24;
-type Box = { x: number; y: number; width: number; height: number };
+export type Box = { x: number; y: number; width: number; height: number };
 /**
  * Lays images out inside the sheet (1920 × H) less a margin, with equal gaps between them.
  * - rows: one height for every image, rows in order; contain centres each row, cover stretches
@@ -222,55 +226,61 @@ type Box = { x: number; y: number; width: number; height: number };
  *   column, cover stretches columns to the full height and width.
  * - cells: equal cells; contain fits each image in its cell, cover fills the cell.
  * The number of rows, columns or cells is the one that shows the images largest (contain) or crops
- * them least (cover).
+ * them least (cover). below keeps that much room under every image for its caption (see captionRoom).
  */
-export function layoutPhotos(photos: Pick<Photo, 'width' | 'height'>[], H = 1080, { layout = 'cells', fit = 'contain', gap = DEFAULT_GAP }: Arrangement = {}, margin: number | Sides = 64): Box[] {
+export function layoutPhotos(photos: Pick<Photo, 'width' | 'height'>[], H = 1080, { layout = 'cells', fit = 'contain', gap = DEFAULT_GAP }: Arrangement = {}, margin: number | Sides = 64, below = 0): Box[] {
   const m = typeof margin === 'number' ? all(margin) : margin;
   const n = photos.length, W = 1920 - m.left - m.right, V = H - m.top - m.bottom;
   if (!n || W <= 0 || V <= 0) return [];
   const aspect = photos.map(p => p.width / p.height), cover = fit === 'cover';
   if (layout === 'rows' || layout === 'columns') {
-    // Columns are rows of the transposed sheet: swap the axes, lay out rows, swap back.
+    // Columns are rows of the transposed sheet: swap the axes, lay out rows, swap back. The room under
+    // the images goes with each row in rows, and with each image along its column in columns.
     const across = layout === 'rows' ? W : V, along = layout === 'rows' ? V : W;
     const a = layout === 'rows' ? aspect : aspect.map(r => 1 / r);
-    const lines = layout === 'rows' ? splitRows(a, across, along, gap) : packColumns(a, across, along, gap);
-    const size = Math.min(...lines.map(line => (across - (line.length - 1) * gap) / sum(line.map(i => a[i]))), (along - (lines.length - 1) * gap) / lines.length);
-    const lineSize = cover ? (along - (lines.length - 1) * gap) / lines.length : size;
+    const perLine = layout === 'rows' ? below : 0, perItem = layout === 'rows' ? 0 : below;
+    const lines = layout === 'rows' ? splitRows(a, across, along, gap, perLine) : packColumns(a, across, along, gap, perItem);
+    const room = (line: number[]) => across - (line.length - 1) * gap - line.length * perItem;
+    const most = (along - (lines.length - 1) * gap) / lines.length - perLine;
+    const size = Math.min(...lines.map(line => room(line) / sum(line.map(i => a[i]))), most);
+    const lineSize = cover ? most : size;
     const boxes: Box[] = [];
-    let offset = (along - lines.length * lineSize - (lines.length - 1) * gap) / 2;
+    let offset = (along - lines.length * (lineSize + perLine) - (lines.length - 1) * gap) / 2;
     for (const line of lines) {
-      const natural = sum(line.map(i => a[i])) * size + (line.length - 1) * gap;
-      const stretch = cover ? (across - (line.length - 1) * gap) / (natural - (line.length - 1) * gap) : 1;
-      let cursor = cover ? 0 : (across - natural) / 2;
+      const natural = sum(line.map(i => a[i])) * size;
+      const stretch = cover ? room(line) / natural : 1;
+      let cursor = cover ? 0 : (room(line) - natural) / 2;
       for (const i of line) {
         const length = a[i] * size * stretch;
         boxes[i] = layout === 'rows'
           ? { x: m.left + cursor, y: m.top + offset, width: length, height: lineSize }
           : { x: m.left + offset, y: m.top + cursor, width: lineSize, height: length };
-        cursor += length + gap;
+        cursor += length + perItem + gap;
       }
-      offset += lineSize + gap;
+      offset += lineSize + perLine + gap;
     }
     return boxes;
   }
   let best: Box[] = [], score = -Infinity;
   for (let columns = 1; columns <= n; columns++) {
-    const rows = Math.ceil(n / columns), cw = (W - gap * (columns - 1)) / columns, ch = (V - gap * (rows - 1)) / rows;
-    if (cw <= 0 || ch <= 0) continue;
+    // Each cell holds its image and the room under it, centred together.
+    const rows = Math.ceil(n / columns), cw = (W - gap * (columns - 1)) / columns, ch = (V - gap * (rows - 1)) / rows, ih = ch - below;
+    if (cw <= 0 || ih <= 0) continue;
     const boxes = aspect.map((ratio, i) => {
-      const width = cover ? cw : Math.min(cw, ch * ratio), height = cover ? ch : width / ratio;
+      const width = cover ? cw : Math.min(cw, ih * ratio), height = cover ? ih : width / ratio;
       const row = Math.floor(i / columns), count = Math.min(columns, n - row * columns);
-      return { x: m.left + (W - count * cw - (count - 1) * gap) / 2 + (i % columns) * (cw + gap) + (cw - width) / 2, y: m.top + row * (ch + gap) + (ch - height) / 2, width, height };
+      return { x: m.left + (W - count * cw - (count - 1) * gap) / 2 + (i % columns) * (cw + gap) + (cw - width) / 2, y: m.top + row * (ch + gap) + (ch - height - below) / 2, width, height };
     });
-    const value = cover ? -sum(aspect.map(r => Math.abs(Math.log(cw / ch / r)))) : sum(boxes.map(b => b.width * b.height));
+    const value = cover ? -sum(aspect.map(r => Math.abs(Math.log(cw / ih / r)))) : sum(boxes.map(b => b.width * b.height));
     if (value > score) { score = value; best = boxes; }
   }
   return best;
 }
 const sum = (values: number[]) => values.reduce((total, v) => total + v, 0);
 // Splits images in order into rows so that one shared height is as large as possible: for every row
-// count, the split that keeps the widest row (aspect sum against its room) narrowest.
-function splitRows(a: number[], across: number, along: number, gap: number) {
+// count, the split that keeps the widest row (aspect sum against its room) narrowest. Every row also
+// keeps perLine under it.
+function splitRows(a: number[], across: number, along: number, gap: number, perLine = 0) {
   const n = a.length, prefix = [0];
   for (const r of a) prefix.push(prefix.at(-1)! + r);
   const cost = (from: number, to: number) => { const room = across - (to - from - 1) * gap; return room > 0 ? (prefix[to] - prefix[from]) / room : Infinity; };
@@ -285,7 +295,7 @@ function splitRows(a: number[], across: number, along: number, gap: number) {
         const value = Math.max(worst[k - 1][i], cost(i, j));
         if (value < worst[k][j]) { worst[k][j] = value; cut[k][j] = i; }
       }
-    const size = Math.min(1 / worst[k][n], (along - (k - 1) * gap) / k);
+    const size = Math.min(1 / worst[k][n], (along - (k - 1) * gap) / k - perLine);
     if (size > bestSize) { bestSize = size; bestRows = k; }
   }
   const rows: number[][] = [];
@@ -293,18 +303,38 @@ function splitRows(a: number[], across: number, along: number, gap: number) {
   return rows;
 }
 // Puts each image into the currently shortest column; the column count is the one that gives the
-// largest shared width.
-function packColumns(a: number[], across: number, along: number, gap: number) {
+// largest shared width. Every image also keeps perItem under it.
+function packColumns(a: number[], across: number, along: number, gap: number, perItem = 0) {
   let best: number[][] = [[]], bestSize = 0;
   for (let c = 1; c <= a.length; c++) {
     const room = (along - (c - 1) * gap) / c;
     if (room <= 0) break;
     const columns: number[][] = Array.from({ length: c }, () => []), length = Array(c).fill(-gap);
-    a.forEach((r, i) => { const j = length.indexOf(Math.min(...length)); columns[j].push(i); length[j] += room * r + gap; });
-    const size = Math.min(room, ...columns.map(column => (across - (column.length - 1) * gap) / sum(column.map(i => a[i]))));
+    a.forEach((r, i) => { const j = length.indexOf(Math.min(...length)); columns[j].push(i); length[j] += room * r + perItem + gap; });
+    const size = Math.min(room, ...columns.map(column => (across - (column.length - 1) * gap - column.length * perItem) / sum(column.map(i => a[i]))));
     if (size > bestSize) { bestSize = size; best = columns; }
   }
   return best;
+}
+/**
+ * Captions are set in the portfolio's small type: its credit lines under the work, 18 px on 30 px
+ * leading, tracking −40, in the regular composite. Lines break only where typed.
+ */
+export const CAPTION = { size: 18, leading: 30, tracking: -40, gap: 12, lines: 4 };
+export const captionLines = (caption = '') => caption.split('\n').filter(line => line.trim()).length;
+/** Room a grid or sequence keeps under every image when any of them has a caption: the gap and its most lines. */
+export function captionRoom(photos: Pick<Photo, 'caption'>[] = []) {
+  const lines = Math.max(0, ...photos.map(p => captionLines(p.caption)));
+  return lines ? CAPTION.gap + CAPTION.size + (lines - 1) * CAPTION.leading : 0;
+}
+/**
+ * A caption set like a text slide on the sheet: its first line's ink starts CAPTION.gap under the image
+ * and lines up with the image's left edge, centre or right edge (text-align within these margins).
+ */
+export function captionTypography(box: Box, align?: Slide['captionAlign']): Typography {
+  const centre = box.x + box.width / 2, half = Math.min(centre, 1920 - centre), end = box.x + box.width;
+  const [left, right] = align === 'center' ? [centre - half, 1920 - centre - half] : align === 'right' ? [0, 1920 - end] : [box.x, 0];
+  return { size: CAPTION.size, leading: CAPTION.leading, paragraph: 0, tracking: CAPTION.tracking, top: box.y + box.height + CAPTION.gap, left, right };
 }
 // A video item of a sequence or grid has its still and length; a clip's video may keep its length; an
 // image has neither, nor a range.
@@ -318,6 +348,8 @@ const validPhoto = (p: Photo, clip = false) =>
   p.height > 0 &&
   (p.duration === undefined || within(p.duration, 0.04, 600)) &&
   (p.length === undefined || within(p.length, 0.04, 3600)) && validRange(p, p.length) && (p.joined === undefined || p.joined === true && !clip) &&
+  (p.caption === undefined || !clip && typeof p.caption === 'string' && p.caption.length <= 500 && captionLines(p.caption) <= CAPTION.lines) &&
+  (p.captionId === undefined || typeof p.captionId === 'string' && p.caption !== undefined) &&
   (p.video === true ? typeof p.poster === 'string' && p.length !== undefined
     : p.video === undefined && p.poster === undefined && (clip || p.length === undefined && p.from === undefined && p.to === undefined));
 const validRange = (r: Range, length?: number) =>
@@ -354,7 +386,8 @@ export function validDeck(value: unknown): value is Slide[] {
           ? Object.keys(s.margin).length === 4 && SIDES.every(([side]) => within((s.margin as Sides)[side], 0, 480))
           : within(s.margin, 0, 480))) ||
         ((s.layout !== undefined || s.fit !== undefined || s.gap !== undefined) && s.kind !== 'gallery' && s.kind !== 'sequence') ||
-        (Array.isArray(s.photos) && s.photos.some((p: Photo) => p?.video) && s.kind !== 'gallery' && s.kind !== 'sequence') ||
+        (Array.isArray(s.photos) && s.photos.some((p: Photo) => p?.video || p?.caption !== undefined) && s.kind !== 'gallery' && s.kind !== 'sequence') ||
+        (s.captionAlign !== undefined && (!['center', 'right'].includes(s.captionAlign) || s.kind !== 'gallery' && s.kind !== 'sequence')) ||
         (s.layout !== undefined && !['rows', 'columns', 'cells'].includes(s.layout)) ||
         (s.fit !== undefined && !['contain', 'cover'].includes(s.fit)) ||
         (s.gap !== undefined && !within(s.gap, 0, 400)) ||

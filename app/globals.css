@@ -309,6 +309,8 @@ aside {
 .photo-row label { display: flex; flex-direction: row-reverse; align-items: center; gap: var(--half); }
 .photo-row input { width: 5.5em; text-align: right; }
 /* A video item's range under its row: "3 초부터 12.5 초까지". */
+/* A caption under its row, starting in the names' column. */
+.caption-field { display: block; width: 100%; padding: 0 0 var(--half) calc(48px + var(--half)); font: inherit; color: inherit; background: transparent; border: 0; border-radius: 0; resize: none; }
 .photo-range { display: flex; justify-content: flex-end; gap: var(--space); padding-bottom: var(--half); }
 .photo-range label { display: flex; flex-direction: row-reverse; align-items: center; gap: var(--half); }
 .photo-range input { width: 5.5em; text-align: right; }
@@ -665,6 +667,10 @@ body.catalog-page { background:#000; color:snow; }
 .text-body .tab { display: inline-block; height: 0; text-indent: 0; vertical-align: baseline; }
 /* Runs never change the line box: every line is exactly the leading, as in InDesign. */
 .text-body span { position: relative; line-height: 0; }
+/* Captions under images (see captionTypography): lines break only where typed. */
+.text-frame.caption { pointer-events: none; }
+.text-frame.caption .text-body { white-space: pre; }
+.caption-outline { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
 .text-editor { width: 100%; min-height: 12em; resize: vertical; padding: var(--half) 0; font: inherit; color: inherit; background: transparent; border: 0; border-bottom: var(--rule) solid var(--line); }
 .number-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(10em, 1fr)); gap: var(--half) var(--space); padding: var(--half) 0; }
 .number-fields label { display: flex; align-items: center; justify-content: space-between; gap: var(--half); white-space: nowrap; }

@@ -111,6 +111,11 @@ test('text outlines and clips publish; scripted or external SVG never does',asyn
   const framed=await executePublish({action:'deck',slug:LEGACY_SLUG,format:'4:3',slides:[{...text,previewId:'o'}],assets:{o:result.snapshot.assets.o}},git,secret);
   assert.equal(framed.snapshot.format,'4:3');
   for(const format of ['3:2','__proto__',43])await assert.rejects(()=>executePublish({action:'deck',slug:LEGACY_SLUG,format,slides:[{...text,previewId:'o'}],assets:{o:result.snapshot.assets.o}},git,secret),/형식/);
+  // A caption publishes only with its outlines, which go out with the deck's files.
+  const grid={id:'g',title:'G',kind:'gallery',src:'',hidden:false,photos:[{id:'m',name:'a.mp4',width:1280,height:720,caption:'캡션'}]};
+  await assert.rejects(()=>executePublish({action:'deck',slug:LEGACY_SLUG,slides:[grid],assets:{m:mp4Proof}},git,secret),/캡션/);
+  const captioned=await executePublish({action:'deck',slug:LEGACY_SLUG,slides:[{...grid,photos:[{...grid.photos[0],captionId:'o'}]}],assets:{m:result.snapshot.assets.m,o:result.snapshot.assets.o}},git,secret);
+  assert.match(captioned.snapshot.assets.o,/\.svg$/);
   const bad=Buffer.from('<svg onload="x"></svg>');
   await assert.rejects(()=>executePublish({action:'upload',slug:LEGACY_SLUG,mime:'image/svg+xml',hash:hash(bad),count:1,index:0,content:bad.toString('base64')},git,secret));
   await assert.rejects(()=>executePublish({action:'upload',slug:LEGACY_SLUG,mime:'constructor',hash:hash(svg),count:1,index:0,content:svg.toString('base64')},git,secret));

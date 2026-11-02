@@ -1,8 +1,8 @@
 import { localAsset } from './catalog';
 'use client';
-import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
-import type { Photo, Range, Slide } from './model';
-import { DEFAULT_TAB, defaultTypography, layoutPhotos, marginOf, ranged, sequenceSteps, stepDuration, vimeoPlayer, youtubeUrl, type Typography } from './model';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
+import type { Box, Photo, Range, Slide } from './model';
+import { DEFAULT_TAB, captionRoom, captionTypography, defaultTypography, layoutPhotos, marginOf, ranged, sequenceSteps, stepDuration, vimeoPlayer, youtubeUrl, type Typography } from './model';
 import colors from './number-colors.json';
 import { FolioNumber } from './folio';
 import { previewSource } from './previews';
@@ -54,7 +54,7 @@ export function SlideView({
   const moving = (live || playing) && !print && !thumbnail;
   const margin = marginOf(slide);
   const boxes =
-    slide.kind === 'gallery' ? layoutPhotos(slide.photos || [], height, slide, margin) : [];
+    slide.kind === 'gallery' ? layoutPhotos(slide.photos || [], height, slide, margin, captionRoom(slide.photos)) : [];
   // Media, single images and plain embeds sit inside the slide's margin (px on its own 1920-wide sheet).
   const inset = (content: ReactNode) => Object.values(margin).some(v => v > 0) && !['text', 'gallery', 'sequence'].includes(slide.kind) && !(slide.kind === 'web' && slide.frame === 'browser')
     ? <div className="slide-inset" style={{ left: `${margin.left / 19.2}%`, right: `${margin.right / 19.2}%`, top: `${margin.top * ratio / 19.2}%`, bottom: `${margin.bottom * ratio / 19.2}%` }}>{content}</div>
@@ -100,7 +100,7 @@ export function SlideView({
               {guides && <MarginGuides typo={slide.typo || defaultTypography} height={height}/>}
             </>
         ) : slide.kind === 'sequence' ? (
-          <Sequence key={slide.id} slide={slide} assets={assets} moving={moving} paused={paused} eager={live || print || playing} onFinish={playing ? onFinish : undefined} onError={() => setFailed(true)}/>
+          <Sequence key={slide.id} slide={slide} assets={assets} moving={moving} paused={paused} eager={live || print || playing} outlined={outlined} onFinish={playing ? onFinish : undefined} onError={() => setFailed(true)}/>
         ) : slide.kind === 'clip' ? (
           moving && slide.media && assets[slide.media.id]
             ? <Clip key={slide.id} slide={slide} range={slide.media} src={assets[slide.media.id]} poster={preview} onFinish={playing ? onFinish : undefined}/>
@@ -121,6 +121,7 @@ export function SlideView({
                 <PhotoMedia photo={p} assets={assets} fit={slide.fit} moving={moving} eager={live || print} onError={() => setFailed(true)}/>
               </div>
             ))}
+            {slide.photos?.map((p, i) => p.caption && <Caption key={`${p.id}-caption`} photo={p} box={boxes[i]} align={slide.captionAlign} outlined={outlined} assets={assets}/>)}
           </>
         ) : browserFrame(slide, live && !print, preview, print ? (
           preview ? <a href={localAsset(slide.src)} className="capture-slide"><img draggable={false} src={preview} alt={slide.title}/></a> : <div className="embed-placeholder">미리보기 캡처가 필요합니다.</div>
@@ -175,8 +176,10 @@ function LocalVideo({ slide, src, preview, playing }: { slide: Slide; src: strin
 // Steps (see sequenceSteps) flip in place, each after its images' durations (the slide's interval for
 // images without one). Only steps around the current one are mounted and decoded ahead, so long sequences stay light.
 // Paused, the current step keeps the time it has left and goes on from there.
-function Sequence({ slide, assets, moving, paused, eager, onFinish, onError }: { slide: Slide; assets: Record<string, string>; moving: boolean; paused: boolean; eager: boolean; onFinish?: () => void; onError: () => void }) {
+function Sequence({ slide, assets, moving, paused, eager, outlined, onFinish, onError }: { slide: Slide; assets: Record<string, string>; moving: boolean; paused: boolean; eager: boolean; outlined: boolean; onFinish?: () => void; onError: () => void }) {
   const steps = sequenceSteps(slide.photos || [], slide.perFrame || 1), height = useContext(SheetHeight);
+  // Every step keeps the room of the slide's longest caption, so images keep their size from step to step.
+  const below = captionRoom(slide.photos);
   const [index, setIndex] = useState(0);
   const images = useRef(new Map<number, HTMLImageElement[]>());
   const finish = useRef(onFinish);
@@ -199,14 +202,24 @@ function Sequence({ slide, assets, moving, paused, eager, onFinish, onError }: {
   const mounted = new Set(moving ? [-1, 0, 1, 2, 3].map(d => index + d).map(i => slide.end === 'loop' ? (i + steps.length) % steps.length : i) : [0]);
   return <>{steps.map((step, i) => {
     if (!mounted.has(i)) return null;
-    const boxes = layoutPhotos(step, height, slide, marginOf(slide));
+    const boxes = layoutPhotos(step, height, slide, marginOf(slide), below);
     return <div key={step[0].id} className="sequence-step" style={{ visibility: i === index ? 'visible' : 'hidden' }}>
       {step.map((p, j) => <div key={p.id} className="photo-placement" style={{ left: `${boxes[j].x / 19.2}%`, top: `${boxes[j].y / height * 100}%`, width: `${boxes[j].width / 19.2}%`, height: `${boxes[j].height / height * 100}%` }}>
         <PhotoMedia photo={p} assets={assets} fit={slide.fit} moving={moving} active={moving && i === index} paused={paused} eager={eager} onError={onError}
           imageRef={node => { const list = images.current.get(i) || []; if (node) images.current.set(i, [...list.filter(n => n.isConnected), node]); }}/>
       </div>)}
+      {step.map((p, j) => p.caption && <Caption key={`${p.id}-caption`} photo={p} box={boxes[j]} align={slide.captionAlign} outlined={outlined} assets={assets}/>)}
     </div>;
   })}</>;
+}
+
+// A caption under its image: live type in the editor, its published outlines in the public viewer
+// (nothing until it has them, like a text slide).
+function Caption({ photo, box, align, outlined, assets }: { photo: Photo; box: Box; align: Slide['captionAlign']; outlined: boolean; assets: Record<string, string> }) {
+  const { x, y, width, height } = box;
+  const slide = useMemo<Slide>(() => ({ id: photo.id, title: photo.name, kind: 'text', src: '', hidden: false, text: photo.caption, typo: captionTypography({ x, y, width, height }, align) }), [photo.id, photo.name, photo.caption, x, y, width, height, align]);
+  if (outlined) return photo.captionId && assets[photo.captionId] ? <img draggable={false} className="caption-outline" src={assets[photo.captionId]} alt={photo.caption}/> : null;
+  return <TextBody slide={slide} caption={align || 'left'}/>;
 }
 
 // One item of a grid or sequence. While the slide moves, a video is loaded with the steps around the

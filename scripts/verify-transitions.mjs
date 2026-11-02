@@ -34,5 +34,15 @@ try {
  await page.waitForFunction(()=>window.decodeGates.length===3);
  await page.evaluate(()=>window.decodeGates[2]());
  await page.waitForFunction(()=>document.querySelector('.presentation-layer[aria-hidden="false"] img').src.includes('page-01.webp'));
- console.log('Verified delayed decode keeps previous frame, rapid navigation cancels stale transitions, decoded DOM is retained, and backward navigation works.');
+ // Leaving the presentation selects the slide it ended on and scrolls its card into view.
+ await page.keyboard.press('End');
+ await page.keyboard.press('Escape');
+ await page.waitForSelector('.presentation-layer',{hidden:true});
+ await new Promise(r=>setTimeout(r,100));
+ const left=await page.evaluate(()=>{const last=[...document.querySelectorAll('.card:not(.hidden-slide)')].at(-1),g=last.closest('.grid').getBoundingClientRect(),r=last.getBoundingClientRect();
+   return{selected:[...document.querySelectorAll('.card.selected')].map(c=>c.dataset.slideId),last:last.dataset.slideId,title:document.querySelector('.properties input')?.value,lastTitle:last.querySelector('.card-title').textContent,inView:r.top>=Math.max(0,g.top)-1&&r.bottom<=Math.min(innerHeight,g.bottom)+1};});
+ assert.deepEqual(left.selected,[left.last],'the last slide shown is selected');
+ assert.equal(left.title,left.lastTitle,'and open in the panel');
+ assert.ok(left.inView,'its card is in view');
+ console.log('Verified delayed decode keeps previous frame, rapid navigation cancels stale transitions, decoded DOM is retained, backward navigation works, and leaving the presentation selects the slide it ended on.');
 } finally {await browser.close();}

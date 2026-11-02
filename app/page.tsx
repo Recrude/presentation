@@ -560,6 +560,20 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     document.addEventListener('fullscreenchange', exit);
     return () => document.removeEventListener('fullscreenchange', exit);
   }, []);
+  // Starting takes the keys from the 발표 button (else Space, Home and End would stay with it). Leaving
+  // (Esc or leaving full screen) selects the slide it was showing and brings its card into view, so the
+  // editor stays where the talk got to.
+  const presented = useRef(false);
+  useEffect(() => {
+    if (publicView) return;
+    if (present) { presented.current = true; document.querySelector<HTMLElement>('.presentation')?.focus({ preventScroll: true }); return; }
+    if (!presented.current) return;
+    presented.current = false;
+    const id = visible[position]?.id;
+    if (!id) return;
+    setPicked([id]); anchorRef.current = id; select(id);
+    requestAnimationFrame(() => gridRef.current?.querySelector(`[data-slide-id="${CSS.escape(id)}"]`)?.scrollIntoView({ block: 'nearest' }));
+  }, [present]);
   useEffect(() => {
     if (!present) return;
     const decoded: HTMLImageElement[] = [];

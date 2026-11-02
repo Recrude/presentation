@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validDeck, assetIds, defaultTypography, assetTypes, isFormat, sheetHeight, layoutPhotos, FORMATS, marginOf, storedMargin } from '../app/model.ts';
+import { validDeck, assetIds, defaultTypography, assetTypes, isFormat, sheetHeight, layoutPhotos, FORMATS, marginOf, storedMargin, stepDuration } from '../app/model.ts';
 import { runs, paragraphs, styleOf, runStyles, fontsIn, styleSample, COMPOSITES } from '../app/composite.ts';
 const photo = id => ({ id, name: id + '.webp', width: 1600, height: 900 });
 const text = { id: 't', title: 'T', kind: 'text', src: '', hidden: false, text: '가 A', typo: { ...defaultTypography } };
@@ -162,4 +162,14 @@ test('outer margin per side: images keep to each side, sides store compactly and
   assert.ok(validDeck([{ ...sequence, margin: m }, { ...web, margin: { top: 0, right: 480, bottom: 0, left: 0 } }]));
   for (const bad of [{ top: 1, right: 1, bottom: 1 }, { ...m, left: 481 }, { ...m, extra: 1 }, [1, 2, 3, 4], null, { ...m, top: '1' }])
     assert.equal(validDeck([{ ...sequence, margin: bad }]), false, JSON.stringify(bad));
+});
+
+test('sequence images stay their own seconds, else the slide interval', () => {
+  assert.equal(stepDuration([{}], 400), 400);
+  assert.equal(stepDuration([{ duration: 2.5 }], 400), 2500);
+  assert.equal(stepDuration([{ duration: 0.2 }, {}], 700), 700, 'a step of two lasts as long as its longest image');
+  assert.equal(stepDuration([{ duration: 3 }, { duration: 1 }]), 3000);
+  assert.ok(validDeck([{ ...sequence, photos: [{ ...photo('a'), duration: 1.5 }, photo('b'), { ...photo('c'), duration: 600 }] }]));
+  for (const duration of [0, 0.01, 601, '2', Infinity])
+    assert.equal(validDeck([{ ...sequence, photos: [{ ...photo('a'), duration }] }]), false, String(duration));
 });

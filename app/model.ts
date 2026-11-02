@@ -1,5 +1,6 @@
 import { chronologicalPages, projectForPage } from './chronology.ts';
-export type Photo = { id: string; name: string; width: number; height: number };
+/** duration: in a sequence, seconds this image stays before the next one (the slide's interval when unset). */
+export type Photo = { id: string; name: string; width: number; height: number; duration?: number };
 // Text slide measurements are px on the 1920-wide sheet; tracking is 1/1000 em like InDesign.
 // top and left are measured to the ink of the first line (see alignInk in text-slide.tsx).
 // tabSize is the distance between tab stops in px from the left margin (default 240); indent is a
@@ -107,6 +108,8 @@ export function duplicate(slides: Slide[], ids: string[], id = () => crypto.rand
   const at = slides.findLastIndex(s => picked.has(s.id)) + 1;
   return { slides: [...slides.slice(0, at), ...copies, ...slides.slice(at)], copies: copies.map(s => s.id) };
 }
+/** How long a sequence step stays, in ms: the longest of its images, each its own duration or the slide's interval. */
+export const stepDuration = (step: Pick<Photo, 'duration'>[], interval = 400) => Math.max(...step.map(p => p.duration !== undefined ? p.duration * 1000 : interval));
 export function numberOf(slides: Slide[], id: string): number | null {
   const i = slides.filter((s) => !s.hidden).findIndex((s) => s.id === id);
   return i < 0 ? null : i + 1;
@@ -257,7 +260,8 @@ const validPhoto = (p: Photo) =>
   Number.isFinite(p.width) &&
   p.width > 0 &&
   Number.isFinite(p.height) &&
-  p.height > 0;
+  p.height > 0 &&
+  (p.duration === undefined || within(p.duration, 0.04, 600));
 const within = (v: unknown, min: number, max: number) => typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
 export function validTypography(t: Typography | undefined): t is Typography {
   return !!t && within(t.size, 8, 400) && within(t.leading, 8, 800) && within(t.paragraph, 0, 1000) && within(t.tracking, -300, 1000) &&

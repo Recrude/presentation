@@ -298,6 +298,9 @@ aside {
 .photo-row button {
   padding: var(--half) 0;
 }
+/* A sequence image's own duration: "1.5 초", empty shows the slide's interval. */
+.photo-row label { display: flex; flex-direction: row-reverse; align-items: center; gap: var(--half); }
+.photo-row input { width: 5.5em; text-align: right; }
 .slide-viewport {
   width: 100%;
   height: 100%;

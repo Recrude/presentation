@@ -185,8 +185,34 @@ try {
   await click('되돌리기');
   assert.equal(await count(), before + 1, 'undo removes the copies');
 
+  // Per-image seconds: 0.3 s, 1.2 s and the slide's 700 ms interval for the third, measured in the live preview.
+  const total = await count();
+  await click('추가');
+  const [seqChooser] = await Promise.all([page.waitForFileChooser(), click('시퀀스')]);
+  await seqChooser.accept(images.slice(0, 3));
+  await page.waitForFunction(n => document.querySelectorAll('.card').length === n, { timeout: 30000 }, total + 1); await ready();
+  await setNumber('간격', '700');
+  const setDuration = (i, value) => page.evaluate((i, value) => { const input = document.querySelectorAll('.photo-row input')[i]; Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, value); input.dispatchEvent(new Event('input', { bubbles: true })); }, i, value);
+  assert.deepEqual(await page.$$eval('.photo-row input', is => is.map(i => i.placeholder)), ['0.7', '0.7', '0.7'], 'empty shows the interval');
+  await setDuration(0, '0.3'); await setDuration(1, '1.2');
+  await click('미리보기');
+  const changes = await page.evaluate(() => new Promise(resolve => {
+    const seen = [], start = performance.now();
+    const tick = () => {
+      const shown = [...document.querySelectorAll('.preview .sequence-step')].find(s => s.style.visibility === 'visible')?.querySelector('img')?.alt;
+      if (shown && shown !== seen.at(-1)?.[1]) seen.push([performance.now(), shown]);
+      if (performance.now() - start < 5200) requestAnimationFrame(tick); else resolve(seen);
+    };
+    tick();
+  }));
+  const names = images.slice(0, 3).map(f => f.split('/').pop()), expected = { [names[0]]: 300, [names[1]]: 1200, [names[2]]: 700 };
+  const held = changes.slice(1, -1).map(([t, name], i) => [name, Math.round(changes[i + 2][0] - t)]);
+  assert.ok(held.length >= 4, `enough steps: ${JSON.stringify(held)}`);
+  for (const [name, ms] of held) assert.ok(Math.abs(ms - expected[name]) < 120, `${name} held ${ms} ms, expected ${expected[name]}`);
+  await click('미리보기 닫기');
+
   assert.deepEqual(errors, []);
-  console.log('arrange: per-side margins; ⌘D and 복제 copy after the picked slides, the copy edits apart, undo; 격자 rows by default, cover, 120 margin on a page and a Safari window; 넘김 ↔ 격자 switch keeps timing; 92 slides imported hidden, 4-slide block and far single drag with autoscroll, batch show, saved order');
+  console.log('arrange: per-image seconds in a sequence; per-side margins; ⌘D and 복제 copy after the picked slides, the copy edits apart, undo; 격자 rows by default, cover, 120 margin on a page and a Safari window; 넘김 ↔ 격자 switch keeps timing; 92 slides imported hidden, 4-slide block and far single drag with autoscroll, batch show, saved order');
 } finally {
   await browser.close();
 }

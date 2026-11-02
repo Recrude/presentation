@@ -2,7 +2,7 @@ import { localAsset } from './catalog';
 'use client';
 import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { Photo, Slide } from './model';
-import { DEFAULT_TAB, defaultTypography, layoutPhotos, marginOf, youtubeUrl, type Typography } from './model';
+import { DEFAULT_TAB, defaultTypography, layoutPhotos, marginOf, stepDuration, youtubeUrl, type Typography } from './model';
 import colors from './number-colors.json';
 import { FolioNumber } from './folio';
 import { previewSource } from './previews';
@@ -192,7 +192,8 @@ function LocalVideo({ slide, src, preview, playing }: { slide: Slide; src: strin
     controls playsInline preload="auto" aria-label={slide.title}/>;
 }
 
-// Steps flip in place at the slide's interval; each step shows `perFrame` images laid out like a gallery.
+// Steps flip in place, each after its images' durations (the slide's interval for images without one);
+// each step shows `perFrame` images laid out like a gallery.
 // Only steps around the current one are mounted and decoded ahead, so long sequences stay light.
 export function sequenceSteps(photos: Photo[], perFrame = 1) {
   const steps: Photo[][] = [];
@@ -205,6 +206,7 @@ function Sequence({ slide, assets, moving, eager, onFinish, onError }: { slide: 
   const images = useRef(new Map<number, HTMLImageElement[]>());
   const finish = useRef(onFinish);
   finish.current = onFinish;
+  const delay = stepDuration(steps[index] || [], slide.interval || 400);
   useEffect(() => {
     if (!moving) { setIndex(0); return; }
     let cancelled = false;
@@ -213,9 +215,9 @@ function Sequence({ slide, assets, moving, eager, onFinish, onError }: { slide: 
       if (next < 0) { if (slide.end === 'next') finish.current?.(); return; }
       await Promise.all((images.current.get(next) || []).map(image => image.decode().catch(() => undefined)));
       if (!cancelled) setIndex(next);
-    }, slide.interval || 400);
+    }, delay);
     return () => { cancelled = true; clearTimeout(timer); };
-  }, [moving, index, steps.length, slide.interval, slide.end]);
+  }, [moving, index, steps.length, delay, slide.end]);
   const mounted = new Set(moving ? [-1, 0, 1, 2, 3].map(d => index + d).map(i => slide.end === 'loop' ? (i + steps.length) % steps.length : i) : [0]);
   return <>{steps.map((step, i) => {
     if (!mounted.has(i)) return null;

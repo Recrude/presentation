@@ -1362,6 +1362,8 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                       {active.photos?.map((p, i) => (
                         <div className="photo-row" key={p.id}>
                           <span>{p.name}</span>
+                          {active.kind === 'sequence' && <NumberField key={`${p.id}-duration`} label="초" value={p.duration} min={0.04} max={600} step={0.1} optional placeholder={String((active.interval || 400) / 1000)}
+                            onChange={v => patch(active.id, { photos: active.photos!.map(x => x.id === p.id ? { ...x, duration: v } : x) })}/>}
                           <button
                             disabled={i === 0}
                             aria-label={`${p.name} 앞으로`}

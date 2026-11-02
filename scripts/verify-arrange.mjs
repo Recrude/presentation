@@ -30,6 +30,12 @@ try {
   await status('92장을 숨김으로');
   let list = await cards();
   assert.equal(list.length, 93);
+  // The long list scrolls without a scrollbar: hovering it never narrows the cards.
+  const widths = () => page.$eval('.grid', g => [g.clientWidth, g.offsetWidth, Math.round(g.querySelector('.card').getBoundingClientRect().width)]);
+  const unhovered = await widths();
+  await page.hover('.card:nth-child(2) .thumbnail');
+  assert.deepEqual(await widths(), unhovered, 'no scrollbar on hover');
+  assert.equal(unhovered[0], unhovered[1], 'no scrollbar at all');
   assert.equal(list.filter(c => c.hidden).length, 92, 'all imported slides are hidden');
   assert.ok(!list[0].hidden, 'the 11/3 slide stays first and shown');
   await click('장표 숨김으로 가져오기');

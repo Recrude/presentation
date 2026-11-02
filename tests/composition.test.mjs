@@ -173,3 +173,16 @@ test('sequence images stay their own seconds, else the slide interval', () => {
   for (const duration of [0, 0.01, 601, '2', Infinity])
     assert.equal(validDeck([{ ...sequence, photos: [{ ...photo('a'), duration }] }]), false, String(duration));
 });
+
+test('videos are items of a sequence or grid: still frame, length as their default time, uploaded with the still', () => {
+  const clipItem = { ...photo('v'), name: 'v.mp4', video: true, poster: 'v-still', length: 6.5 };
+  const mixed = { ...sequence, photos: [photo('a'), clipItem, { ...photo('b'), duration: 1 }] };
+  assert.ok(validDeck([mixed, { ...mixed, id: 'g', kind: 'gallery', interval: undefined, end: undefined }]));
+  assert.deepEqual(assetIds([mixed]), ['a', 'v', 'v-still', 'b']);
+  assert.equal(stepDuration([clipItem], 2000), 6500, 'a video lasts its length');
+  assert.equal(stepDuration([{ ...clipItem, duration: 2 }], 2000), 2000, 'unless its seconds are set');
+  assert.equal(stepDuration([photo('a'), clipItem], 2000), 6500);
+  for (const bad of [{ ...clipItem, poster: undefined }, { ...clipItem, length: 0 }, { ...clipItem, video: 'yes' }, { ...photo('a'), poster: 'x' }, { ...photo('a'), length: 3 }])
+    assert.equal(validDeck([{ ...sequence, photos: [bad] }]), false, JSON.stringify(bad));
+  assert.equal(validDeck([{ id: 'f', title: 'F', kind: 'folio', src: '', hidden: false, photos: [clipItem], folioPalette: { background: '#000000', foreground: '#ffffff' } }]), false, 'no video in a folio');
+});

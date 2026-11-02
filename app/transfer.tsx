@@ -35,7 +35,7 @@ export async function importBackup(value: unknown) {
   await saveImages(entries.map(([id, blob]) => [remap.get(id)!, blob]));
   for (const [id,blob] of entries) assets[remap.get(id)!] = URL.createObjectURL(blob);
   const slides = b.slides.map(s => ({...s,
-    ...(s.photos ? {photos:s.photos.map(photo => ({...photo,id:remap.get(photo.id)!}))} : {}),
+    ...(s.photos ? {photos:s.photos.map(photo => ({...photo,id:remap.get(photo.id)!,...(photo.poster ? {poster:remap.get(photo.poster)!} : {})}))} : {}),
     ...(s.previewId ? {previewId:remap.get(s.previewId)!} : {}),
     ...(s.media ? {media:{...s.media,id:remap.get(s.media.id)!}} : {}),
   }));

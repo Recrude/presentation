@@ -115,18 +115,7 @@ export function SlideView({
                   height: `${boxes[i].height / height * 100}%`,
                 }}
               >
-                {assets[p.id] ? (
-                  <img
-                    draggable={false}
-                    src={assets[p.id]}
-                    style={{ objectFit: slide.fit || 'contain' }}
-                    alt={p.name}
-                    loading={live || print ? 'eager' : 'lazy'}
-                    onError={() => setFailed(true)}
-                  />
-                ) : (
-                  <span>이미지 불러오는 중</span>
-                )}
+                <PhotoMedia photo={p} assets={assets} fit={slide.fit} moving={moving} eager={live || print} onError={() => setFailed(true)}/>
               </div>
             ))}
           </>
@@ -224,11 +213,31 @@ function Sequence({ slide, assets, moving, eager, onFinish, onError }: { slide: 
     const boxes = layoutPhotos(step, height, slide, marginOf(slide));
     return <div key={step[0].id} className="sequence-step" style={{ visibility: i === index ? 'visible' : 'hidden' }}>
       {step.map((p, j) => <div key={p.id} className="photo-placement" style={{ left: `${boxes[j].x / 19.2}%`, top: `${boxes[j].y / height * 100}%`, width: `${boxes[j].width / 19.2}%`, height: `${boxes[j].height / height * 100}%` }}>
-        {assets[p.id] ? <img draggable={false} src={assets[p.id]} style={{ objectFit: slide.fit || 'contain' }} alt={p.name} loading={eager ? 'eager' : 'lazy'} onError={onError}
-          ref={node => { const list = images.current.get(i) || []; if (node) images.current.set(i, [...list.filter(n => n.isConnected), node]); }}/> : <span>이미지 불러오는 중</span>}
+        <PhotoMedia photo={p} assets={assets} fit={slide.fit} moving={moving} active={moving && i === index} eager={eager} onError={onError}
+          imageRef={node => { const list = images.current.get(i) || []; if (node) images.current.set(i, [...list.filter(n => n.isConnected), node]); }}/>
       </div>)}
     </div>;
   })}</>;
+}
+
+// One item of a grid or sequence. While the slide moves, a video is loaded with the steps around the
+// current one and plays muted from its start while its own step shows (looping if the step lasts
+// longer); in thumbnails and print it is its still frame.
+function PhotoMedia({ photo, assets, fit, moving, active = moving, eager, onError, imageRef }: { photo: Photo; assets: Record<string, string>; fit?: Slide['fit']; moving: boolean; active?: boolean; eager: boolean; onError: () => void; imageRef?: (node: HTMLImageElement | null) => void }) {
+  const still = photo.video ? photo.poster && assets[photo.poster] : assets[photo.id];
+  if (photo.video && moving && assets[photo.id]) return <StepVideo src={assets[photo.id]} poster={still || undefined} fit={fit} name={photo.name} active={active} onError={onError}/>;
+  return still ? <img draggable={false} src={still} style={{ objectFit: fit || 'contain' }} alt={photo.name} loading={eager ? 'eager' : 'lazy'} onError={onError} ref={imageRef}/> : <span>이미지 불러오는 중</span>;
+}
+function StepVideo({ src, poster, fit, name, active, onError }: { src: string; poster?: string; fit?: Slide['fit']; name: string; active: boolean; onError: () => void }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const [playbackSource] = useState(src);
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+    if (active) { video.currentTime = 0; void video.play().catch(() => undefined); }
+    else video.pause();
+  }, [active]);
+  return <video ref={ref} src={playbackSource} poster={poster} muted loop playsInline preload="auto" style={{ objectFit: fit || 'contain' }} aria-label={name} onError={onError}/>;
 }
 
 function Clip({ slide, src, poster, onFinish }: { slide: Slide; src: string; poster: string; onFinish?: () => void }) {

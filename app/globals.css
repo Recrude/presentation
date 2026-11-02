@@ -163,9 +163,10 @@ a:focus-visible {
   scrollbar-width: none;
   overscroll-behavior: contain;
 }
-.grid:hover {
-  scrollbar-width: thin;
-  scrollbar-color: var(--line) transparent;
+/* No scrollbar in the slide list or the panel, so hovering never shifts the cards (wheel and trackpad still scroll). */
+.grid::-webkit-scrollbar,
+aside::-webkit-scrollbar {
+  display: none;
 }
 .card {
   min-width: 0;
@@ -336,7 +337,8 @@ aside {
 .photo-placement {
   position: absolute;
 }
-.photo-placement img {
+.photo-placement img,
+.photo-placement video {
   width: 100%;
   height: 100%;
   object-fit: contain;

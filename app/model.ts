@@ -1,6 +1,10 @@
 import { chronologicalPages, projectForPage } from './chronology.ts';
-/** duration: in a sequence, seconds this image stays before the next one (the slide's interval when unset). */
-export type Photo = { id: string; name: string; width: number; height: number; duration?: number };
+/**
+ * duration: in a sequence, seconds this image stays before the next one (the slide's interval when unset).
+ * video: a muted video laid out like an image in a sequence or grid; its file is under id, a still frame
+ * under poster (thumbnails, PDF, before playback) and its length in seconds is the step's default time.
+ */
+export type Photo = { id: string; name: string; width: number; height: number; duration?: number; video?: true; poster?: string; length?: number };
 // Text slide measurements are px on the 1920-wide sheet; tracking is 1/1000 em like InDesign.
 // top and left are measured to the ink of the first line (see alignInk in text-slide.tsx).
 // tabSize is the distance between tab stops in px from the left margin (default 240); indent is a
@@ -67,7 +71,7 @@ export const GALLERY_LIMIT = 60;
 export const assetTypes: Record<string, string> = Object.assign(Object.create(null), { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif', 'image/avif': 'avif', 'image/svg+xml': 'svg', 'video/mp4': 'mp4', 'video/webm': 'webm' });
 export const MAX_ASSET = 40 * 1024 * 1024;
 export function assetIds(slides: Slide[]) {
-  return [...new Set(slides.flatMap(s => [...(s.photos?.map(p => p.id) || []), ...(s.media ? [s.media.id] : []), ...(s.previewId ? [s.previewId] : [])]))];
+  return [...new Set(slides.flatMap(s => [...(s.photos?.flatMap(p => p.poster ? [p.id, p.poster] : [p.id]) || []), ...(s.media ? [s.media.id] : []), ...(s.previewId ? [s.previewId] : [])]))];
 }
 export const initial: Slide[] = chronologicalPages.map(i => {
   const project = projectForPage(i);
@@ -108,8 +112,9 @@ export function duplicate(slides: Slide[], ids: string[], id = () => crypto.rand
   const at = slides.findLastIndex(s => picked.has(s.id)) + 1;
   return { slides: [...slides.slice(0, at), ...copies, ...slides.slice(at)], copies: copies.map(s => s.id) };
 }
-/** How long a sequence step stays, in ms: the longest of its images, each its own duration or the slide's interval. */
-export const stepDuration = (step: Pick<Photo, 'duration'>[], interval = 400) => Math.max(...step.map(p => p.duration !== undefined ? p.duration * 1000 : interval));
+/** How long a sequence step stays, in ms: the longest of its items, each its own duration, else a video's length, else the slide's interval. */
+export const stepDuration = (step: Pick<Photo, 'duration' | 'video' | 'length'>[], interval = 400) =>
+  Math.max(...step.map(p => p.duration !== undefined ? p.duration * 1000 : p.video && p.length ? p.length * 1000 : interval));
 export function numberOf(slides: Slide[], id: string): number | null {
   const i = slides.filter((s) => !s.hidden).findIndex((s) => s.id === id);
   return i < 0 ? null : i + 1;
@@ -261,7 +266,8 @@ const validPhoto = (p: Photo) =>
   p.width > 0 &&
   Number.isFinite(p.height) &&
   p.height > 0 &&
-  (p.duration === undefined || within(p.duration, 0.04, 600));
+  (p.duration === undefined || within(p.duration, 0.04, 600)) &&
+  (p.video === undefined ? p.poster === undefined && p.length === undefined : p.video === true && typeof p.poster === 'string' && within(p.length, 0.04, 3600));
 const within = (v: unknown, min: number, max: number) => typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
 export function validTypography(t: Typography | undefined): t is Typography {
   return !!t && within(t.size, 8, 400) && within(t.leading, 8, 800) && within(t.paragraph, 0, 1000) && within(t.tracking, -300, 1000) &&
@@ -292,6 +298,7 @@ export function validDeck(value: unknown): value is Slide[] {
           ? Object.keys(s.margin).length === 4 && SIDES.every(([side]) => within((s.margin as Sides)[side], 0, 480))
           : within(s.margin, 0, 480))) ||
         ((s.layout !== undefined || s.fit !== undefined || s.gap !== undefined) && s.kind !== 'gallery' && s.kind !== 'sequence') ||
+        (Array.isArray(s.photos) && s.photos.some((p: Photo) => p?.video) && s.kind !== 'gallery' && s.kind !== 'sequence') ||
         (s.layout !== undefined && !['rows', 'columns', 'cells'].includes(s.layout)) ||
         (s.fit !== undefined && !['contain', 'cover'].includes(s.fit)) ||
         (s.gap !== undefined && !within(s.gap, 0, 400))

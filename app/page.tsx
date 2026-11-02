@@ -83,6 +83,8 @@ async function folderFiles(entry: FileSystemDirectoryEntry): Promise<File[]> {
   return Promise.all(entries.filter((e): e is FileSystemFileEntry => e.isFile).map(e => new Promise<File>((resolve, reject) => e.file(resolve, reject))));
 }
 const byName = (a: File, b: File) => a.name.localeCompare(b.name, undefined, { numeric: true });
+// The image shown for an item when it is not playing: a video's still frame, else the image itself.
+const still = (photo: Photo) => photo.video && photo.poster ? photo.poster : photo.id;
 // Instagram post links are imported as files (the server checks the link exactly).
 const instagramPost = (raw: string) => /^https:\/\/(www\.)?(instagram\.com|instagr\.am)\/(?:[^/?#]+\/)?(?:p|reels?|tv)\/[\w-]{5,40}/.test(raw.trim());
 type Drag = {
@@ -478,8 +480,8 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     visible.slice(Math.max(0, position - 1), position + 3).forEach(slide => {
       const sources = slide.kind === 'image' ? [originalSource(slide.src)]
         : slide.kind === 'gallery' || slide.kind === 'folio'
-          ? (slide.photos || []).map(photo => assets[photo.id]).filter(Boolean)
-          : slide.kind === 'sequence' ? (slide.photos || []).slice(0, 4).map(photo => assets[photo.id]).filter(Boolean)
+          ? (slide.photos || []).map(photo => assets[still(photo)]).filter(Boolean)
+          : slide.kind === 'sequence' ? (slide.photos || []).slice(0, 4).map(photo => assets[still(photo)]).filter(Boolean)
             : (slide.kind === 'clip' || slide.kind === 'text' && publicView) && slide.previewId && assets[slide.previewId] ? [assets[slide.previewId]] : [];
       sources.forEach(src => {
         const image = new Image();
@@ -644,8 +646,8 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     }
   }
   // An Instagram post of the connected account (official API, see server/instagram.mjs): its files come
-  // through the server in parts, then each run of images becomes a sequence (2 s per image, each can be
-  // changed) and each video a clip, in the post's order.
+  // through the server in parts and become one sequence, images at 2 s and videos at their length (each
+  // can be changed).
   async function importInstagram(raw: string, name = '') {
     setBusy(true); setStatus('인스타그램 게시물 찾는 중');
     try {
@@ -672,20 +674,13 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
         setStatus(`인스타그램 ${++done}/${count} 받는 중`);
       };
       await Promise.all(Array.from({ length: Math.min(4, count) }, async () => { while (next < count) { const i = next++; await download(post.items[i], i); } }));
-      const title = name.trim() || post.title, added: Slide[] = [];
-      let run: File[] = [];
-      const flush = async () => {
-        if (!run.length) return;
-        const { photos } = await loadPhotos(run);
-        added.push(photos.length > 1 ? { ...sequence(photos, title), interval: 2000 } : { id: crypto.randomUUID(), title, kind: 'gallery', src: '', hidden: false, photos, layout: 'rows' });
-        run = [];
-      };
-      for (const file of files) {
-        if (file.type.startsWith('video/')) { await flush(); added.push({ ...(await loadClip(file)), title }); }
-        else run.push(file);
-      }
-      await flush();
-      insert(added);
+      // One slide in the post's order: images and videos alike are items of one sequence (a lone image
+      // is a picture slide).
+      const title = name.trim() || post.title, items: Photo[] = [];
+      for (const file of files) items.push(file.type.startsWith('video/') ? await loadVideoItem(file) : (await loadPhotos([file])).photos[0]);
+      insert([items.length === 1 && !items[0].video
+        ? { id: crypto.randomUUID(), title, kind: 'gallery', src: '', hidden: false, photos: items, layout: 'rows' }
+        : { ...sequence(items, title), interval: 2000 }]);
       setUrl(''); setTitle('');
       const stills = post.items.filter(i => i.still).length;
       setStatus(`인스타그램 ${files.length}개 가져옴${stills ? ` · 영상 ${stills}개는 음원 저작권 때문에 표지 이미지로 들어왔습니다` : ''} · 저장되지 않음`);
@@ -799,8 +794,8 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       if (fileRef.current) fileRef.current.value = '';
     }
   }
-  // A clip is stored with a poster frame used for thumbnails, PDF and the moment before playback.
-  async function loadClip(file: File): Promise<Slide> {
+  // A video is stored with a poster frame used for thumbnails, PDF and the moment before playback.
+  async function storeVideo(file: File) {
     if (!/^video\/(mp4|webm)$/.test(file.type)) throw Error(`${file.name} · MP4, WebM 영상을 선택하세요.`);
     if (file.size > MAX_ASSET) throw Error(`${file.name} · 영상 한 개는 40MB 이하여야 합니다. 짧게 자르거나 압축하세요.`);
     const src = URL.createObjectURL(file);
@@ -818,8 +813,17 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       await saveImages([[mediaId, file], [posterId, poster]]);
       objectUrls.current.set(mediaId, src); objectUrls.current.set(posterId, posterUrl);
       setAssets(a => ({ ...a, [mediaId]: src, [posterId]: posterUrl }));
-      return { id: crypto.randomUUID(), title: file.name.replace(/\.[^.]+$/, ''), kind: 'clip', src: '', hidden: false, media: { id: mediaId, name: file.name, width: video.videoWidth, height: video.videoHeight }, previewId: posterId, end: 'loop', muted: true };
+      return { media: { id: mediaId, name: file.name, width: video.videoWidth, height: video.videoHeight }, posterId, length: Math.max(0.04, Math.round((video.duration || 0) * 100) / 100) };
     } catch (e) { URL.revokeObjectURL(src); throw e; }
+  }
+  async function loadClip(file: File): Promise<Slide> {
+    const { media, posterId } = await storeVideo(file);
+    return { id: crypto.randomUUID(), title: file.name.replace(/\.[^.]+$/, ''), kind: 'clip', src: '', hidden: false, media, previewId: posterId, end: 'loop', muted: true };
+  }
+  // A video as one item of a sequence: laid out like an image, its length is its default time.
+  async function loadVideoItem(file: File): Promise<Photo> {
+    const { media, posterId, length } = await storeVideo(file);
+    return { ...media, video: true, poster: posterId, length };
   }
   async function importClips(files: File[]) {
     if (!files.length) return;
@@ -997,8 +1001,8 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
         s.kind === 'image'
           ? [originalSource(s.src)]
           : s.kind === 'gallery' || s.kind === 'folio'
-            ? (s.photos || []).map((p) => preparedAssets[p.id])
-            : s.kind === 'sequence' ? sequenceSteps(s.photos!, s.perFrame)[0].map(p => preparedAssets[p.id])
+            ? (s.photos || []).map((p) => preparedAssets[still(p)])
+            : s.kind === 'sequence' ? sequenceSteps(s.photos!, s.perFrame)[0].map(p => preparedAssets[still(p)])
               : s.kind === 'text' ? []
                 : [previewSource(s, preparedAssets)],
       );
@@ -1415,7 +1419,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                       {active.photos?.map((p, i) => (
                         <div className="photo-row" key={p.id}>
                           <span>{p.name}</span>
-                          {active.kind === 'sequence' && <NumberField key={`${p.id}-duration`} label="초" value={p.duration} min={0.04} max={600} step={0.1} optional placeholder={String((active.interval || 400) / 1000)}
+                          {active.kind === 'sequence' && <NumberField key={`${p.id}-duration`} label="초" value={p.duration} min={0.04} max={600} step={0.1} optional placeholder={String(p.video && p.length ? Math.round(p.length * 10) / 10 : (active.interval || 400) / 1000)}
                             onChange={v => patch(active.id, { photos: active.photos!.map(x => x.id === p.id ? { ...x, duration: v } : x) })}/>}
                           <button
                             disabled={i === 0}

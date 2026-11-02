@@ -1,5 +1,6 @@
 // Sequence steps of their own sizes: 한 번에 groups evenly, 묶기/풀기 joins a row to the step above or
-// starts a step there. Checks the panel's blocks (a rule above each step), moving and removing rows keeps
+// starts a step there. Checks each row's thumbnail (same box, names in one column, it moves with its image),
+// the panel's blocks (a rule above each step), moving and removing rows keeps
 // the other steps, 격자 and back keeps them, undo, playback 2·3·1 images per step in the editor and after
 // publishing (mock GitHub, real checks), and 한 번에 regrouping everything.
 // Needs the dev server on 3100 and Google Chrome; the 11/3 deck starts empty (published file answered 404).
@@ -93,6 +94,16 @@ try {
   await page.waitForFunction(() => document.querySelectorAll('.card').length === 1); await ready();
   await setField('간격', '400');
   await assertPanel('a b c d e f', 'one image per step');
+  // Each row starts with its image's thumbnail in a 48×36 box; the names line up.
+  const thumbs = () => page.$$eval('.photo-row', rows => Promise.all(rows.map(async row => {
+    const box = row.querySelector('.photo-thumb'), img = box.querySelector('img');
+    await img?.decode().catch(() => undefined);
+    const r = box.getBoundingClientRect();
+    return { src: img?.src, loaded: img?.naturalWidth > 0, size: `${Math.round(r.width)}×${Math.round(r.height)}`, name: Math.round(row.querySelector('span').getBoundingClientRect().left), first: row.firstElementChild === box };
+  })));
+  const before = await thumbs();
+  assert.ok(before.every(t => t.loaded && t.size === '48×36' && t.first && t.name === before[0].name), JSON.stringify(before.map(({ src, ...t }) => t)));
+  assert.equal(new Set(before.map(t => t.src)).size, 6, 'each row its own image');
   assert.ok(await page.$eval(`.photo-row button[aria-label="${names[0]} 앞 순번과 묶기"]`, b => b.disabled), 'the first row has no step before it');
 
   // 한 번에 2, then join e's step to c's and split before f: 2 · 3 · 1.
@@ -109,6 +120,7 @@ try {
   // Moving a row swaps it into the other's place; the steps stay.
   await row(names[1], '뒤로');
   assert.equal((await panel())[0], 'ac bde f', 'b and c swapped places, the steps stayed');
+  assert.deepEqual((await thumbs()).slice(1, 3).map(t => t.src), [before[2].src, before[1].src], 'the thumbnails moved with their images');
   await row(names[1], '앞으로');
   await assertPanel('ab cde f', 'and back');
   // Removing a row shrinks its step; undo brings it back.

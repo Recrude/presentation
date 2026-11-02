@@ -155,6 +155,8 @@ try {
   assert.deepEqual([await field('초부터', '.photo-range'), await field('초까지', '.photo-range')], [{ value: '', placeholder: '0' }, { value: '', placeholder: '4' }]);
   assert.equal(await page.$$eval('.photo-range', r => r.length), 1, 'only the video has a range');
   await setField('초부터', '2.5', '.photo-range'); await setField('초까지', '3.5', '.photo-range');
+  // The video row's thumbnail is its still, redrawn at the range start (blue).
+  await page.waitForFunction(async () => { const img = document.querySelectorAll('.photo-row')[1]?.querySelector('.photo-thumb img'); if (!img) return false; await img.decode().catch(() => undefined); const c = document.createElement('canvas'); c.width = c.height = 1; c.getContext('2d').drawImage(img, img.naturalWidth / 2, img.naturalHeight / 2, 1, 1, 0, 0, 1, 1); return c.getContext('2d').getImageData(0, 0, 1, 1).data[2] > 150; }, { timeout: 10000 });
   assert.deepEqual(await page.$$eval('.photo-row input', i => i.map(x => x.placeholder)), ['2', '1'], 'the video’s step lasts its range');
   await page.evaluate(() => { const input = document.querySelector('.photo-row input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, '0.3'); input.dispatchEvent(new Event('input', { bubbles: true })); });
   await click('미리보기');

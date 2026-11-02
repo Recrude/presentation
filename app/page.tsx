@@ -1502,6 +1502,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                       {active.photos?.map((p, i) => (
                         <Fragment key={p.id}>
                         <div className={`photo-row${stepStarts && i && !stepStarts.has(p.id) ? ' joined' : ''}`}>
+                          <div className="photo-thumb">{assets[still(p)] && <img src={assets[still(p)]} alt="" loading="lazy" decoding="async" draggable={false}/>}</div>
                           <span>{p.name}</span>
                           {active.kind === 'sequence' && <NumberField key={`${p.id}-duration`} label="초" value={p.duration} min={0.04} max={600} step={0.1} optional placeholder={String(Math.round(stepDuration([{ ...p, duration: undefined }], active.interval || 400) / 100) / 10)}
                             onChange={v => patch(active.id, { photos: active.photos!.map(x => x.id === p.id ? { ...x, duration: v } : x) })}/>}

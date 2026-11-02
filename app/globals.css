@@ -293,6 +293,9 @@ aside {
 .photo-row.joined {
   border-top-color: transparent;
 }
+/* Each image's still in a fixed box, so names stay in one column whatever the image's shape. */
+.photo-thumb { flex: none; width: 48px; height: 36px; background: var(--black); }
+.photo-thumb img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .photo-row > span {
   flex: 1;
   overflow: hidden;

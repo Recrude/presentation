@@ -48,7 +48,7 @@ import {
   type Format,
 } from './model';
 import { fontData, missingFonts, importFontFiles } from './fonts';
-import { COMPOSITES, fontsIn } from './composite';
+import { COMPOSITES, fontsIn, setWeight } from './composite';
 import { readDeck, saveDeck, readImage, readImages, saveImages } from './storage';
 import { SheetHeight, SlideView } from './slide-view';
 import { PresentationStage } from './presentation-stage';
@@ -278,6 +278,18 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   }
   function swapPhotos(id: string, a: number, b: number) {
     regroup(id, steps => { const ps = steps.flat(); [ps[a], ps[b]] = [ps[b], ps[a]]; let at = 0; return steps.map(step => ps.slice(at, at += step.length)); });
+  }
+  // Sets the letters picked in the text field bold or regular (⌘B: the other weight). The slide's 글꼴
+  // becomes bold when every letter is, else regular with `**` around the bold runs; the same letters
+  // stay picked.
+  const textRef = useRef<HTMLTextAreaElement>(null);
+  function applyWeight(weight: 'bold' | 'regular' | 'toggle') {
+    const el = textRef.current, slide = stateRef.current.find(s => s.id === selected);
+    if (!el || slide?.kind !== 'text') return;
+    const typo = slide.typo || defaultTypography, result = setWeight(el.value, typo.composite === 'bold', el.selectionStart, el.selectionEnd, weight);
+    if (!result) { setStatus('굵기를 바꿀 글자를 고르세요'); return; }
+    if (result.text !== el.value || result.bold !== (typo.composite === 'bold')) patch(slide.id, { text: result.text, typo: { ...typo, composite: result.bold ? 'bold' : undefined } });
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(result.start, result.end); });
   }
   // A new text slide continues the type of the nearest text slide before it, like a Keynote master.
   function nearestTypography() {
@@ -1468,8 +1480,9 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                     </div>}
                   </div>
                   {active.kind === 'text' && <>
-                    <textarea className="text-editor" aria-label="텍스트" placeholder="빈 줄로 문단을 나눕니다 · **굵게** · 탭으로 칸 맞춤" value={active.text || ''} onChange={e => patch(active.id, { text: e.target.value })}
+                    <textarea ref={textRef} className="text-editor" aria-label="텍스트" placeholder="빈 줄로 문단을 나눕니다 · 글자를 골라 볼드·레귤러(⌘B) · 탭으로 칸 맞춤" value={active.text || ''} onChange={e => patch(active.id, { text: e.target.value })}
                       onKeyDown={e => {
+                        if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'b' && !e.nativeEvent.isComposing) { e.preventDefault(); applyWeight('toggle'); return; }
                         // Tab types a tab (the text is laid out on tab stops); Shift-Tab still leaves the field.
                         if (e.key !== 'Tab' || e.shiftKey || e.nativeEvent.isComposing) return;
                         e.preventDefault();
@@ -1479,6 +1492,10 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                           requestAnimationFrame(() => el.setSelectionRange(at + 1, at + 1));
                         }
                       }}/>
+                    <div className="row">
+                      {([['bold', '볼드'], ['regular', '레귤러']] as const).map(([weight, label]) =>
+                        <button key={weight} title={weight === 'bold' ? '⌘B' : undefined} aria-label={`고른 글자 ${label}`} onMouseDown={e => e.preventDefault()} onClick={() => applyWeight(weight)}>{label}</button>)}
+                    </div>
                     <div className="row font-choice">
                       <label>글꼴<select value={active.typo?.composite || 'regular'} onChange={e => patchTypography(active.id, { composite: e.target.value === 'bold' ? 'bold' : undefined })}>
                         {COMPOSITES.map(c => <option key={c.weight} value={c.weight}>{c.name}</option>)}

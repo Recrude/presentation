@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validDeck, assetIds, defaultTypography, assetTypes, isFormat, sheetHeight, layoutPhotos, FORMATS, marginOf, storedMargin, stepDuration, sequenceSteps, groupSteps, joinOrSplit, captionRoom, captionTypography } from '../app/model.ts';
-import { runs, paragraphs, styleOf, runStyles, fontsIn, styleSample, COMPOSITES } from '../app/composite.ts';
+import { runs, paragraphs, styleOf, runStyles, fontsIn, styleSample, COMPOSITES, setWeight } from '../app/composite.ts';
 const photo = id => ({ id, name: id + '.webp', width: 1600, height: 900 });
 const text = { id: 't', title: 'T', kind: 'text', src: '', hidden: false, text: '가 A', typo: { ...defaultTypography } };
 const sequence = { id: 's', title: 'S', kind: 'sequence', src: '', hidden: false, photos: [photo('a'), photo('b'), photo('c')], interval: 400, end: 'loop' };
@@ -271,4 +271,26 @@ test('captions validate on grid and sequence images only, with their outlines pu
     { ...captioned, photos: [{ ...photo('a'), caption: 1 }] },
     { ...clip, media: { ...photo('m'), caption: '영상' } },
   ]) assert.equal(validDeck([bad]), false, JSON.stringify(bad).slice(0, 120));
+});
+
+test('weight of picked letters: bold or regular per range, `**` around bold runs on a regular base, none when all bold', () => {
+  // What the slide shows: bold letters in [ ], paragraphs split by ¶.
+  const shown = (text, bold) => paragraphs(text).map(p => runs(p, bold).map(r => runStyles[r.style].bold ? `[${r.text}]` : r.text).join('').replace(/\]\[/g, '')).join(' ¶ ');
+  const apply = (text, bold, s, e, weight) => { const r = setWeight(text, bold, s, e, weight); return [r.text, r.bold, r.text.slice(r.start, r.end)]; };
+  assert.deepEqual(apply('김재연 동작하는 것', false, 0, 3, 'bold'), ['**김재연** 동작하는 것', false, '김재연'], 'a word bold; it stays picked');
+  assert.deepEqual(apply('**김재연**\n\n동작하는 것', false, 0, 9, 'regular'), ['김재연\n\n동작하는 것', false, '김재연'], 'and back');
+  // A bold slide with a regular word: the base turns regular and the rest is marked bold.
+  const [text, bold] = apply('김재연 동작하는 것', true, 4, 6, 'regular');
+  assert.deepEqual([text, bold, shown(text, bold)], ['**김재연** 동작**하는 것**', false, '[김재연] 동작[하는 것]']);
+  // Every letter bold: no marks, the slide is bold.
+  assert.deepEqual(apply('**가 나** 다', false, 0, 11, 'bold'), ['가 나 다', true, '가 나 다']);
+  // Spaces join runs between bold letters and stay out at their edges; runs never cross a paragraph.
+  assert.deepEqual(apply('가 나 다', false, 0, 4, 'bold'), ['**가 나** 다', false, '가 나** '], 'the picked trailing space stays out of the run');
+  const [split] = apply('첫 문단\n\n둘째 문단', false, 2, 9, 'bold');
+  assert.deepEqual([split, shown(split, false)], ['첫 **문단**\n\n**둘째** 문단', '첫 [문단] ¶ [둘째] 문단']);
+  // ⌘B: the other weight when every picked letter has it, else bold.
+  assert.deepEqual(apply('**가 나** 다', false, 0, 8, 'toggle'), ['가 나 다', false, '가 나 ']);
+  assert.deepEqual(apply('**가** 나', false, 0, 9, 'toggle'), ['가 나', true, '가 나']);
+  assert.equal(setWeight('가  나', false, 1, 3, 'bold'), null, 'no letter picked');
+  assert.deepEqual(apply('a\tb **c**', false, 0, 1, 'bold'), ['**a**\tb **c**', false, 'a'], 'tabs stay as typed');
 });

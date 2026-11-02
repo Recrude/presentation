@@ -52,3 +52,52 @@ export const styleSample = (style: number) => ['가', '“', '×', 'A', '1', '�
 // Average advance (em) a condensed run gives back per glyph: Hangul faces are monospaced (1em),
 // Latin varies, so 0.6em keeps the editor within ~0.004em per glyph of the condensed outlines.
 export const condenseAdvance = (style: number) => [0, 5].includes(style % CATEGORIES.length) ? 1 : 0.6;
+/**
+ * Sets the characters typed in [start, end) of a text (offsets in it, `**` included) bold or regular,
+ * or the other way when all its letters are already bold ('toggle'). The text comes back on a regular
+ * base with `**` around its bold runs, inside each paragraph as runs reads them, spaces between bold
+ * letters inside a run and spaces at its edges out; when every letter is bold it comes back without
+ * marks and the slide is bold. start and end are the same characters' offsets in the new text.
+ * Null when the range holds no letter.
+ */
+export function setWeight(text: string, slideBold: boolean, start: number, end: number, weight: 'bold' | 'regular' | 'toggle') {
+  type Char = { char: string; bold: boolean; at: number };
+  const read = (from: number, to: number) => {
+    const p = text.slice(from, to), marks: number[] = [], chars: Char[] = [];
+    for (let i = p.indexOf('**'); i >= 0; i = p.indexOf('**', i + 2)) marks.push(i);
+    if (marks.length % 2) marks.pop();
+    for (let i = 0, m = 0, inside = false; i < p.length;) {
+      if (marks[m] === i) { inside = !inside; m++; i += 2; continue; }
+      const char = String.fromCodePoint(p.codePointAt(i)!);
+      chars.push({ char, bold: slideBold || inside, at: from + i });
+      i += char.length;
+    }
+    return chars;
+  };
+  // Paragraphs as paragraphs() splits them, with their separators kept as typed.
+  const parts: (Char[] | string)[] = [];
+  let from = 0;
+  for (const match of text.matchAll(/\n[ \t]*\n/g)) { parts.push(read(from, match.index), match[0]); from = match.index + match[0].length; }
+  parts.push(read(from, text.length));
+  const letter = (c: Char) => !!c.char.trim(), chars = parts.flatMap(p => typeof p === 'string' ? [] : p);
+  const picked = chars.filter(c => c.at >= start && c.at < end);
+  if (!picked.some(letter)) return null;
+  const bold = weight === 'toggle' ? !picked.filter(letter).every(c => c.bold) : weight === 'bold';
+  for (const c of picked) c.bold = bold;
+  const allBold = chars.filter(letter).every(c => c.bold);
+  let out = '', first = -1, last = -1;
+  for (const p of parts) {
+    if (typeof p === 'string') { out += p; continue; }
+    // A space is bold when the letters on both sides are, so runs start and end on letters.
+    const near = (i: number, step: number) => { for (let j = i; j >= 0 && j < p.length; j += step) if (letter(p[j])) return p[j].bold; return false; };
+    let open = false;
+    p.forEach((c, i) => {
+      const marked = !allBold && (letter(c) ? c.bold : near(i, -1) && near(i, 1));
+      if (marked !== open) { out += '**'; open = marked; }
+      if (c.at >= start && c.at < end) { if (first < 0) first = out.length; last = out.length + c.char.length; }
+      out += c.char;
+    });
+    if (open) out += '**';
+  }
+  return { text: out, bold: allBold, start: first, end: last };
+}

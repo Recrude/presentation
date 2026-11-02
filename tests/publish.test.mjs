@@ -116,6 +116,9 @@ test('text outlines and clips publish; scripted or external SVG never does',asyn
   await assert.rejects(()=>executePublish({action:'deck',slug:LEGACY_SLUG,slides:[grid],assets:{m:mp4Proof}},git,secret),/캡션/);
   const captioned=await executePublish({action:'deck',slug:LEGACY_SLUG,slides:[{...grid,photos:[{...grid.photos[0],captionId:'o'}]}],assets:{m:result.snapshot.assets.m,o:result.snapshot.assets.o}},git,secret);
   assert.match(captioned.snapshot.assets.o,/\.svg$/);
+  const page={id:'w',title:'W',kind:'web',src:'https://ved.kr/',hidden:false,caption:'캡션'};
+  await assert.rejects(()=>executePublish({action:'deck',slug:LEGACY_SLUG,slides:[page],assets:{}},git,secret),/캡션/);
+  assert.match((await executePublish({action:'deck',slug:LEGACY_SLUG,slides:[{...page,captionId:'o'}],assets:{o:result.snapshot.assets.o}},git,secret)).snapshot.assets.o,/\.svg$/);
   const bad=Buffer.from('<svg onload="x"></svg>');
   await assert.rejects(()=>executePublish({action:'upload',slug:LEGACY_SLUG,mime:'image/svg+xml',hash:hash(bad),count:1,index:0,content:bad.toString('base64')},git,secret));
   await assert.rejects(()=>executePublish({action:'upload',slug:LEGACY_SLUG,mime:'constructor',hash:hash(svg),count:1,index:0,content:svg.toString('base64')},git,secret));

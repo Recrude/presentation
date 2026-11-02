@@ -52,8 +52,11 @@ export type Slide = {
   margin?: number | Sides;
   /** Several images: how they share the sheet (see layoutPhotos). */
   layout?: Arrangement['layout'];
-  /** Grid or sequence: where captions line up under their images (left edge when unset). */
+  /** Grid, sequence or web page: where captions line up under their images or page (left edge when unset). */
   captionAlign?: 'center' | 'right';
+  /** Web: small text under the page or its window (see CAPTION), and its outlines like a photo's caption. */
+  caption?: string;
+  captionId?: string;
   fit?: Arrangement['fit'];
   gap?: number;
   /** Web: the browser window's toolbar color (light scheme, read when captured); tintDark is from older captures and unused. */
@@ -89,7 +92,7 @@ export const GALLERY_LIMIT = 60;
 export const assetTypes: Record<string, string> = Object.assign(Object.create(null), { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif', 'image/avif': 'avif', 'image/svg+xml': 'svg', 'video/mp4': 'mp4', 'video/webm': 'webm' });
 export const MAX_ASSET = 40 * 1024 * 1024;
 export function assetIds(slides: Slide[]) {
-  return [...new Set(slides.flatMap(s => [...(s.photos?.flatMap(p => [p.id, ...(p.poster ? [p.poster] : []), ...(p.captionId ? [p.captionId] : [])]) || []), ...(s.media ? [s.media.id] : []), ...(s.previewId ? [s.previewId] : [])]))];
+  return [...new Set(slides.flatMap(s => [...(s.photos?.flatMap(p => [p.id, ...(p.poster ? [p.poster] : []), ...(p.captionId ? [p.captionId] : [])]) || []), ...(s.media ? [s.media.id] : []), ...(s.previewId ? [s.previewId] : []), ...(s.captionId ? [s.captionId] : [])]))];
 }
 export const initial: Slide[] = chronologicalPages.map(i => {
   const project = projectForPage(i);
@@ -322,6 +325,7 @@ function packColumns(a: number[], across: number, along: number, gap: number, pe
  */
 export const CAPTION = { size: 18, leading: 30, tracking: -40, gap: 12, lines: 4 };
 export const captionLines = (caption = '') => caption.split('\n').filter(line => line.trim()).length;
+const validCaption = (caption: unknown) => typeof caption === 'string' && caption.length <= 500 && captionLines(caption) <= CAPTION.lines;
 /** Room a grid or sequence keeps under every image when any of them has a caption: the gap and its most lines. */
 export function captionRoom(photos: Pick<Photo, 'caption'>[] = []) {
   const lines = Math.max(0, ...photos.map(p => captionLines(p.caption)));
@@ -336,6 +340,11 @@ export function captionTypography(box: Box, align?: Slide['captionAlign']): Typo
   const [left, right] = align === 'center' ? [centre - half, 1920 - centre - half] : align === 'right' ? [0, 1920 - end] : [box.x, 0];
   return { size: CAPTION.size, leading: CAPTION.leading, paragraph: 0, tracking: CAPTION.tracking, top: box.y + box.height + CAPTION.gap, left, right };
 }
+/** A web page's box (its window's, in a Safari frame): inside the slide's margin, less the room for its caption. */
+export function pageBox(s: Pick<Slide, 'kind' | 'frame' | 'margin' | 'caption'>, H = 1080): Box {
+  const m = marginOf(s);
+  return { x: m.left, y: m.top, width: 1920 - m.left - m.right, height: H - m.top - m.bottom - captionRoom([s]) };
+}
 // A video item of a sequence or grid has its still and length; a clip's video may keep its length; an
 // image has neither, nor a range.
 const validPhoto = (p: Photo, clip = false) =>
@@ -348,7 +357,7 @@ const validPhoto = (p: Photo, clip = false) =>
   p.height > 0 &&
   (p.duration === undefined || within(p.duration, 0.04, 600)) &&
   (p.length === undefined || within(p.length, 0.04, 3600)) && validRange(p, p.length) && (p.joined === undefined || p.joined === true && !clip) &&
-  (p.caption === undefined || !clip && typeof p.caption === 'string' && p.caption.length <= 500 && captionLines(p.caption) <= CAPTION.lines) &&
+  (p.caption === undefined || !clip && validCaption(p.caption)) &&
   (p.captionId === undefined || typeof p.captionId === 'string' && p.caption !== undefined) &&
   (p.video === true ? typeof p.poster === 'string' && p.length !== undefined
     : p.video === undefined && p.poster === undefined && (clip || p.length === undefined && p.from === undefined && p.to === undefined));
@@ -387,7 +396,9 @@ export function validDeck(value: unknown): value is Slide[] {
           : within(s.margin, 0, 480))) ||
         ((s.layout !== undefined || s.fit !== undefined || s.gap !== undefined) && s.kind !== 'gallery' && s.kind !== 'sequence') ||
         (Array.isArray(s.photos) && s.photos.some((p: Photo) => p?.video || p?.caption !== undefined) && s.kind !== 'gallery' && s.kind !== 'sequence') ||
-        (s.captionAlign !== undefined && (!['center', 'right'].includes(s.captionAlign) || s.kind !== 'gallery' && s.kind !== 'sequence')) ||
+        (s.captionAlign !== undefined && (!['center', 'right'].includes(s.captionAlign) || !['gallery', 'sequence', 'web'].includes(s.kind))) ||
+        (s.caption !== undefined && (s.kind !== 'web' || !validCaption(s.caption))) ||
+        (s.captionId !== undefined && (typeof s.captionId !== 'string' || s.caption === undefined)) ||
         (s.layout !== undefined && !['rows', 'columns', 'cells'].includes(s.layout)) ||
         (s.fit !== undefined && !['contain', 'cover'].includes(s.fit)) ||
         (s.gap !== undefined && !within(s.gap, 0, 400)) ||

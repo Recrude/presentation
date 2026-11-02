@@ -1,9 +1,10 @@
-// Captions under images: a row's 캡션 opens its field, typed lines (at most 4) become small type under the
+// Captions under images and web pages: a row's 캡션 opens its field, typed lines (at most 4) become small type under the
 // image, and the grid or sequence keeps room for the longest under every image, so images keep one size
 // from step to step. Measured on screen in the presentation (sheet px at 1:1): the caption's ink starts
 // 12 px under its image and lines up with its left edge, centre or right edge (캡션 정렬). Published
 // through the real checks (mock GitHub) as SVG outlines per slide (a copy of the slide gets its own),
-// which the public viewer shows in the same places as the live type.
+// which the public viewer shows in the same places as the live type. A web page's caption goes under its
+// Safari window or under the page inside the slide's margin, which shrink by its room.
 // Needs the dev server on 3100, Google Chrome, ffmpeg and the composite fonts in ~/Library/Fonts and
 // /Library/Fonts; the 11/3 deck starts empty (published file answered 404).
 import puppeteer from 'puppeteer-core';
@@ -25,6 +26,9 @@ const seq = path.join(work, 'seq');
 fs.mkdirSync(seq);
 const image = (name, color, size) => execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', `color=c=${color}:s=${size}:d=1`, '-frames:v', '1', path.join(seq, name)]);
 image('a.png', 'red', '1600x900'); image('b.png', 'green', '900x1200'); image('c.png', 'blue', '1200x900');
+// The capture of the web page (answered for the capture API) and the page itself.
+execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=gray:s=1440x900:d=1', '-frames:v', '1', path.join(work, 'capture.png')]);
+const capture = fs.readFileSync(path.join(work, 'capture.png'));
 const registry = { version: 1, items: catalogEntries.map(e => ({ id: e.id, public: true })) };
 const blobs = new Map(), files = new Map();
 let pending = [];
@@ -51,6 +55,8 @@ try {
   page.on('request', async req => {
     const url = new URL(req.url());
     if (url.pathname.endsWith('/decks/catalog.json')) return req.respond({ status: 200, contentType: 'application/json', body: JSON.stringify(registry) });
+    if (url.pathname.endsWith('/api/capture')) return req.respond({ status: 200, contentType: 'image/png', headers: { 'X-Toolbar-Color': '#ffffff' }, body: capture });
+    if (url.hostname === 'caption.test') return req.respond({ status: 200, contentType: 'text/html', body: '<body style="margin:0;background:#888"></body>' });
     if (url.pathname.endsWith('/api/publish/')) {
       try { return req.respond({ status: 200, contentType: 'application/json', body: JSON.stringify(await executePublish(JSON.parse(req.postData()), git, 'test-secret')) }); }
       catch (e) { return req.respond({ status: e.status || 500, contentType: 'application/json', body: JSON.stringify({ error: e.message }) }); }
@@ -88,6 +94,11 @@ try {
     const steps = layer.querySelectorAll('.sequence-step'), scope = steps.length && !all ? [...steps].find(s => s.style.visibility === 'visible') : layer;
     return [...scope.querySelectorAll('.photo-placement')].map(p => { const r = p.getBoundingClientRect(); return { name: p.querySelector('img').alt, x: (r.x - sheet.x) * k, y: (r.y - sheet.y) * k, width: r.width * k, height: r.height * k }; });
   }, all);
+  // The web page's box on screen (its window, or the page inside the margin), in sheet px.
+  const pageRect = selector => page.evaluate(selector => {
+    const layer = document.querySelector('.presentation-layer[aria-hidden="false"]'), sheet = layer.querySelector('.slide-sheet').getBoundingClientRect(), k = 1920 / sheet.width, r = layer.querySelector(selector).getBoundingClientRect();
+    return [{ name: 'page', x: (r.x - sheet.x) * k, y: (r.y - sheet.y) * k, width: r.width * k, height: r.height * k }];
+  }, selector);
   // Ink of the bright (caption) pixels on screen under an image box, in sheet px.
   const ink = async box => page.evaluate(async (shot, box) => {
     const sheet = document.querySelector('.presentation-layer[aria-hidden="false"] .slide-sheet').getBoundingClientRect(), k = sheet.width / 1920;
@@ -103,8 +114,8 @@ try {
   }, await page.screenshot({ encoding: 'base64' }), box);
   const close = (a, b, d, message) => assert.ok(Math.abs(a - b) <= d, `${message}: ${a.toFixed(2)} vs ${b.toFixed(2)}`);
   // Each captioned box's caption: 12 px under it, lined up as asked, inside the bottom margin.
-  const measure = async (names, align, label) => {
-    const boxes = await placements(), found = {};
+  const measure = async (names, align, label, shown, margin = 64) => {
+    const boxes = shown || await placements(), found = {};
     for (const name of names) {
       const box = boxes.find(b => b.name === name), m = await ink(box), at = `${label} ${name} ${align}`;
       assert.ok(m.top < Infinity, `${at}: a caption under the image`);
@@ -112,7 +123,7 @@ try {
       if (align === 'left') close(m.left, box.x, 1.5, `${at}: left edges`);
       if (align === 'center') close((m.left + m.right) / 2, box.x + box.width / 2, 1.5, `${at}: centres`);
       if (align === 'right') close(m.right, box.x + box.width, 2, `${at}: right edges`);
-      assert.ok(m.bottom <= 1080 - 64 + 1, `${at}: inside the bottom margin (${m.bottom})`);
+      assert.ok(m.bottom <= 1080 - margin + 1, `${at}: inside the bottom margin (${m.bottom})`);
       found[name] = m;
     }
     return found;
@@ -189,15 +200,47 @@ try {
   live.sequence = await measure(['a.png'], 'right', '넘김');
   await leave();
 
+  // A web page's caption: under its Safari window (margin 48), which leaves the two-line room.
+  await button('추가', '.toolbar');
+  await page.type('[aria-label="웹 또는 영상 주소"]', 'https://caption.test/');
+  await button('링크 추가');
+  await status('캡처 완료');
+  await page.waitForFunction(() => document.querySelectorAll('.card').length === 3);
+  assert.equal(await page.$$eval('.properties label', l => l.some(x => x.textContent.startsWith('캡션 정렬'))), false, 'no 캡션 정렬 before a caption');
+  await page.focus('textarea[aria-label="캡션"]');
+  await page.keyboard.type('caption.test\n웹 페이지 2026');
+  await choose('캡션 정렬', 'right');
+  if (process.env.VERIFY_OUT) await (await page.$('.properties')).screenshot({ path: process.env.VERIFY_OUT + '/captions-web-panel.png' });
+  await present();
+  const framed = await pageRect('.browser-window');
+  close(framed[0].y + framed[0].height, 1080 - 48 - 60, 0.5, 'the window ends the two-line room above its 48 margin');
+  live.window = await measure(['page'], 'right', '창', framed, 48);
+  await leave();
+  // A copy without the window, margin 64: under the page itself, centred.
+  await button('복제', '.properties');
+  await page.waitForFunction(() => document.querySelectorAll('.card').length === 4);
+  await page.evaluate(() => [...document.querySelectorAll('.properties label.check')].find(l => l.textContent.includes('브라우저 창')).querySelector('input').click());
+  await page.evaluate(() => { const i = document.querySelector('.field input[aria-label="바깥 여백"]'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(i, '64'); i.dispatchEvent(new Event('input', { bubbles: true })); });
+  await choose('캡션 정렬', 'center');
+  await select(3);
+  await present();
+  const plain = await pageRect('.slide-inset');
+  close(plain[0].y + plain[0].height, 1080 - 64 - 60, 0.5, 'the page ends the two-line room above its 64 margin');
+  close(plain[0].x, 64, 0.5, 'the page inside the margin');
+  live.page = await measure(['page'], 'center', '페이지', plain, 64);
+  if (process.env.VERIFY_OUT) await page.screenshot({ path: `${process.env.VERIFY_OUT}/captions-web.png` });
+  await leave();
+
   // Published through the real checks: outlines per slide, the copy's its own.
   await button('저장', '.toolbar'); await status('이 브라우저에 저장됨');
   await button('게시', '.toolbar'); await status('게시됨');
   const deck = JSON.parse(files.get(`public/decks/${ID}/deck.json`));
-  const [grid, sequence] = deck.slides;
-  assert.deepEqual([grid.kind, grid.captionAlign, sequence.kind, sequence.captionAlign], ['gallery', 'center', 'sequence', 'right']);
+  const [grid, sequence, window, bare] = deck.slides;
+  assert.deepEqual([grid.kind, grid.captionAlign, sequence.kind, sequence.captionAlign, window.frame, window.captionAlign, bare.frame, bare.captionAlign], ['gallery', 'center', 'sequence', 'right', 'browser', 'right', undefined, 'center']);
   assert.deepEqual(grid.photos.map(p => p.caption), ['Visual 시각 2025', undefined, '셋째 이미지\n두 줄째']);
-  const outlines = [...grid.photos, ...sequence.photos].map(p => p.captionId).filter(Boolean);
-  assert.equal(new Set(outlines).size, 4, 'four outlines: the copy has its own');
+  assert.deepEqual([window.caption, bare.caption], ['caption.test\n웹 페이지 2026', 'caption.test\n웹 페이지 2026']);
+  const outlines = [...grid.photos, ...sequence.photos, window, bare].map(p => p.captionId).filter(Boolean);
+  assert.equal(new Set(outlines).size, 6, 'six outlines: each copy has its own');
   for (const id of outlines) {
     const svg = files.get('public/' + deck.assets[id].slice('/presentations/'.length));
     assert.ok(svg && safeSvg(svg) && /viewBox="0 0 1920 1080"/.test(svg.toString()), 'a whole-sheet SVG that passes the server’s checks');
@@ -217,8 +260,15 @@ try {
   await new Promise(r => setTimeout(r, 700));
   const stepped = await measure(['a.png'], 'right', '공개 넘김');
   for (const side of ['top', 'left', 'right', 'bottom']) close(stepped['a.png'][side], live.sequence['a.png'][side], 1.5, `공개 넘김 ${side} = live`);
+  for (const [key, selector, align, margin] of [['window', '.browser-window', 'right', 48], ['page', '.slide-inset', 'center', 64]]) {
+    await page.keyboard.press('ArrowRight');
+    await page.waitForFunction(selector => { const layer = document.querySelector('.presentation-layer[aria-hidden="false"]'), i = layer?.querySelector('.caption-outline'); return layer?.querySelector(selector) && i?.complete && i.naturalWidth; }, {}, selector);
+    await new Promise(r => setTimeout(r, 700));
+    const shown = await measure(['page'], align, `공개 ${key}`, await pageRect(selector), margin);
+    for (const side of ['top', 'left', 'right', 'bottom']) close(shown.page[side], live[key].page[side], 1.5, `공개 ${key} ${side} = live`);
+  }
   assert.deepEqual(errors, []);
-  console.log(`captions: 캡션 opens a field (closes while empty, 4 lines at most, emptied goes); ink 12 px under each image, left/centre/right edges within 1.5 px live and published (${JSON.stringify(Object.fromEntries(Object.entries(outlined['a.png']).map(([k, v]) => [k, +v.toFixed(1)])))}); every step keeps the 2-line room (images 892 high); the copy publishes its own outlines`);
+  console.log(`captions: 캡션 opens a field (closes while empty, 4 lines at most, emptied goes); ink 12 px under each image, left/centre/right edges within 1.5 px live and published (${JSON.stringify(Object.fromEntries(Object.entries(outlined['a.png']).map(([k, v]) => [k, +v.toFixed(1)])))}); every step keeps the 2-line room (images 892 high); a web page's caption under its window (right) or the page (centre), live and published; each copy publishes its own outlines`);
 } finally {
   await browser.close();
   fs.rmSync(work, { recursive: true, force: true });

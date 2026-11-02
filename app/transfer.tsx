@@ -37,6 +37,7 @@ export async function importBackup(value: unknown) {
   const slides = b.slides.map(s => ({...s,
     ...(s.photos ? {photos:s.photos.map(photo => ({...photo,id:remap.get(photo.id)!,...(photo.poster ? {poster:remap.get(photo.poster)!} : {}),...(photo.captionId ? {captionId:remap.get(photo.captionId)!} : {})}))} : {}),
     ...(s.previewId ? {previewId:remap.get(s.previewId)!} : {}),
+    ...(s.captionId ? {captionId:remap.get(s.captionId)!} : {}),
     ...(s.media ? {media:{...s.media,id:remap.get(s.media.id)!}} : {}),
   }));
   return {slides,assets,format:b.format};

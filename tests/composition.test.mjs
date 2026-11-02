@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validDeck, assetIds, defaultTypography, assetTypes, isFormat, sheetHeight, layoutPhotos, FORMATS, marginOf, storedMargin, stepDuration, sequenceSteps, groupSteps, joinOrSplit, captionRoom, captionTypography } from '../app/model.ts';
+import { validDeck, assetIds, defaultTypography, assetTypes, isFormat, sheetHeight, layoutPhotos, FORMATS, marginOf, storedMargin, stepDuration, sequenceSteps, groupSteps, joinOrSplit, captionRoom, captionTypography, pageBox } from '../app/model.ts';
 import { runs, paragraphs, styleOf, runStyles, fontsIn, styleSample, COMPOSITES, setWeight } from '../app/composite.ts';
 const photo = id => ({ id, name: id + '.webp', width: 1600, height: 900 });
 const text = { id: 't', title: 'T', kind: 'text', src: '', hidden: false, text: '가 A', typo: { ...defaultTypography } };
@@ -293,4 +293,16 @@ test('weight of picked letters: bold or regular per range, `**` around bold runs
   assert.deepEqual(apply('**가** 나', false, 0, 9, 'toggle'), ['가 나', true, '가 나']);
   assert.equal(setWeight('가  나', false, 1, 3, 'bold'), null, 'no letter picked');
   assert.deepEqual(apply('a\tb **c**', false, 0, 1, 'bold'), ['**a**\tb **c**', false, 'a'], 'tabs stay as typed');
+});
+
+test('a web page’s caption: under the page or its window, inside the margin, published like an image’s', () => {
+  const captioned = { ...web, caption: 'ved.kr\n2026', captionId: 'outline', captionAlign: 'right' };
+  assert.ok(validDeck([captioned, { ...web, id: 'w2', frame: undefined, caption: '한 줄' }]));
+  assert.deepEqual(assetIds([captioned]), ['outline']);
+  assert.deepEqual(pageBox(web), { x: 48, y: 48, width: 1824, height: 984 }, 'no caption: the window as before');
+  assert.deepEqual(pageBox(captioned), { x: 48, y: 48, width: 1824, height: 984 - 60 }, 'two lines: 12 + 18 + 30 less');
+  assert.deepEqual(pageBox({ kind: 'web', caption: '한 줄', margin: { top: 0, right: 100, bottom: 40, left: 100 } }, 1440), { x: 100, y: 0, width: 1720, height: 1440 - 40 - 30 });
+  const youtube = { id: 'y', title: 'Y', kind: 'youtube', src: 'https://www.youtube-nocookie.com/embed/aaaaaaaaaaa', hidden: false };
+  for (const bad of [{ ...youtube, caption: '영상' }, { ...text, caption: '글' }, { ...web, caption: '1\n2\n3\n4\n5' }, { ...web, captionId: 'outline' }, { ...web, caption: 7 }])
+    assert.equal(validDeck([bad]), false, JSON.stringify(bad).slice(0, 120));
 });

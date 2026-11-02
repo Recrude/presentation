@@ -309,8 +309,9 @@ aside {
 .photo-row label { display: flex; flex-direction: row-reverse; align-items: center; gap: var(--half); }
 .photo-row input { width: 5.5em; text-align: right; }
 /* A video item's range under its row: "3 초부터 12.5 초까지". */
-/* A caption under its row, starting in the names' column. */
-.caption-field { display: block; width: 100%; padding: 0 0 var(--half) calc(48px + var(--half)); font: inherit; color: inherit; background: transparent; border: 0; border-radius: 0; resize: none; }
+/* Captions: a web page's under its fields; an image's under its row, starting in the names' column. */
+.caption-field { display: block; width: 100%; padding: var(--half) 0; font: inherit; color: inherit; background: transparent; border: 0; border-bottom: var(--rule) solid var(--line); border-radius: 0; resize: none; }
+.photo-list .caption-field { padding: 0 0 var(--half) calc(48px + var(--half)); border: 0; }
 .photo-range { display: flex; justify-content: flex-end; gap: var(--space); padding-bottom: var(--half); }
 .photo-range label { display: flex; flex-direction: row-reverse; align-items: center; gap: var(--half); }
 .photo-range input { width: 5.5em; text-align: right; }

@@ -40,6 +40,7 @@ import {
   captionRoom,
   captionTypography,
   layoutPhotos,
+  pageBox,
   vimeoPlayer,
   type Range,
   type Slide,
@@ -74,6 +75,12 @@ const typographyFields: [Exclude<keyof Typography, 'composite' | 'tabs' | 'inden
 const endings = [['loop', '반복'], ['hold', '멈춤'], ['next', '다음 장']] as const;
 // Keeps the typed text while it is not yet a valid number (e.g. "0." on the way to "0.5"). A heading
 // (a button) takes the label's place, and the label then only names the input.
+// Where a slide's captions line up under their images or page.
+function CaptionAlign({ slide, onChange }: { slide: Slide; onChange: (align: Slide['captionAlign']) => void }) {
+  return <label>캡션 정렬<select value={slide.captionAlign || 'left'} onChange={e => onChange(e.target.value === 'center' || e.target.value === 'right' ? e.target.value : undefined)}>
+    <option value="left">왼쪽</option><option value="center">가운데</option><option value="right">오른쪽</option>
+  </select></label>;
+}
 function NumberField({ label, heading, value, min, max, step = 1, optional = false, placeholder = '—', onChange }: { label: string; heading?: ReactNode; value: number | undefined; min: number; max: number; step?: number; optional?: boolean; placeholder?: string; onChange: (value: number | undefined) => void }) {
   const [text, setText] = useState(value === undefined ? '' : String(value));
   useEffect(() => { if ((text === '' ? undefined : Number(text)) !== value) setText(value === undefined ? '' : String(value)); }, [value]);
@@ -270,10 +277,11 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     if (steps.some(step => step.length > GALLERY_LIMIT)) { setStatus(`한 순번은 ${GALLERY_LIMIT}장까지입니다.`); return; }
     patch(id, groupSteps(steps, slide.perFrame));
   }
-  // A caption is kept as typed, at most CAPTION.lines lines; emptied, it goes. Its outlines (captionId)
-  // are made again when publishing.
-  function setCaption(slide: Slide, photoId: string, value: string) {
+  // A caption (an image's, or a web page's without photoId) is kept as typed, at most CAPTION.lines lines;
+  // emptied, it goes. Its outlines (captionId) are made again when publishing.
+  function setCaption(slide: Slide, photoId: string | undefined, value: string) {
     if (captionLines(value) > CAPTION.lines) { setStatus(`캡션은 ${CAPTION.lines}줄까지입니다.`); return; }
+    if (!photoId) { patch(slide.id, { caption: value || undefined, captionId: undefined }); return; }
     patch(slide.id, { photos: slide.photos!.map(p => { if (p.id !== photoId) return p; const { caption, captionId, ...rest } = p; return value ? { ...rest, caption: value } : rest; }) });
   }
   function swapPhotos(id: string, a: number, b: number) {
@@ -719,7 +727,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   function finish(id: string) {
     if (advanceRef.current.id === id) setPosition(p => Math.min(p + 1, advanceRef.current.length - 1));
   }
-  const textFonts = (deck: Slide[]) => [...new Set(deck.flatMap(s => s.kind === 'text' ? fontsIn(s.text || '', s.typo?.composite === 'bold') : (s.photos || []).flatMap(p => p.caption ? fontsIn(p.caption) : [])))];
+  const textFonts = (deck: Slide[]) => [...new Set(deck.flatMap(s => s.kind === 'text' ? fontsIn(s.text || '', s.typo?.composite === 'bold') : [s, ...s.photos || []].flatMap(p => p.caption ? fontsIn(p.caption) : [])))];
   const usedFonts = textFonts(slides).sort().join(',');
   useEffect(() => {
     if (publicView || !usedFonts) return;
@@ -1005,7 +1013,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   // every publish; a caption's outlines sit where the slide's layout puts it in each step.
   async function outlineTexts(deck: Slide[], current: Record<string, string>) {
     const texts = deck.filter(s => !s.hidden && s.kind === 'text');
-    const captioned = deck.filter(s => !s.hidden && (s.kind === 'gallery' || s.kind === 'sequence') && s.photos?.some(p => p.caption));
+    const captioned = deck.filter(s => !s.hidden && ((s.kind === 'gallery' || s.kind === 'sequence') && s.photos?.some(p => p.caption) || s.kind === 'web' && s.caption));
     if (!texts.length && !captioned.length) return { deck, assets: current };
     setStatus('텍스트 윤곽 만드는 중');
     const data = await fontData(textFonts([...texts, ...captioned]));
@@ -1019,6 +1027,10 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     };
     for (const slide of texts) await outline(slide.id, slide, slide.title);
     for (const slide of captioned) {
+      if (slide.kind === 'web') {
+        await outline(`${slide.id}/caption`, { id: slide.id, title: slide.title, kind: 'text', src: '', hidden: false, text: slide.caption, typo: captionTypography(pageBox(slide, height), slide.captionAlign) }, `${slide.title} 캡션`, slide.captionAlign || 'left');
+        continue;
+      }
       const below = captionRoom(slide.photos);
       for (const step of slide.kind === 'sequence' ? sequenceSteps(slide.photos!, slide.perFrame) : [slide.photos!]) {
         const boxes = layoutPhotos(step, height, slide, marginOf(slide), below);
@@ -1030,6 +1042,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     Object.entries(urls).forEach(([id, src]) => objectUrls.current.set(id, src));
     setAssets(a => ({ ...a, ...urls }));
     const next = deck.map(s => ids[s.id] ? { ...s, previewId: ids[s.id] }
+      : ids[`${s.id}/caption`] ? { ...s, captionId: ids[`${s.id}/caption`] }
       : s.photos?.some(p => ids[`${s.id}/${p.id}`]) ? { ...s, photos: s.photos.map(p => ids[`${s.id}/${p.id}`] ? { ...p, captionId: ids[`${s.id}/${p.id}`] } : p) } : s);
     if (stateRef.current === deck) { stateRef.current = next; setSlides(next); }
     return { deck: next, assets: { ...current, ...urls } };
@@ -1519,9 +1532,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                     {active.kind !== 'clip' && <label>정렬<select value={active.layout || 'cells'} onChange={e => patch(active.id, { layout: e.target.value as Slide['layout'] })}>{ARRANGEMENTS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>}
                     {active.kind !== 'clip' && <label>맞춤<select value={active.fit || 'contain'} onChange={e => patch(active.id, { fit: e.target.value === 'cover' ? 'cover' : undefined })}><option value="contain">contain</option><option value="cover">cover</option></select></label>}
                     {active.kind !== 'clip' && <NumberField key={`${active.id}-gap`} label="이미지 간격" value={active.gap} min={0} max={400} optional placeholder={String(DEFAULT_GAP)} onChange={v => patch(active.id, { gap: v })}/>}
-                    {active.photos?.some(p => p.caption) && <label>캡션 정렬<select value={active.captionAlign || 'left'} onChange={e => patch(active.id, { captionAlign: e.target.value === 'center' || e.target.value === 'right' ? e.target.value : undefined })}>
-                      <option value="left">왼쪽</option><option value="center">가운데</option><option value="right">오른쪽</option>
-                    </select></label>}
+                    {active.photos?.some(p => p.caption) && <CaptionAlign slide={active} onChange={captionAlign => patch(active.id, { captionAlign })}/>}
                     {active.kind === 'sequence' && <NumberField key={`${active.id}-interval`} label="간격 ms" value={active.interval} min={40} max={10000} step={10} onChange={v => { if (v !== undefined) patch(active.id, { interval: Math.round(v) }); }}/>}
                     {active.kind === 'sequence' && <NumberField key={`${active.id}-per`} label="한 번에" value={byHand ? undefined : active.perFrame || 1} min={1} max={PER_FRAME_LIMIT}
                       onChange={v => { if (v !== undefined && Number.isInteger(v)) patch(active.id, { perFrame: v === 1 ? undefined : v, ...byHand && { photos: active.photos!.map(({ joined, ...p }) => p) } }); }}/>}
@@ -1544,7 +1555,12 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                   {(active.kind === 'youtube' || active.kind === 'video' || active.kind === 'web' && vimeoPlayer(active.src)) && <div className="row number-fields">
                     <RangeFields id={active.id} range={active} step={active.kind === 'youtube' ? 1 : 0.1} onChange={r => setRange(active, r)}/>
                   </div>}
-                  {active.kind === 'web' && <div className="row"><label className="check"><input type="checkbox" checked={active.frame === 'browser'} onChange={e => patch(active.id, { frame: e.target.checked ? 'browser' : undefined })}/>브라우저 창</label></div>}
+                  {active.kind === 'web' && <>
+                    <div className="row"><label className="check"><input type="checkbox" checked={active.frame === 'browser'} onChange={e => patch(active.id, { frame: e.target.checked ? 'browser' : undefined })}/>브라우저 창</label></div>
+                    <textarea className="caption-field" aria-label="캡션" placeholder="캡션" rows={Math.max(1, (active.caption || '').split('\n').length)} maxLength={500}
+                      value={active.caption || ''} onChange={e => setCaption(active, undefined, e.target.value)}/>
+                    {active.caption && <div className="row number-fields"><CaptionAlign slide={active} onChange={captionAlign => patch(active.id, { captionAlign })}/></div>}
+                  </>}
                   {(active.kind === 'youtube' || active.kind === 'video') && (
                     <div className="video-settings">
                       {(

@@ -2,7 +2,7 @@ import { localAsset } from './catalog';
 'use client';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
 import type { Box, Photo, Range, Slide } from './model';
-import { DEFAULT_TAB, captionRoom, captionTypography, defaultTypography, layoutPhotos, marginOf, ranged, sequenceSteps, stepDuration, vimeoPlayer, youtubeUrl, type Typography } from './model';
+import { DEFAULT_TAB, captionRoom, captionTypography, defaultTypography, layoutPhotos, marginOf, pageBox, ranged, sequenceSteps, stepDuration, vimeoPlayer, youtubeUrl, type Typography } from './model';
 import colors from './number-colors.json';
 import { FolioNumber } from './folio';
 import { previewSource } from './previews';
@@ -55,9 +55,11 @@ export function SlideView({
   const margin = marginOf(slide);
   const boxes =
     slide.kind === 'gallery' ? layoutPhotos(slide.photos || [], height, slide, margin, captionRoom(slide.photos)) : [];
-  // Media, single images and plain embeds sit inside the slide's margin (px on its own 1920-wide sheet).
-  const inset = (content: ReactNode) => Object.values(margin).some(v => v > 0) && !['text', 'gallery', 'sequence'].includes(slide.kind) && !(slide.kind === 'web' && slide.frame === 'browser')
-    ? <div className="slide-inset" style={{ left: `${margin.left / 19.2}%`, right: `${margin.right / 19.2}%`, top: `${margin.top * ratio / 19.2}%`, bottom: `${margin.bottom * ratio / 19.2}%` }}>{content}</div>
+  // Media, single images and plain embeds sit inside the slide's margin (px on its own 1920-wide sheet);
+  // a web page with a caption also leaves the caption's room under it.
+  const below = slide.kind === 'web' ? captionRoom([slide]) : 0;
+  const inset = (content: ReactNode) => (below || Object.values(margin).some(v => v > 0)) && !['text', 'gallery', 'sequence'].includes(slide.kind) && !(slide.kind === 'web' && slide.frame === 'browser')
+    ? <div className="slide-inset" style={{ left: `${margin.left / 19.2}%`, right: `${margin.right / 19.2}%`, top: `${margin.top * ratio / 19.2}%`, bottom: `${(margin.bottom + below) * ratio / 19.2}%` }}>{content}</div>
     : content;
   return (
     <div className="slide-viewport">
@@ -121,7 +123,7 @@ export function SlideView({
                 <PhotoMedia photo={p} assets={assets} fit={slide.fit} moving={moving} eager={live || print} onError={() => setFailed(true)}/>
               </div>
             ))}
-            {slide.photos?.map((p, i) => p.caption && <Caption key={`${p.id}-caption`} photo={p} box={boxes[i]} align={slide.captionAlign} outlined={outlined} assets={assets}/>)}
+            {slide.photos?.map((p, i) => p.caption && <Caption key={`${p.id}-caption`} id={p.id} text={p.caption} outline={p.captionId} box={boxes[i]} align={slide.captionAlign} outlined={outlined} assets={assets}/>)}
           </>
         ) : browserFrame(slide, live && !print, preview, print ? (
           preview ? <a href={localAsset(slide.src)} className="capture-slide"><img draggable={false} src={preview} alt={slide.title}/></a> : <div className="embed-placeholder">미리보기 캡처가 필요합니다.</div>
@@ -137,6 +139,7 @@ export function SlideView({
             <span>{slide.title}</span>
           </div>
         )))}
+        {slide.kind === 'web' && slide.caption && <Caption id={slide.id} text={slide.caption} outline={slide.captionId} box={pageBox(slide, height)} align={slide.captionAlign} outlined={outlined} assets={assets}/>}
         {failed && (
           <div className="image-failure" role="alert">
             이미지 로딩 실패
@@ -208,17 +211,17 @@ function Sequence({ slide, assets, moving, paused, eager, outlined, onFinish, on
         <PhotoMedia photo={p} assets={assets} fit={slide.fit} moving={moving} active={moving && i === index} paused={paused} eager={eager} onError={onError}
           imageRef={node => { const list = images.current.get(i) || []; if (node) images.current.set(i, [...list.filter(n => n.isConnected), node]); }}/>
       </div>)}
-      {step.map((p, j) => p.caption && <Caption key={`${p.id}-caption`} photo={p} box={boxes[j]} align={slide.captionAlign} outlined={outlined} assets={assets}/>)}
+      {step.map((p, j) => p.caption && <Caption key={`${p.id}-caption`} id={p.id} text={p.caption} outline={p.captionId} box={boxes[j]} align={slide.captionAlign} outlined={outlined} assets={assets}/>)}
     </div>;
   })}</>;
 }
 
-// A caption under its image: live type in the editor, its published outlines in the public viewer
-// (nothing until it has them, like a text slide).
-function Caption({ photo, box, align, outlined, assets }: { photo: Photo; box: Box; align: Slide['captionAlign']; outlined: boolean; assets: Record<string, string> }) {
+// A caption under its image or web page (box): live type in the editor, its published outlines in the
+// public viewer (nothing until it has them, like a text slide).
+function Caption({ id, text, outline, box, align, outlined, assets }: { id: string; text: string; outline?: string; box: Box; align: Slide['captionAlign']; outlined: boolean; assets: Record<string, string> }) {
   const { x, y, width, height } = box;
-  const slide = useMemo<Slide>(() => ({ id: photo.id, title: photo.name, kind: 'text', src: '', hidden: false, text: photo.caption, typo: captionTypography({ x, y, width, height }, align) }), [photo.id, photo.name, photo.caption, x, y, width, height, align]);
-  if (outlined) return photo.captionId && assets[photo.captionId] ? <img draggable={false} className="caption-outline" src={assets[photo.captionId]} alt={photo.caption}/> : null;
+  const slide = useMemo<Slide>(() => ({ id, title: '', kind: 'text', src: '', hidden: false, text, typo: captionTypography({ x, y, width, height }, align) }), [id, text, x, y, width, height, align]);
+  if (outlined) return outline && assets[outline] ? <img draggable={false} className="caption-outline" src={assets[outline]} alt={text}/> : null;
   return <TextBody slide={slide} caption={align || 'left'}/>;
 }
 
@@ -370,7 +373,7 @@ function BrowserFrame({ slide, live, preview, children }: { slide: Slide; live: 
   const channels = [1, 3, 5].map(i => parseInt(tint.slice(i, i + 2), 16));
   const light = (0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]) / 255 > 0.55;
   const margin = marginOf(slide);
-  return <div className={`browser-stage${live ? ' is-live' : ''}`} style={{ '--frame-top': margin.top, '--frame-right': margin.right, '--frame-bottom': margin.bottom, '--frame-left': margin.left } as CSSProperties}>
+  return <div className={`browser-stage${live ? ' is-live' : ''}`} style={{ '--frame-top': margin.top, '--frame-right': margin.right, '--frame-bottom': margin.bottom + captionRoom([slide]), '--frame-left': margin.left } as CSSProperties}>
     <div className={`browser-window${light ? ' is-light' : ''}`} style={{ '--tint': tint } as CSSProperties}>
       <div className="browser-bar" aria-hidden="true">
         <span className="browser-light"/><span className="browser-light"/><span className="browser-light"/>

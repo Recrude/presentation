@@ -42,6 +42,13 @@ async function graph(url, token, fetchImpl) {
   throw new InstagramError(`인스타그램 API 오류${body.error?.message ? ` · ${body.error.message}` : ''}`, 502);
 }
 
+// The caption's first line, cut at a word to at most 40 characters.
+export function captionTitle(caption = '') {
+  const line = caption.split('\n').map(s => s.trim()).find(Boolean) || '';
+  if (line.length <= 40) return line;
+  const cut = line.slice(0, 40), space = cut.lastIndexOf(' ');
+  return (space > 10 ? cut.slice(0, space) : cut).replace(/[\s,.·:;(@#-]+$/, '') + '…';
+}
 // A video whose audio is licensed comes without media_url; its cover frame comes in as a still.
 const asset = m => m.media_type === 'VIDEO'
   ? (m.media_url ? { type: 'video', url: m.media_url } : m.thumbnail_url ? { type: 'image', url: m.thumbnail_url, still: true } : null)
@@ -60,8 +67,7 @@ export async function instagramPost(raw, { token = process.env.INSTAGRAM_ACCESS_
         : [post];
       const items = parts.map(asset).filter(Boolean);
       if (!items.length) throw new InstagramError('이 게시물에서 가져올 수 있는 파일이 없습니다.', 422);
-      const title = (post.caption || '').split('\n').map(s => s.trim()).find(Boolean)?.slice(0, 60) || code;
-      return { code, title, items };
+      return { code, title: captionTitle(post.caption) || code, items };
     }
     if (!page.paging?.next || n >= pages) throw new InstagramError('연결된 인스타그램 계정의 게시물에서 찾지 못했습니다. 연결된 계정의 게시물만 가져올 수 있습니다.', 404);
     page = await graph(page.paging.next, token, fetchImpl);

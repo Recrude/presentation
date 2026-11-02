@@ -653,9 +653,11 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       const found = await fetch(api + 'instagram=' + encodeURIComponent(raw.trim()), { signal: AbortSignal.timeout(55000) });
       if (!found.ok) throw Error(await found.text() || '인스타그램 게시물을 찾지 못했습니다.');
       const post: { code: string; title: string; items: { type: 'image' | 'video'; url: string; still?: boolean }[] } = await found.json();
-      const files: File[] = [];
-      for (const [i, item] of post.items.entries()) {
-        setStatus(`인스타그램 ${i + 1}/${post.items.length} 받는 중`);
+      // Four files at a time; each keeps its place in the post.
+      const files: File[] = [], count = post.items.length;
+      let next = 0, done = 0;
+      setStatus(`인스타그램 0/${count} 받는 중`);
+      const download = async (item: (typeof post.items)[number], i: number) => {
         const parts: Blob[] = [];
         let received = 0, total = 1, type = '';
         for (let part = 0; received < total; part++) {
@@ -666,8 +668,10 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
           parts.push(blob); received += blob.size; total = Number(r.headers.get('X-Asset-Size')); type = r.headers.get('Content-Type') || type;
         }
         const extension = { 'video/mp4': 'mp4', 'image/png': 'png', 'image/webp': 'webp' }[type] || 'jpg';
-        files.push(new File(parts, `${post.code}-${String(i + 1).padStart(2, '0')}.${extension}`, { type }));
-      }
+        files[i] = new File(parts, `${post.code}-${String(i + 1).padStart(2, '0')}.${extension}`, { type });
+        setStatus(`인스타그램 ${++done}/${count} 받는 중`);
+      };
+      await Promise.all(Array.from({ length: Math.min(4, count) }, async () => { while (next < count) { const i = next++; await download(post.items[i], i); } }));
       const title = name.trim() || post.title, added: Slide[] = [];
       let run: File[] = [];
       const flush = async () => {

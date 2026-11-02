@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { postCode, assetUrl, instagramPost, instagramAsset, CHUNK } from '../server/instagram.mjs';
+import { postCode, assetUrl, instagramPost, instagramAsset, captionTitle, CHUNK } from '../server/instagram.mjs';
 
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 // A fake Graph API: two pages of /me/media, one carousel with an image, a video and a video without media_url.
@@ -43,6 +43,12 @@ test('a carousel is found on a later page; images, videos and stills of licensed
   assert.deepEqual(calls, ['/v26.0/me/media', '/v26.0/me/media?after', '/v26.0/2/children']);
   const single = await instagramPost('https://www.instagram.com/p/AAAAA1/', { token: 'TOKEN', fetchImpl: graphApi() });
   assert.deepEqual(single.items, [{ type: 'image', url: 'https://scontent.cdninstagram.com/a.jpg' }]);
+});
+
+test('the slide title is the caption’s first line, cut at a word', () => {
+  assert.equal(captionTitle('\n  전시 기록 · 2025\n둘째 줄'), '전시 기록 · 2025');
+  assert.equal(captionTitle('올해 3월부터 한국과학기술원 KAIST 산업디자인학과 강이룬(@rrrrroon) 교수님의 시각도구연구실(@vil)에서'), '올해 3월부터 한국과학기술원 KAIST 산업디자인학과…');
+  assert.equal(captionTitle(), '');
 });
 
 test('missing token, someone else’s post and an expired token say so', async () => {

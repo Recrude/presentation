@@ -69,7 +69,8 @@ try {
   assert.match(await page.$eval('[role=status]', e => e.textContent), /영상 1개는 음원 저작권/);
   await ready();
   assert.deepEqual(await cards(), ['전시 기록', '전시 기록', '전시 기록']);
-  assert.deepEqual(requests, ['post', 'post', '1.webp:0', '1.webp:1', '1.webp:2', '2.webp:0', '2.webp:1', '2.webp:2', '3.mp4:0', '3.mp4:1', '3.mp4:2', '4.webp:0', '4.webp:1', '4.webp:2']);
+  // Files download four at a time, each in its parts; the slides still follow the post's order.
+  assert.deepEqual([...requests].sort(), ['post', 'post', '1.webp:0', '1.webp:1', '1.webp:2', '2.webp:0', '2.webp:1', '2.webp:2', '3.mp4:0', '3.mp4:1', '3.mp4:2', '4.webp:0', '4.webp:1', '4.webp:2'].sort());
   // The sequence: two images at 2 s, each changeable; then the clip; then the still as a picture slide.
   await page.click('.card:nth-child(1) .thumbnail');
   assert.deepEqual(await page.$$eval('.photo-row', rows => rows.map(r => [r.querySelector('span').textContent, r.querySelector('input').placeholder])), [['DS7HWFfCXIl-01.webp', '2'], ['DS7HWFfCXIl-02.webp', '2']]);

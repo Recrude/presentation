@@ -153,6 +153,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   const [navigationVisible, setNavigationVisible] = useState(true);
   const [present, setPresent] = useState(publicView),
     [position, setPosition] = useState(0),
+    [paused, setPaused] = useState(false),
     [printing, setPrinting] = useState(false);
   const [dragUI, setDragUI] = useState<{ ids: string[]; slot: number } | null>(
       null,
@@ -186,6 +187,8 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   const visible = slides.filter((s) => !s.hidden),
     active = slides.find((s) => s.id === selected),
     current = visible[position];
+  const currentRef = useRef(current);
+  currentRef.current = current;
   // In the panel a sequence's steps are blocks of rows, a rule above each; byHand: its images are joined one by one, not 한 번에.
   const stepStarts = active?.kind === 'sequence' && active.photos ? new Set(sequenceSteps(active.photos, active.perFrame).map(step => step[0].id)) : undefined,
     byHand = !!active?.photos?.some(p => p.joined);
@@ -539,6 +542,12 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
         setPresent(false);
         return;
       }
+      // On a sequence Space pauses it and plays it on, instead of going to the next slide.
+      if (e.key === ' ' && currentRef.current?.kind === 'sequence') {
+        e.preventDefault();
+        if (!e.repeat) setPaused(p => !p);
+        return;
+      }
       if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) {
         e.preventDefault();
         setPosition((p) => Math.min(p + 1, visible.length - 1));
@@ -672,12 +681,16 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   }, [ready, videoRetry, slides.some(s => !s.hidden && s.kind === 'video')]);
   const advanceRef = useRef({ id: '', length: 0 });
   advanceRef.current = { id: current?.id || '', length: visible.length };
+  // A paused sequence (Space) holds its slide too; any other slide, or leaving, plays again.
+  const advanceLeft = useRef<{ id: string; ms: number } | null>(null);
+  useEffect(() => { setPaused(false); advanceLeft.current = null; }, [present, current?.id]);
   useEffect(() => {
-    // Auto-advance counts from the moment the slide is actually on screen.
-    if (!present || !current?.advance || current.id !== shownId) return;
-    const timer = setTimeout(() => setPosition(p => Math.min(p + 1, advanceRef.current.length - 1)), current.advance * 1000);
-    return () => clearTimeout(timer);
-  }, [present, current?.id, current?.advance, shownId]);
+    // Auto-advance counts from the moment the slide is actually on screen; a pause keeps the time left.
+    if (!present || !current?.advance || current.id !== shownId || paused) return;
+    const id = current.id, ms = advanceLeft.current?.id === id ? advanceLeft.current.ms : current.advance * 1000, start = performance.now();
+    const timer = setTimeout(() => setPosition(p => Math.min(p + 1, advanceRef.current.length - 1)), ms);
+    return () => { clearTimeout(timer); advanceLeft.current = { id, ms: Math.max(0, ms - (performance.now() - start)) }; };
+  }, [present, current?.id, current?.advance, shownId, paused]);
   function finish(id: string) {
     if (advanceRef.current.id === id) setPosition(p => Math.min(p + 1, advanceRef.current.length - 1));
   }
@@ -1562,6 +1575,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
             number={position + 1}
             assets={assets}
             outlined={publicView}
+            paused={paused}
             onShown={setShownId}
             onFinish={finish}
           />

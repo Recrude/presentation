@@ -20,6 +20,7 @@ export function SlideView({
   thumbnail = false,
   outlined = false,
   guides = false,
+  paused = false,
   onFinish,
 }: {
   slide: Slide;
@@ -33,6 +34,8 @@ export function SlideView({
   outlined?: boolean;
   /** Editor preview: show a text slide's top, left and right margins. */
   guides?: boolean;
+  /** Sequence held where it is (Space in the presentation): its step and that step's videos stop. */
+  paused?: boolean;
   /** Sequence or clip reached its end with “다음 장” selected. */
   onFinish?: () => void;
 }) {
@@ -97,7 +100,7 @@ export function SlideView({
               {guides && <MarginGuides typo={slide.typo || defaultTypography} height={height}/>}
             </>
         ) : slide.kind === 'sequence' ? (
-          <Sequence key={slide.id} slide={slide} assets={assets} moving={moving} eager={live || print || playing} onFinish={playing ? onFinish : undefined} onError={() => setFailed(true)}/>
+          <Sequence key={slide.id} slide={slide} assets={assets} moving={moving} paused={paused} eager={live || print || playing} onFinish={playing ? onFinish : undefined} onError={() => setFailed(true)}/>
         ) : slide.kind === 'clip' ? (
           moving && slide.media && assets[slide.media.id]
             ? <Clip key={slide.id} slide={slide} range={slide.media} src={assets[slide.media.id]} poster={preview} onFinish={playing ? onFinish : undefined}/>
@@ -171,31 +174,35 @@ function LocalVideo({ slide, src, preview, playing }: { slide: Slide; src: strin
 
 // Steps (see sequenceSteps) flip in place, each after its images' durations (the slide's interval for
 // images without one). Only steps around the current one are mounted and decoded ahead, so long sequences stay light.
-function Sequence({ slide, assets, moving, eager, onFinish, onError }: { slide: Slide; assets: Record<string, string>; moving: boolean; eager: boolean; onFinish?: () => void; onError: () => void }) {
+// Paused, the current step keeps the time it has left and goes on from there.
+function Sequence({ slide, assets, moving, paused, eager, onFinish, onError }: { slide: Slide; assets: Record<string, string>; moving: boolean; paused: boolean; eager: boolean; onFinish?: () => void; onError: () => void }) {
   const steps = sequenceSteps(slide.photos || [], slide.perFrame || 1), height = useContext(SheetHeight);
   const [index, setIndex] = useState(0);
   const images = useRef(new Map<number, HTMLImageElement[]>());
   const finish = useRef(onFinish);
   finish.current = onFinish;
   const delay = stepDuration(steps[index] || [], slide.interval || 400);
+  const left = useRef<{ index: number; delay: number; ms: number } | null>(null);
   useEffect(() => {
-    if (!moving) { setIndex(0); return; }
+    if (!moving) { setIndex(0); left.current = null; return; }
+    if (paused) return;
     let cancelled = false;
+    const ms = left.current?.index === index && left.current.delay === delay ? left.current.ms : delay, start = performance.now();
     const timer = setTimeout(async () => {
       const next = index + 1 < steps.length ? index + 1 : slide.end === 'loop' ? 0 : -1;
       if (next < 0) { if (slide.end === 'next') finish.current?.(); return; }
       await Promise.all((images.current.get(next) || []).map(image => image.decode().catch(() => undefined)));
       if (!cancelled) setIndex(next);
-    }, delay);
-    return () => { cancelled = true; clearTimeout(timer); };
-  }, [moving, index, steps.length, delay, slide.end]);
+    }, ms);
+    return () => { cancelled = true; clearTimeout(timer); left.current = { index, delay, ms: Math.max(0, ms - (performance.now() - start)) }; };
+  }, [moving, paused, index, steps.length, delay, slide.end]);
   const mounted = new Set(moving ? [-1, 0, 1, 2, 3].map(d => index + d).map(i => slide.end === 'loop' ? (i + steps.length) % steps.length : i) : [0]);
   return <>{steps.map((step, i) => {
     if (!mounted.has(i)) return null;
     const boxes = layoutPhotos(step, height, slide, marginOf(slide));
     return <div key={step[0].id} className="sequence-step" style={{ visibility: i === index ? 'visible' : 'hidden' }}>
       {step.map((p, j) => <div key={p.id} className="photo-placement" style={{ left: `${boxes[j].x / 19.2}%`, top: `${boxes[j].y / height * 100}%`, width: `${boxes[j].width / 19.2}%`, height: `${boxes[j].height / height * 100}%` }}>
-        <PhotoMedia photo={p} assets={assets} fit={slide.fit} moving={moving} active={moving && i === index} eager={eager} onError={onError}
+        <PhotoMedia photo={p} assets={assets} fit={slide.fit} moving={moving} active={moving && i === index} paused={paused} eager={eager} onError={onError}
           imageRef={node => { const list = images.current.get(i) || []; if (node) images.current.set(i, [...list.filter(n => n.isConnected), node]); }}/>
       </div>)}
     </div>;
@@ -205,21 +212,27 @@ function Sequence({ slide, assets, moving, eager, onFinish, onError }: { slide: 
 // One item of a grid or sequence. While the slide moves, a video is loaded with the steps around the
 // current one and plays muted from its start while its own step shows (looping if the step lasts
 // longer); in thumbnails and print it is its still frame.
-function PhotoMedia({ photo, assets, fit, moving, active = moving, eager, onError, imageRef }: { photo: Photo; assets: Record<string, string>; fit?: Slide['fit']; moving: boolean; active?: boolean; eager: boolean; onError: () => void; imageRef?: (node: HTMLImageElement | null) => void }) {
+function PhotoMedia({ photo, assets, fit, moving, active = moving, paused = false, eager, onError, imageRef }: { photo: Photo; assets: Record<string, string>; fit?: Slide['fit']; moving: boolean; active?: boolean; paused?: boolean; eager: boolean; onError: () => void; imageRef?: (node: HTMLImageElement | null) => void }) {
   const still = photo.video ? photo.poster && assets[photo.poster] : assets[photo.id];
-  if (photo.video && moving && assets[photo.id]) return <StepVideo src={assets[photo.id]} range={photo} poster={still || undefined} fit={fit} name={photo.name} active={active} onError={onError}/>;
+  if (photo.video && moving && assets[photo.id]) return <StepVideo src={assets[photo.id]} range={photo} poster={still || undefined} fit={fit} name={photo.name} active={active} paused={paused} onError={onError}/>;
   return still ? <img draggable={false} src={still} style={{ objectFit: fit || 'contain' }} alt={photo.name} loading={eager ? 'eager' : 'lazy'} onError={onError} ref={imageRef}/> : <span>이미지 불러오는 중</span>;
 }
-function StepVideo({ src, range, poster, fit, name, active, onError }: { src: string; range: Range; poster?: string; fit?: Slide['fit']; name: string; active: boolean; onError: () => void }) {
+function StepVideo({ src, range, poster, fit, name, active, paused, onError }: { src: string; range: Range; poster?: string; fit?: Slide['fit']; name: string; active: boolean; paused: boolean; onError: () => void }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [playbackSource] = useState(src);
   useRange(ref, range, 'loop');
+  // Its step coming up starts it from the range start; pausing the sequence stops it where it is.
   useEffect(() => {
     const video = ref.current;
     if (!video) return;
-    if (active) { video.currentTime = range.from || 0; void video.play().catch(() => undefined); }
+    if (active) { video.currentTime = range.from || 0; if (!paused) void video.play().catch(() => undefined); }
     else video.pause();
   }, [active]);
+  useEffect(() => {
+    const video = ref.current;
+    if (!video || !active) return;
+    if (paused) video.pause(); else void video.play().catch(() => undefined);
+  }, [paused]);
   return <video ref={ref} src={playbackSource} poster={poster} muted loop={!ranged(range)} playsInline preload="auto" style={{ objectFit: fit || 'contain' }} aria-label={name} onError={onError}/>;
 }
 

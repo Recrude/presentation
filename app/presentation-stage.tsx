@@ -5,9 +5,11 @@ import { usePresentationZoom } from './presentation-zoom';
 
 type Frame = { slide: Slide; number: number };
 const DISSOLVE_MS = 600;
-export function PresentationStage({ slide, number, assets, outlined = false, onShown, onFinish }: Frame & {
+export function PresentationStage({ slide, number, assets, outlined = false, paused = false, onShown, onFinish }: Frame & {
   assets: Record<string, string>;
   outlined?: boolean;
+  /** The slide on screen holds still (a sequence paused with Space). */
+  paused?: boolean;
   /** The slide is on screen (decoded and swapped in); auto-advance timing starts here. */
   onShown?: (id: string) => void;
   onFinish?: (id: string) => void;
@@ -56,7 +58,7 @@ export function PresentationStage({ slide, number, assets, outlined = false, onS
         className="presentation-layer"
         style={{ visibility: active || fading ? 'visible' : 'hidden' }}
         aria-hidden={!active} inert={!active}>
-        <SlideView slide={frame.slide} number={frame.number} assets={assets} live playing={active || fading} outlined={outlined}
+        <SlideView slide={frame.slide} number={frame.number} assets={assets} live playing={active || fading} outlined={outlined} paused={active && paused}
           onFinish={active ? () => onFinish?.(frame.slide.id) : undefined}/>
       </div>;
     })}

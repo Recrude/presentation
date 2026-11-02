@@ -2,6 +2,7 @@ import { lookup } from 'node:dns/promises';
 import path from 'node:path';
 import { isIP, BlockList } from 'node:net';
 import puppeteer from 'puppeteer-core';
+import { instagramHandler } from '../server/instagram.mjs';
 
 const privateV4 = new BlockList();
 for (const [ip, bits] of [['0.0.0.0',8],['10.0.0.0',8],['100.64.0.0',10],['127.0.0.0',8],['169.254.0.0',16],['172.16.0.0',12],['192.0.0.0',24],['192.168.0.0',16],['198.18.0.0',15],['224.0.0.0',4],['240.0.0.0',4]]) privateV4.addSubnet(ip,bits);
@@ -123,7 +124,10 @@ export async function capture(raw) {
 }
 export default async function handler(req,res) {
   if(req.method !== 'GET'){res.statusCode=405;res.end();return;}
-  const url=new URL(req.url,'http://localhost').searchParams.get('url');
+  // Instagram posts come through this already-routed, editor-only endpoint (see server/instagram.mjs).
+  const query=new URL(req.url,'http://localhost').searchParams;
+  if(query.has('instagram') || query.has('instagram-asset')){await instagramHandler(query,res);return;}
+  const url=query.get('url');
   if(!url || url.length>2048){res.statusCode=400;res.end('주소를 확인하세요.');return;}
   try {
     const {bytes,toolbar}=await capture(url);res.statusCode=200;

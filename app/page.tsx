@@ -83,6 +83,8 @@ async function folderFiles(entry: FileSystemDirectoryEntry): Promise<File[]> {
   return Promise.all(entries.filter((e): e is FileSystemFileEntry => e.isFile).map(e => new Promise<File>((resolve, reject) => e.file(resolve, reject))));
 }
 const byName = (a: File, b: File) => a.name.localeCompare(b.name, undefined, { numeric: true });
+// Instagram post links are imported as files (the server checks the link exactly).
+const instagramPost = (raw: string) => /^https:\/\/(www\.)?(instagram\.com|instagr\.am)\/(?:[^/?#]+\/)?(?:p|reels?|tv)\/[\w-]{5,40}/.test(raw.trim());
 type Drag = {
   /** The grabbed slide; ids are all slides that move with it, in deck order. */
   id: string;
@@ -615,6 +617,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     setAdding(false);
   }
   function addLink(raw = url, name = title) {
+    if (instagramPost(raw)) { void importInstagram(raw, name); return; }
     try {
       const parsed = embed(raw);
       const slide: Slide = {
@@ -639,6 +642,52 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     } catch (e) {
       setStatus(e instanceof Error ? e.message : '주소를 확인하세요.');
     }
+  }
+  // An Instagram post of the connected account (official API, see server/instagram.mjs): its files come
+  // through the server in parts, then each run of images becomes a sequence (2 s per image, each can be
+  // changed) and each video a clip, in the post's order.
+  async function importInstagram(raw: string, name = '') {
+    setBusy(true); setStatus('인스타그램 게시물 찾는 중');
+    try {
+      const api = BASE + 'api/capture?';
+      const found = await fetch(api + 'instagram=' + encodeURIComponent(raw.trim()), { signal: AbortSignal.timeout(55000) });
+      if (!found.ok) throw Error(await found.text() || '인스타그램 게시물을 찾지 못했습니다.');
+      const post: { code: string; title: string; items: { type: 'image' | 'video'; url: string; still?: boolean }[] } = await found.json();
+      const files: File[] = [];
+      for (const [i, item] of post.items.entries()) {
+        setStatus(`인스타그램 ${i + 1}/${post.items.length} 받는 중`);
+        const parts: Blob[] = [];
+        let received = 0, total = 1, type = '';
+        for (let part = 0; received < total; part++) {
+          const r = await fetch(api + 'instagram-asset=' + encodeURIComponent(item.url) + '&part=' + part, { signal: AbortSignal.timeout(55000) });
+          if (!r.ok) throw Error(await r.text() || '인스타그램 파일을 받지 못했습니다.');
+          const blob = await r.blob();
+          if (!blob.size) throw Error('인스타그램 파일을 끝까지 받지 못했습니다.');
+          parts.push(blob); received += blob.size; total = Number(r.headers.get('X-Asset-Size')); type = r.headers.get('Content-Type') || type;
+        }
+        const extension = { 'video/mp4': 'mp4', 'image/png': 'png', 'image/webp': 'webp' }[type] || 'jpg';
+        files.push(new File(parts, `${post.code}-${String(i + 1).padStart(2, '0')}.${extension}`, { type }));
+      }
+      const title = name.trim() || post.title, added: Slide[] = [];
+      let run: File[] = [];
+      const flush = async () => {
+        if (!run.length) return;
+        const { photos } = await loadPhotos(run);
+        added.push(photos.length > 1 ? { ...sequence(photos, title), interval: 2000 } : { id: crypto.randomUUID(), title, kind: 'gallery', src: '', hidden: false, photos, layout: 'rows' });
+        run = [];
+      };
+      for (const file of files) {
+        if (file.type.startsWith('video/')) { await flush(); added.push({ ...(await loadClip(file)), title }); }
+        else run.push(file);
+      }
+      await flush();
+      insert(added);
+      setUrl(''); setTitle('');
+      const stills = post.items.filter(i => i.still).length;
+      setStatus(`인스타그램 ${files.length}개 가져옴${stills ? ` · 영상 ${stills}개는 음원 저작권 때문에 표지 이미지로 들어왔습니다` : ''} · 저장되지 않음`);
+    } catch (e) {
+      setStatus(e instanceof Error ? e.message : '인스타그램에서 가져오지 못했습니다.');
+    } finally { setBusy(false); }
   }
   function chooseFiles(target: string | null = null) {
     importMode.current = 'gallery';
@@ -1056,7 +1105,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
               />
               <input
                 aria-label="웹 또는 영상 주소"
-                placeholder="웹·유튜브 주소 또는 iframe"
+                placeholder="웹·유튜브·인스타그램 게시물 주소 또는 iframe"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 onKeyDown={(e) => {

@@ -654,6 +654,13 @@ body.catalog-page { background:#000; color:snow; }
 .number-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(10em, 1fr)); gap: var(--half) var(--space); padding: var(--half) 0; }
 .number-fields label { display: flex; align-items: center; justify-content: space-between; gap: var(--half); white-space: nowrap; }
 .number-fields input { width: 4.5em; text-align: right; }
+/* 바깥 여백: its name opens the four sides below, on the panel's columns: 위·아래 then 왼쪽·오른쪽. */
+.number-fields .field { display: flex; align-items: center; justify-content: space-between; gap: var(--half); white-space: nowrap; }
+.margin-toggle { padding: var(--half) 0; }
+.margin-toggle[aria-expanded='true'] { text-decoration: underline; }
+.number-fields .margin-sides { grid-column: 1 / -1; grid-template-columns: subgrid; padding: 0; }
+.margin-sides label:nth-child(odd) { grid-column: 1; }
+.margin-sides label:nth-child(even) { grid-column: 2; }
 .workspace.file-over { outline: 1px solid var(--ink); outline-offset: -1px; }
 .sequence-step { position: absolute; inset: 0; }
 /* A slide's outer margin around media and single images (see SlideView). */
@@ -664,7 +671,8 @@ body.catalog-page { background:#000; color:snow; }
 .browser-stage { position: absolute; inset: 0; container-type: size; }
 .browser-window {
   --u: calc(100cqw / 1920);
-  position: absolute; inset: calc(var(--frame-margin, 48) * 100cqw / 1920); overflow: hidden;
+  position: absolute; overflow: hidden;
+  inset: calc(var(--frame-top, 48) * 100cqw / 1920) calc(var(--frame-right, 48) * 100cqw / 1920) calc(var(--frame-bottom, 48) * 100cqw / 1920) calc(var(--frame-left, 48) * 100cqw / 1920);
   background: var(--tint); border: calc(1 * var(--u)) solid #333; border-top-color: #555;
   border-radius: calc(25 * var(--u)) !important;
 }

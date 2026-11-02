@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validDeck, assetIds, defaultTypography, assetTypes, isFormat, sheetHeight, layoutPhotos, FORMATS } from '../app/model.ts';
+import { validDeck, assetIds, defaultTypography, assetTypes, isFormat, sheetHeight, layoutPhotos, FORMATS, marginOf, storedMargin } from '../app/model.ts';
 import { runs, paragraphs, styleOf, runStyles, fontsIn, styleSample, COMPOSITES } from '../app/composite.ts';
 const photo = id => ({ id, name: id + '.webp', width: 1600, height: 900 });
 const text = { id: 't', title: 'T', kind: 'text', src: '', hidden: false, text: '가 A', typo: { ...defaultTypography } };
@@ -139,4 +139,27 @@ test('slide margin, image arrangement and tab interval validate', () => {
     { ...web, layout: 'rows' }, { ...text, fit: 'cover' }, { ...text, typo: { ...defaultTypography, tabSize: 4 } }])
     assert.equal(validDeck([bad]), false, JSON.stringify(bad).slice(0, 90));
   assert.deepEqual({ ...defaultTypography }, { size: 64, leading: 100, paragraph: 100, tracking: -25, top: 96, left: 96, right: 96, composite: 'bold' }, 'new text default');
+});
+
+test('outer margin per side: images keep to each side, sides store compactly and validate', () => {
+  const photos = [{ width: 1600, height: 900 }, { width: 900, height: 1600 }, { width: 1000, height: 1000 }];
+  const close = (a, b) => Math.abs(a - b) < 0.01;
+  const m = { top: 200, right: 40, bottom: 80, left: 300 };
+  for (const layout of ['rows', 'columns', 'cells']) {
+    const cover = layoutPhotos(photos, 1080, { layout, fit: 'cover', gap: 24 }, m);
+    assert.ok(close(Math.min(...cover.map(b => b.x)), 300) && close(Math.max(...cover.map(b => b.x + b.width)), 1880), `${layout}: left 300, right 40`);
+    assert.ok(close(Math.min(...cover.map(b => b.y)), 200) && close(Math.max(...cover.map(b => b.y + b.height)), 1000), `${layout}: top 200, bottom 80`);
+    const contain = layoutPhotos(photos, 1080, { layout, gap: 24 }, m);
+    assert.ok(contain.every(b => b.x >= 300 - 0.01 && b.y >= 200 - 0.01 && b.x + b.width <= 1880.01 && b.y + b.height <= 1000.01), `${layout}: contain stays inside`);
+  }
+  assert.deepEqual(layoutPhotos(photos, 1080, { layout: 'rows' }, 64), layoutPhotos(photos, 1080, { layout: 'rows' }, { top: 64, right: 64, bottom: 64, left: 64 }), 'a number is every side');
+  assert.deepEqual(marginOf(sequence), { top: 64, right: 64, bottom: 64, left: 64 }, 'default for the kind');
+  assert.deepEqual(marginOf({ ...web, margin: 10 }), { top: 10, right: 10, bottom: 10, left: 10 });
+  assert.deepEqual(marginOf({ ...web, margin: m }), m);
+  assert.deepEqual(storedMargin(sequence, m), m);
+  assert.equal(storedMargin(sequence, { top: 90, right: 90, bottom: 90, left: 90 }), 90, 'equal sides store one number');
+  assert.equal(storedMargin(web, { top: 48, right: 48, bottom: 48, left: 48 }), undefined, 'the default stores nothing');
+  assert.ok(validDeck([{ ...sequence, margin: m }, { ...web, margin: { top: 0, right: 480, bottom: 0, left: 0 } }]));
+  for (const bad of [{ top: 1, right: 1, bottom: 1 }, { ...m, left: 481 }, { ...m, extra: 1 }, [1, 2, 3, 4], null, { ...m, top: '1' }])
+    assert.equal(validDeck([{ ...sequence, margin: bad }]), false, JSON.stringify(bad));
 });

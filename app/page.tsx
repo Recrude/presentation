@@ -5,6 +5,7 @@ import {
   useState,
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
 } from 'react';
 import {
   initial,
@@ -16,6 +17,9 @@ import {
   validDeck,
   defaultTypography,
   defaultMargin,
+  marginOf,
+  storedMargin,
+  SIDES,
   DEFAULT_TAB,
   DEFAULT_GAP,
   ARRANGEMENTS,
@@ -55,17 +59,19 @@ const typographyFields: [Exclude<keyof Typography, 'composite' | 'tabs' | 'inden
   ['top', '위·왼쪽', 0, 900, 1], ['right', '오른쪽', 0, 900, 1],
 ];
 const endings = [['loop', '반복'], ['hold', '멈춤'], ['next', '다음 장']] as const;
-// Keeps the typed text while it is not yet a valid number (e.g. "0." on the way to "0.5").
-function NumberField({ label, value, min, max, step = 1, optional = false, placeholder = '—', onChange }: { label: string; value: number | undefined; min: number; max: number; step?: number; optional?: boolean; placeholder?: string; onChange: (value: number | undefined) => void }) {
+// Keeps the typed text while it is not yet a valid number (e.g. "0." on the way to "0.5"). A heading
+// (a button) takes the label's place, and the label then only names the input.
+function NumberField({ label, heading, value, min, max, step = 1, optional = false, placeholder = '—', onChange }: { label: string; heading?: ReactNode; value: number | undefined; min: number; max: number; step?: number; optional?: boolean; placeholder?: string; onChange: (value: number | undefined) => void }) {
   const [text, setText] = useState(value === undefined ? '' : String(value));
   useEffect(() => { if ((text === '' ? undefined : Number(text)) !== value) setText(value === undefined ? '' : String(value)); }, [value]);
-  return <label>{label}<input type="number" inputMode="decimal" min={min} max={max} step={step} value={text} placeholder={placeholder}
+  const input = <input type="number" inputMode="decimal" min={min} max={max} step={step} value={text} placeholder={placeholder} aria-label={heading ? label : undefined}
     onChange={e => {
       setText(e.target.value);
       const next = e.target.value === '' ? undefined : Number(e.target.value);
       if (next === undefined ? optional : Number.isFinite(next) && next >= min && next <= max) onChange(next);
     }}
-    onBlur={() => setText(value === undefined ? '' : String(value))}/></label>;
+    onBlur={() => setText(value === undefined ? '' : String(value))}/>;
+  return heading ? <div className="field">{heading}{input}</div> : <label>{label}{input}</label>;
 }
 async function folderFiles(entry: FileSystemDirectoryEntry): Promise<File[]> {
   const reader = entry.createReader(), entries: FileSystemEntry[] = [];
@@ -143,6 +149,9 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   const visible = slides.filter((s) => !s.hidden),
     active = slides.find((s) => s.id === selected),
     current = visible[position];
+  // The outer margin's four sides open below it; a slide that has different sides opens with them.
+  const [sidesOpen, setSidesOpen] = useState(false);
+  useEffect(() => setSidesOpen(typeof active?.margin === 'object'), [active?.id]);
   const selection = picked.includes(selected) ? slides.filter(s => picked.includes(s.id)).map(s => s.id) : selected ? [selected] : [];
   const selectionRef = useRef(selection);
   selectionRef.current = selection;
@@ -1250,8 +1259,18 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                   </div>
                   <div className="row number-fields">
                     <NumberField key={`${active.id}-advance`} label="자동 넘김 초" value={active.advance} min={0.1} max={3600} step={0.1} optional onChange={v => patch(active.id, { advance: v })}/>
-                    {active.kind !== 'text' && <NumberField key={`${active.id}-margin`} label="바깥 여백" value={active.margin} min={0} max={480} optional placeholder={String(defaultMargin(active))} onChange={v => patch(active.id, { margin: v })}/>}
+                    {active.kind !== 'text' && <NumberField key={`${active.id}-margin`} label="바깥 여백" value={typeof active.margin === 'object' ? undefined : active.margin} min={0} max={480} optional
+                      heading={<button className="margin-toggle" aria-expanded={sidesOpen} title="위·아래·왼쪽·오른쪽 따로" onClick={() => setSidesOpen(v => !v)}>바깥 여백</button>}
+                      placeholder={typeof active.margin === 'object' ? '각각' : String(defaultMargin(active))} onChange={v => patch(active.id, { margin: v })}/>}
                     <label className="check"><input type="checkbox" checked={active.transition === 'dissolve'} onChange={e => patch(active.id, { transition: e.target.checked ? 'dissolve' : undefined })}/>디졸브</label>
+                    {active.kind !== 'text' && sidesOpen && <div className="margin-sides number-fields">
+                      {SIDES.map(([side, label]) => <NumberField key={`${active.id}-margin-${side}`} label={label} min={0} max={480} optional placeholder={String(defaultMargin(active))}
+                        value={typeof active.margin === 'object' ? active.margin[side] : active.margin}
+                        onChange={v => {
+                          const slide = stateRef.current.find(s => s.id === active.id)!;
+                          patch(slide.id, { margin: storedMargin(slide, { ...marginOf(slide), [side]: v ?? defaultMargin(slide) }) });
+                        }}/>)}
+                    </div>}
                   </div>
                   {active.kind === 'text' && <>
                     <textarea className="text-editor" aria-label="텍스트" placeholder="빈 줄로 문단을 나눕니다 · **굵게** · 탭으로 칸 맞춤" value={active.text || ''} onChange={e => patch(active.id, { text: e.target.value })}

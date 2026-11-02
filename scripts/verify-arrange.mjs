@@ -91,7 +91,7 @@ try {
   const [chooser] = await Promise.all([page.waitForFileChooser(), click('시퀀스')]);
   await chooser.accept(images);
   await page.waitForFunction(() => document.querySelectorAll('.card').length === 94, { timeout: 30000 }); await ready();
-  const setNumber = async (label, value) => page.evaluate((label, value) => { const input = [...document.querySelectorAll('.properties label')].find(l => l.textContent.startsWith(label)).querySelector('input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, value); input.dispatchEvent(new Event('input', { bubbles: true })); }, label, value);
+  const setNumber = async (label, value) => page.evaluate((label, value) => { const input = [...document.querySelectorAll('.properties label, .properties .field')].find(l => l.textContent.startsWith(label)).querySelector('input'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, value); input.dispatchEvent(new Event('input', { bubbles: true })); }, label, value);
   await setNumber('간격', '700');
   const arrangement = await page.evaluateHandle(() => [...document.querySelectorAll('.properties label')].find(l => l.textContent.startsWith('배열')).querySelector('select'));
   await arrangement.select('gallery');
@@ -128,6 +128,31 @@ try {
     await setNumber('바깥 여백', '120');
     assert.deepEqual(await inset(), [120, 120, 120, 120], `${kind} margin`);
   }
+  // Each side: ▾ opens 위·아래·왼쪽·오른쪽 under 바깥 여백; a slide with different sides opens with them.
+  const sideFields = () => page.$$eval('.margin-sides label', ls => ls.map(l => [l.textContent, l.querySelector('input').value]));
+  const cardOf = kind => page.$$eval('.card .card-title', (titles, kind) => titles.findIndex(t => (kind === 'image' ? /\d{4}\.\d{2} · /.test(t.textContent) : t.textContent === 'VED')), kind).then(i => i + 1);
+  assert.deepEqual(await sideFields(), [], 'closed by default');
+  await page.click('.margin-toggle');
+  assert.deepEqual(await sideFields(), [['위', '120'], ['아래', '120'], ['왼쪽', '120'], ['오른쪽', '120']]);
+  await setNumber('위', '200'); await setNumber('왼쪽', '300');
+  assert.deepEqual(await inset(), [300, 200, 120, 120], 'Safari window: left 300, top 200');
+  assert.equal(await page.$eval('.field input[aria-label="바깥 여백"]', i => [i.value, i.placeholder].join()), ',각각');
+  await page.$eval(`.card:nth-child(${await cardOf('image')}) .thumbnail`, e => e.click());
+  assert.deepEqual(await sideFields(), [], 'a slide with one margin opens closed');
+  await page.click('.margin-toggle');
+  await setNumber('아래', '0');
+  assert.deepEqual(await inset(), [120, 120, 120, 0], 'page: bottom 0');
+  await page.$eval(`.card:nth-child(${await cardOf('web')}) .thumbnail`, e => e.click());
+  assert.deepEqual(await sideFields(), [['위', '200'], ['아래', '120'], ['왼쪽', '300'], ['오른쪽', '120']], 'different sides open by themselves');
+  await setNumber('위', '120'); await setNumber('왼쪽', '120');
+  assert.equal(await page.$eval('.field input[aria-label="바깥 여백"]', i => i.value), '120', 'equal sides become one value again');
+  // The columns line up: every input in the panel's grid ends on its column's right edge.
+  const edges = await page.$$eval('.properties .number-fields input', is => is.map(i => Math.round(i.getBoundingClientRect().right)));
+  const firstRow = await page.$$eval('.margin-sides input', is => is.map(i => Math.round(i.getBoundingClientRect().right)));
+  assert.equal(new Set(firstRow).size, 2, 'sides in two columns');
+  assert.ok(firstRow.every(x => edges.filter(e => e === x).length >= 2), 'side inputs align with the fields above');
+  await setNumber('바깥 여백', '');
+  assert.deepEqual(await inset(), [48, 48, 48, 48], 'empty is the default again');
 
   // Duplicating: ⌘D copies the text slide right after it and picks the copy; editing the copy leaves
   // the original; ⌘D inside the text field types nothing special; two picked slides copy as a block.
@@ -161,7 +186,7 @@ try {
   assert.equal(await count(), before + 1, 'undo removes the copies');
 
   assert.deepEqual(errors, []);
-  console.log('arrange: ⌘D and 복제 copy after the picked slides, the copy edits apart, undo; 격자 rows by default, cover, 120 margin on a page and a Safari window; 넘김 ↔ 격자 switch keeps timing; 92 slides imported hidden, 4-slide block and far single drag with autoscroll, batch show, saved order');
+  console.log('arrange: per-side margins; ⌘D and 복제 copy after the picked slides, the copy edits apart, undo; 격자 rows by default, cover, 120 margin on a page and a Safari window; 넘김 ↔ 격자 switch keeps timing; 92 slides imported hidden, 4-slide block and far single drag with autoscroll, batch show, saved order');
 } finally {
   await browser.close();
 }

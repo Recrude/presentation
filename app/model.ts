@@ -32,8 +32,8 @@ export type Slide = {
   perFrame?: number;
   /** Web: show the page inside a Safari-like window. */
   frame?: 'browser';
-  /** Space around the slide's content in px on the 1920 sheet (text slides use their own margins). */
-  margin?: number;
+  /** Space around the slide's content in px on the 1920 sheet: one value, or each side (text slides use their own margins). */
+  margin?: number | Sides;
   /** Several images: how they share the sheet (see layoutPhotos). */
   layout?: Arrangement['layout'];
   fit?: Arrangement['fit'];
@@ -48,6 +48,17 @@ export type Slide = {
 export const defaultTypography: Typography = { size: 64, leading: 100, paragraph: 100, tracking: -25, top: 96, left: 96, right: 96, composite: 'bold' };
 /** Outer margin when a slide sets none: image sets and sequences keep 64, the Safari window 48, the rest bleed. */
 export const defaultMargin = (s: Pick<Slide, 'kind' | 'frame'>) => s.kind === 'gallery' || s.kind === 'sequence' ? 64 : s.kind === 'web' && s.frame === 'browser' ? 48 : 0;
+export type Sides = { top: number; right: number; bottom: number; left: number };
+export const SIDES = [['top', '위'], ['bottom', '아래'], ['left', '왼쪽'], ['right', '오른쪽']] as const;
+const all = (v: number): Sides => ({ top: v, right: v, bottom: v, left: v });
+/** A slide's outer margin on each side, with the default for its kind when it sets none. */
+export const marginOf = (s: Pick<Slide, 'kind' | 'frame' | 'margin'>): Sides => typeof s.margin === 'object' ? s.margin : all(s.margin ?? defaultMargin(s));
+/** Stores sides as one number when they are equal, and nothing when that is the kind's default. */
+export function storedMargin(s: Pick<Slide, 'kind' | 'frame'>, sides: Sides): Slide['margin'] {
+  const { top, right, bottom, left } = sides;
+  if (top !== right || top !== bottom || top !== left) return { top, right, bottom, left };
+  return top === defaultMargin(s) ? undefined : top;
+}
 export const SEQUENCE_LIMIT = 200;
 /** Images laid out together on one sheet (an image set, or a sequence switched to 격자). */
 export const GALLERY_LIMIT = 60;
@@ -157,8 +168,9 @@ type Box = { x: number; y: number; width: number; height: number };
  * The number of rows, columns or cells is the one that shows the images largest (contain) or crops
  * them least (cover).
  */
-export function layoutPhotos(photos: Pick<Photo, 'width' | 'height'>[], H = 1080, { layout = 'cells', fit = 'contain', gap = DEFAULT_GAP }: Arrangement = {}, margin = 64): Box[] {
-  const n = photos.length, W = 1920 - margin * 2, V = H - margin * 2;
+export function layoutPhotos(photos: Pick<Photo, 'width' | 'height'>[], H = 1080, { layout = 'cells', fit = 'contain', gap = DEFAULT_GAP }: Arrangement = {}, margin: number | Sides = 64): Box[] {
+  const m = typeof margin === 'number' ? all(margin) : margin;
+  const n = photos.length, W = 1920 - m.left - m.right, V = H - m.top - m.bottom;
   if (!n || W <= 0 || V <= 0) return [];
   const aspect = photos.map(p => p.width / p.height), cover = fit === 'cover';
   if (layout === 'rows' || layout === 'columns') {
@@ -177,8 +189,8 @@ export function layoutPhotos(photos: Pick<Photo, 'width' | 'height'>[], H = 1080
       for (const i of line) {
         const length = a[i] * size * stretch;
         boxes[i] = layout === 'rows'
-          ? { x: margin + cursor, y: margin + offset, width: length, height: lineSize }
-          : { x: margin + offset, y: margin + cursor, width: lineSize, height: length };
+          ? { x: m.left + cursor, y: m.top + offset, width: length, height: lineSize }
+          : { x: m.left + offset, y: m.top + cursor, width: lineSize, height: length };
         cursor += length + gap;
       }
       offset += lineSize + gap;
@@ -192,7 +204,7 @@ export function layoutPhotos(photos: Pick<Photo, 'width' | 'height'>[], H = 1080
     const boxes = aspect.map((ratio, i) => {
       const width = cover ? cw : Math.min(cw, ch * ratio), height = cover ? ch : width / ratio;
       const row = Math.floor(i / columns), count = Math.min(columns, n - row * columns);
-      return { x: margin + (W - count * cw - (count - 1) * gap) / 2 + (i % columns) * (cw + gap) + (cw - width) / 2, y: margin + row * (ch + gap) + (ch - height) / 2, width, height };
+      return { x: m.left + (W - count * cw - (count - 1) * gap) / 2 + (i % columns) * (cw + gap) + (cw - width) / 2, y: m.top + row * (ch + gap) + (ch - height) / 2, width, height };
     });
     const value = cover ? -sum(aspect.map(r => Math.abs(Math.log(cw / ch / r)))) : sum(boxes.map(b => b.width * b.height));
     if (value > score) { score = value; best = boxes; }
@@ -272,7 +284,9 @@ export function validDeck(value: unknown): value is Slide[] {
         (s.previewId !== undefined && typeof s.previewId !== 'string') ||
         (s.frame !== undefined && (s.frame !== 'browser' || s.kind !== 'web')) ||
         [s.tint, s.tintDark].some(t => t !== undefined && (s.kind !== 'web' || typeof t !== 'string' || !/^#[0-9a-f]{6}$/.test(t))) ||
-        (s.margin !== undefined && !within(s.margin, 0, 480)) ||
+        (s.margin !== undefined && !(typeof s.margin === 'object' && s.margin !== null && !Array.isArray(s.margin)
+          ? Object.keys(s.margin).length === 4 && SIDES.every(([side]) => within((s.margin as Sides)[side], 0, 480))
+          : within(s.margin, 0, 480))) ||
         ((s.layout !== undefined || s.fit !== undefined || s.gap !== undefined) && s.kind !== 'gallery' && s.kind !== 'sequence') ||
         (s.layout !== undefined && !['rows', 'columns', 'cells'].includes(s.layout)) ||
         (s.fit !== undefined && !['contain', 'cover'].includes(s.fit)) ||

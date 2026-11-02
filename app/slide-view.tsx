@@ -241,24 +241,15 @@ function Clip({ slide, src, poster, onFinish }: { slide: Slide; src: string; pos
 function browserFrame(slide: Slide, live: boolean, preview: string, content: ReactNode) {
   return slide.kind === 'web' && slide.frame === 'browser' ? <BrowserFrame slide={slide} live={live} preview={preview}>{content}</BrowserFrame> : content;
 }
-// An embedded page follows the viewer's color scheme, so the toolbar does too.
-function useDarkScheme() {
-  const [dark, setDark] = useState(() => matchMedia('(prefers-color-scheme: dark)').matches);
-  useEffect(() => {
-    const query = matchMedia('(prefers-color-scheme: dark)'), update = () => setDark(query.matches);
-    query.addEventListener('change', update);
-    return () => query.removeEventListener('change', update);
-  }, []);
-  return dark;
-}
 // Safari (macOS 26) window, measured from 2x window captures: 25pt corners, 52pt toolbar,
 // 14pt traffic lights, 279×36pt address field with 13pt text. Units are pt on the 1920 sheet;
 // a live page uses CSS px so the chrome keeps Safari's size relative to the page inside.
-// The toolbar takes the page's color as Safari does (read by the capture, see api/capture.mjs).
+// The toolbar takes the page's light theme-color, else its body background (read by the capture, see api/capture.mjs).
 function BrowserFrame({ slide, live, preview, children }: { slide: Slide; live: boolean; preview: string; children: ReactNode }) {
   let host = slide.src;
   try { host = new URL(slide.src).hostname.replace(/^www\./, ''); } catch {}
-  const dark = useDarkScheme(), stored = (dark ? slide.tintDark : undefined) || slide.tint;
+  // Always the light-scheme color, whatever the viewer's setting (tintDark of older captures is ignored).
+  const stored = slide.tint;
   // Without a color from the capture (an image picked by hand, older slides) the capture's top edge
   // stands in when it is one solid color.
   const [sampled, setSampled] = useState('');

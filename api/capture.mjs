@@ -23,10 +23,8 @@ export function captureTarget(raw) {
   return {kind:'web',url:u.href};
 }
 /**
- * Safari tints its toolbar with the page (runs inside the captured page): the theme-color meta for the
- * current color scheme; else the solid color along the top edge, sampled at five points like WebKit and
- * rejected where an image, background image, canvas, video, iframe, fixed or animated element sits;
- * else the document background.
+ * The browser window's toolbar color, always read in the light color scheme (runs inside the captured
+ * page): the theme-color meta for light; else the body's background; else the root's; else white.
  */
 export function pageToolbarColor() {
   const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1;
@@ -34,51 +32,19 @@ export function pageToolbarColor() {
   const rgba = css => { g.clearRect(0, 0, 1, 1); g.fillStyle = 'transparent'; g.fillStyle = css; g.fillRect(0, 0, 1, 1); const d = g.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2], d[3] / 255]; };
   const over = (top, under) => [0, 1, 2].map(i => top[i] * top[3] + under[i] * (1 - top[3])).concat(1);
   const hex = c => '#' + c.slice(0, 3).map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
-  const lab = c => {
-    const [r, gr, b] = c.slice(0, 3).map(v => (v /= 255) <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
-    const [x, y, z] = [(0.4124 * r + 0.3576 * gr + 0.1805 * b) / 0.95047, 0.2126 * r + 0.7152 * gr + 0.0722 * b, (0.0193 * r + 0.1192 * gr + 0.9505 * b) / 1.08883]
-      .map(t => t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116);
-    return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
-  };
-  const differ = (a, b) => { const p = lab(a), q = lab(b); return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]) > 5; };
-  const root = document.documentElement, body = document.body;
-  const dark = matchMedia('(prefers-color-scheme: dark)').matches && /dark/.test(getComputedStyle(root).colorScheme);
-  const base = dark ? [18, 18, 18, 1] : [255, 255, 255, 1];
+  const white = [255, 255, 255, 1];
   for (const meta of document.querySelectorAll('meta[name="theme-color" i]')) {
     const media = meta.getAttribute('media'), value = (meta.getAttribute('content') || '').trim();
     if ((media && !matchMedia(media).matches) || !CSS.supports('color', value)) continue;
     const color = rgba(value);
-    if (color[3] > 0) return hex(over(color, base));
+    if (color[3] > 0) return hex(over(color, white));
   }
-  // The root background, or the body's when the root has none, fills the whole canvas.
-  const rootBackground = rgba(getComputedStyle(root).backgroundColor), bodyBackground = body ? rgba(getComputedStyle(body).backgroundColor) : [0, 0, 0, 0];
-  const documentColor = over(rootBackground[3] > 0 ? rootBackground : bodyBackground, base);
-  const sample = x => {
-    let color = documentColor;
-    for (const element of document.elementsFromPoint(x, 0).reverse()) {
-      const style = getComputedStyle(element);
-      if (style.position === 'fixed' || style.backgroundImage !== 'none' || style.animationName !== 'none' ||
-        /^(img|picture|canvas|video|iframe|embed|object|svg)$/.test(element.localName)) return null;
-      if (element === root || (element === body && rootBackground[3] === 0)) continue;
-      const background = rgba(style.backgroundColor);
-      if (background[3] > 0) color = over(background, color);
-    }
-    return color;
-  };
-  let samples = [0, 1, 2, 3, 4].map(i => sample((root.clientWidth - 1) * i / 4));
-  if (samples.every(Boolean)) {
-    const changes = samples.slice(1).map((color, i) => differ(samples[i], color));
-    const count = changes.filter(Boolean).length;
-    // One differing sample at either end (a corner element, a scrollbar) is left out.
-    if (count === 1 && changes[0]) samples = samples.slice(1);
-    else if (count === 1 && changes[3]) samples = samples.slice(0, 4);
-    if (count === 0 || (count === 1 && (changes[0] || changes[3])))
-      return hex([0, 1, 2].map(i => samples.reduce((sum, c) => sum + c[i], 0) / samples.length));
-  }
-  return hex(documentColor);
+  const root = over(rgba(getComputedStyle(document.documentElement).backgroundColor), white);
+  const body = document.body ? rgba(getComputedStyle(document.body).backgroundColor) : [0, 0, 0, 0];
+  return hex(body[3] > 0 ? over(body, root) : root);
 }
 const color = value => /^#[0-9a-f]{6}$/.test(value || '') ? value : undefined;
-/** The preview image and, for web pages, Safari's toolbar color in the light and dark color schemes. */
+/** The preview image and, for web pages, the browser window's toolbar color (light color scheme). */
 export async function capture(raw) {
   const target=captureTarget(raw);
   if(target.kind==='youtube') {
@@ -93,7 +59,9 @@ export async function capture(raw) {
   if (chromium) await chromium.font(path.join(process.cwd(), 'api/fonts/NotoSansKR.ttf'));
   const browser=await puppeteer.launch({executablePath:local || await chromium.executablePath(),args:local?[]:await puppeteer.defaultArgs({args:chromium.args,headless:'shell'}),headless:local?true:'shell'});
   try {
+    // The preview and the toolbar color are both the page's light color scheme, whatever the viewer uses.
     const page=await browser.newPage(); await page.setViewport({width:1920,height:1080,deviceScaleFactor:1});
+    await page.emulateMediaFeatures([{name:'prefers-color-scheme',value:'light'}]);
     const checked=new Map();
     async function safe(url) {
       const u=new URL(url);
@@ -115,11 +83,7 @@ export async function capture(raw) {
     await page.waitForNetworkIdle({idleTime:500,timeout:5000}).catch(()=>{});
     await new Promise(r=>setTimeout(r,1800));
     const bytes=Buffer.from(await page.screenshot({type:'jpeg',quality:90,fullPage:false}));
-    const light=color(await page.evaluate(pageToolbarColor));
-    await page.emulateMediaFeatures([{name:'prefers-color-scheme',value:'dark'}]);
-    await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
-    const dark=color(await page.evaluate(pageToolbarColor));
-    return {bytes,toolbar:light && {light,dark:dark || light}};
+    return {bytes,toolbar:color(await page.evaluate(pageToolbarColor))};
   } finally {await browser.close();}
 }
 export default async function handler(req,res) {
@@ -131,7 +95,7 @@ export default async function handler(req,res) {
   if(!url || url.length>2048){res.statusCode=400;res.end('주소를 확인하세요.');return;}
   try {
     const {bytes,toolbar}=await capture(url);res.statusCode=200;
-    if(toolbar){res.setHeader('X-Toolbar-Color',toolbar.light);res.setHeader('X-Toolbar-Color-Dark',toolbar.dark);}
+    if(toolbar)res.setHeader('X-Toolbar-Color',toolbar);
     res.setHeader('Content-Type','image/jpeg');res.setHeader('Cache-Control','public, max-age=300, s-maxage=3600');res.end(bytes);
   } catch(e) {res.statusCode=422;res.setHeader('Content-Type','text/plain; charset=utf-8');res.end(e instanceof Error?e.message:'캡처 실패');}
 }

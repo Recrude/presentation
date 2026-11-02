@@ -39,7 +39,7 @@ export type Slide = {
   layout?: Arrangement['layout'];
   fit?: Arrangement['fit'];
   gap?: number;
-  /** Web: Safari's toolbar color for the page in the light and dark color schemes (read when captured). */
+  /** Web: the browser window's toolbar color (light scheme, read when captured); tintDark is from older captures and unused. */
   tint?: string;
   tintDark?: string;
   end?: 'loop' | 'hold' | 'next';

@@ -962,10 +962,10 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       const response = await fetch(BASE + 'api/capture?url=' + encodeURIComponent(slide.src), { signal: AbortSignal.timeout(55000) });
       if (!response.ok) throw Error(await response.text());
       blob = await response.blob();
-      // Safari's toolbar color for this page; a capture image picked by hand keeps the color already read.
-      const color = (name: string) => { const value = response.headers.get(name); return value && /^#[0-9a-f]{6}$/.test(value) ? value : undefined; };
-      const light = color('X-Toolbar-Color'), dark = color('X-Toolbar-Color-Dark');
-      if (light) toolbar = { tint: light, tintDark: dark !== light ? dark : undefined };
+      // The window's toolbar color for this page (light scheme); a capture image picked by hand keeps the
+      // color already read. An older dark-scheme color is dropped.
+      const tint = response.headers.get('X-Toolbar-Color');
+      if (tint && /^#[0-9a-f]{6}$/.test(tint)) toolbar = { tint, tintDark: undefined };
     }
     if (!blob.type.startsWith('image/') || blob.size > 40 * 1024 * 1024) throw Error('40MB 이하의 캡처 이미지를 선택하세요.');
     const src = URL.createObjectURL(blob), id = crypto.randomUUID();

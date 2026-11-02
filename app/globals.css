@@ -290,6 +290,9 @@ aside {
   border-top: var(--rule) solid var(--line);
   gap: var(--half);
 }
+.photo-row.joined {
+  border-top-color: transparent;
+}
 .photo-row > span {
   flex: 1;
   overflow: hidden;

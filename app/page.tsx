@@ -29,8 +29,12 @@ import {
   sheetHeight,
   SEQUENCE_LIMIT,
   GALLERY_LIMIT,
+  PER_FRAME_LIMIT,
   MAX_ASSET,
   stepDuration,
+  sequenceSteps,
+  groupSteps,
+  joinOrSplit,
   vimeoPlayer,
   type Range,
   type Slide,
@@ -41,7 +45,7 @@ import {
 import { fontData, missingFonts, importFontFiles } from './fonts';
 import { COMPOSITES, fontsIn } from './composite';
 import { readDeck, saveDeck, readImage, readImages, saveImages } from './storage';
-import { SheetHeight, SlideView, sequenceSteps } from './slide-view';
+import { SheetHeight, SlideView } from './slide-view';
 import { PresentationStage } from './presentation-stage';
 import { exhibitionVideo, prepareVideo } from './video-cache';
 import { previewSource } from './previews';
@@ -182,6 +186,9 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
   const visible = slides.filter((s) => !s.hidden),
     active = slides.find((s) => s.id === selected),
     current = visible[position];
+  // In the panel a sequence's steps are blocks of rows, a rule above each; byHand: its images are joined one by one, not 한 번에.
+  const stepStarts = active?.kind === 'sequence' && active.photos ? new Set(sequenceSteps(active.photos, active.perFrame).map(step => step[0].id)) : undefined,
+    byHand = !!active?.photos?.some(p => p.joined);
   // The outer margin's four sides open below it; a slide that has different sides opens with them.
   const [sidesOpen, setSidesOpen] = useState(false);
   useEffect(() => setSidesOpen(typeof active?.margin === 'object'), [active?.id]);
@@ -243,6 +250,18 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
         amend(slides => find(slides)?.from !== from ? slides : slides.map(s => s.id !== slide.id ? s : photoId ? { ...s, photos: s.photos!.map(p => p.id === photoId ? { ...p, poster: id } : p) } : { ...s, previewId: id }));
       } catch { /* the earlier still stays */ }
     }, 600));
+  }
+  // A sequence's steps are places in its order: moving an image swaps it into the other's place, and
+  // removing one from images joined by hand shrinks its step (with 한 번에 the rest move up instead).
+  function regroup(id: string, edit: (steps: Photo[][]) => Photo[][]) {
+    const slide = stateRef.current.find(s => s.id === id);
+    if (!slide?.photos) return;
+    const steps = edit(sequenceSteps(slide.photos, slide.perFrame));
+    if (steps.some(step => step.length > GALLERY_LIMIT)) { setStatus(`한 순번은 ${GALLERY_LIMIT}장까지입니다.`); return; }
+    patch(id, groupSteps(steps, slide.perFrame));
+  }
+  function swapPhotos(id: string, a: number, b: number) {
+    regroup(id, steps => { const ps = steps.flat(); [ps[a], ps[b]] = [ps[b], ps[a]]; let at = 0; return steps.map(step => ps.slice(at, at += step.length)); });
   }
   // A new text slide continues the type of the nearest text slide before it, like a Keynote master.
   function nearestTypography() {
@@ -1424,7 +1443,8 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                     {active.kind !== 'clip' && <label>맞춤<select value={active.fit || 'contain'} onChange={e => patch(active.id, { fit: e.target.value === 'cover' ? 'cover' : undefined })}><option value="contain">contain</option><option value="cover">cover</option></select></label>}
                     {active.kind !== 'clip' && <NumberField key={`${active.id}-gap`} label="이미지 간격" value={active.gap} min={0} max={400} optional placeholder={String(DEFAULT_GAP)} onChange={v => patch(active.id, { gap: v })}/>}
                     {active.kind === 'sequence' && <NumberField key={`${active.id}-interval`} label="간격 ms" value={active.interval} min={40} max={10000} step={10} onChange={v => { if (v !== undefined) patch(active.id, { interval: Math.round(v) }); }}/>}
-                    {active.kind === 'sequence' && <NumberField key={`${active.id}-per`} label="한 번에" value={active.perFrame || 1} min={1} max={12} onChange={v => { if (v !== undefined && Number.isInteger(v)) patch(active.id, { perFrame: v === 1 ? undefined : v }); }}/>}
+                    {active.kind === 'sequence' && <NumberField key={`${active.id}-per`} label="한 번에" value={byHand ? undefined : active.perFrame || 1} min={1} max={PER_FRAME_LIMIT}
+                      onChange={v => { if (v !== undefined && Number.isInteger(v)) patch(active.id, { perFrame: v === 1 ? undefined : v, ...byHand && { photos: active.photos!.map(({ joined, ...p }) => p) } }); }}/>}
                     {active.kind === 'clip' && active.media && <RangeFields id={active.id} range={active.media} length={active.media.length} onChange={r => setRange(active, r)}/>}
                     {active.kind !== 'gallery' && <label>끝나면<select value={active.end || 'loop'} onChange={e => patch(active.id, { end: e.target.value as Slide['end'] })}>{endings.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>}
                     {active.kind !== 'gallery' && <button onClick={() => setLive(v => !v)}>{live ? '미리보기 닫기' : '미리보기'}</button>}
@@ -1481,42 +1501,19 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
                       </button>
                       {active.photos?.map((p, i) => (
                         <Fragment key={p.id}>
-                        <div className="photo-row">
+                        <div className={`photo-row${stepStarts && i && !stepStarts.has(p.id) ? ' joined' : ''}`}>
                           <span>{p.name}</span>
                           {active.kind === 'sequence' && <NumberField key={`${p.id}-duration`} label="초" value={p.duration} min={0.04} max={600} step={0.1} optional placeholder={String(Math.round(stepDuration([{ ...p, duration: undefined }], active.interval || 400) / 100) / 10)}
                             onChange={v => patch(active.id, { photos: active.photos!.map(x => x.id === p.id ? { ...x, duration: v } : x) })}/>}
-                          <button
-                            disabled={i === 0}
-                            aria-label={`${p.name} 앞으로`}
-                            onClick={() => {
-                              const ps = [...active.photos!];
-                              [ps[i - 1], ps[i]] = [ps[i], ps[i - 1]];
-                              patch(active.id, { photos: ps });
-                            }}
-                          >
-                            ←
-                          </button>
-                          <button
-                            disabled={i === active.photos!.length - 1}
-                            aria-label={`${p.name} 뒤로`}
-                            onClick={() => {
-                              const ps = [...active.photos!];
-                              [ps[i + 1], ps[i]] = [ps[i], ps[i + 1]];
-                              patch(active.id, { photos: ps });
-                            }}
-                          >
-                            →
-                          </button>
+                          {stepStarts && <button disabled={i === 0} aria-label={`${p.name} ${stepStarts.has(p.id) ? '앞 순번과 묶기' : '여기서 순번 나누기'}`}
+                            onClick={() => regroup(active.id, steps => joinOrSplit(steps, p.id))}>{stepStarts.has(p.id) ? '묶기' : '풀기'}</button>}
+                          <button disabled={i === 0} aria-label={`${p.name} 앞으로`} onClick={() => swapPhotos(active.id, i - 1, i)}>←</button>
+                          <button disabled={i === active.photos!.length - 1} aria-label={`${p.name} 뒤로`} onClick={() => swapPhotos(active.id, i, i + 1)}>→</button>
                           <button
                             disabled={active.photos!.length === 1}
                             aria-label={`${p.name} 삭제`}
-                            onClick={() =>
-                              patch(active.id, {
-                                photos: active.photos!.filter(
-                                  (x) => x.id !== p.id,
-                                ),
-                              })
-                            }
+                            onClick={() => byHand ? regroup(active.id, steps => steps.map(step => step.filter(x => x.id !== p.id)))
+                              : patch(active.id, { photos: active.photos!.filter(x => x.id !== p.id) })}
                           >
                             삭제
                           </button>

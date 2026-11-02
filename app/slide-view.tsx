@@ -2,7 +2,7 @@ import { localAsset } from './catalog';
 'use client';
 import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
 import type { Photo, Range, Slide } from './model';
-import { DEFAULT_TAB, defaultTypography, layoutPhotos, marginOf, ranged, stepDuration, vimeoPlayer, youtubeUrl, type Typography } from './model';
+import { DEFAULT_TAB, defaultTypography, layoutPhotos, marginOf, ranged, sequenceSteps, stepDuration, vimeoPlayer, youtubeUrl, type Typography } from './model';
 import colors from './number-colors.json';
 import { FolioNumber } from './folio';
 import { previewSource } from './previews';
@@ -169,14 +169,8 @@ function LocalVideo({ slide, src, preview, playing }: { slide: Slide; src: strin
     controls playsInline preload="auto" aria-label={slide.title}/>;
 }
 
-// Steps flip in place, each after its images' durations (the slide's interval for images without one);
-// each step shows `perFrame` images laid out like a gallery.
-// Only steps around the current one are mounted and decoded ahead, so long sequences stay light.
-export function sequenceSteps(photos: Photo[], perFrame = 1) {
-  const steps: Photo[][] = [];
-  for (let i = 0; i < photos.length; i += perFrame) steps.push(photos.slice(i, i + perFrame));
-  return steps;
-}
+// Steps (see sequenceSteps) flip in place, each after its images' durations (the slide's interval for
+// images without one). Only steps around the current one are mounted and decoded ahead, so long sequences stay light.
 function Sequence({ slide, assets, moving, eager, onFinish, onError }: { slide: Slide; assets: Record<string, string>; moving: boolean; eager: boolean; onFinish?: () => void; onError: () => void }) {
   const steps = sequenceSteps(slide.photos || [], slide.perFrame || 1), height = useContext(SheetHeight);
   const [index, setIndex] = useState(0);

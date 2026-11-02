@@ -4,8 +4,9 @@ import { chronologicalPages, projectForPage } from './chronology.ts';
  * video: a muted video laid out like an image in a sequence or grid; its file is under id, a still frame
  * under poster (thumbnails, PDF, before playback) and its length in seconds is the step's default time.
  * from/to: the part of a video that plays (see Range); a clip's video keeps its range here too.
+ * joined: in a sequence, shown in the same step as the image before it (see sequenceSteps).
  */
-export type Photo = { id: string; name: string; width: number; height: number; duration?: number; video?: true; poster?: string; length?: number } & Range;
+export type Photo = { id: string; name: string; width: number; height: number; duration?: number; video?: true; poster?: string; length?: number; joined?: true } & Range;
 /** The part of a video that plays, in seconds: from its start (0) and to its end when unset. */
 export type Range = { from?: number; to?: number };
 export const ranged = (r: Range) => !!r.from || r.to !== undefined;
@@ -41,7 +42,7 @@ export type Slide = {
   typo?: Typography;
   media?: Photo;
   interval?: number;
-  /** Sequence: images shown together per step, laid out like a gallery. */
+  /** Sequence: images shown together per step, laid out like a gallery (unless its images are joined one by one). */
   perFrame?: number;
   /** Web: show the page inside a Safari-like window. */
   frame?: 'browser';
@@ -76,6 +77,8 @@ export function storedMargin(s: Pick<Slide, 'kind' | 'frame'>, sides: Sides): Sl
   return top === defaultMargin(s) ? undefined : top;
 }
 export const SEQUENCE_LIMIT = 200;
+/** The most images 한 번에 (perFrame) groups; a step of joined images may hold up to GALLERY_LIMIT. */
+export const PER_FRAME_LIMIT = 12;
 /** Images laid out together on one sheet (an image set, or a sequence switched to 격자). */
 export const GALLERY_LIMIT = 60;
 // Published asset formats. Text slides publish as SVG outlines, clips as MP4/WebM.
@@ -122,6 +125,32 @@ export function duplicate(slides: Slide[], ids: string[], id = () => crypto.rand
   if (!copies.length) return { slides, copies: [] };
   const at = slides.findLastIndex(s => picked.has(s.id)) + 1;
   return { slides: [...slides.slice(0, at), ...copies, ...slides.slice(at)], copies: copies.map(s => s.id) };
+}
+/**
+ * A sequence's steps, each laid out like a gallery: images joined to the one before them share its
+ * step; a sequence without joined images shows `perFrame` at a time.
+ */
+export function sequenceSteps(photos: Photo[], perFrame = 1) {
+  const joined = photos.some(p => p.joined), steps: Photo[][] = [];
+  photos.forEach((p, i) => { if (i && (joined ? p.joined : i % perFrame)) steps.at(-1)!.push(p); else steps.push([p]); });
+  return steps;
+}
+/**
+ * Stores steps (empty ones dropped): as perFrame when all but the last hold the same number within its
+ * limit and the last no more (the current perFrame first, so a short sequence keeps it), else as joined images.
+ */
+export function groupSteps(steps: Photo[][], perFrame = 1): Pick<Slide, 'photos' | 'perFrame'> {
+  steps = steps.filter(step => step.length);
+  const chunks = (size: number) => size <= PER_FRAME_LIMIT && steps.every((step, i) => i < steps.length - 1 ? step.length === size : step.length <= size);
+  const size = chunks(perFrame) ? perFrame : steps.length && chunks(steps[0].length) ? steps[0].length : 0;
+  return { perFrame: size > 1 ? size : undefined, photos: steps.flatMap(step => step.map(({ joined, ...p }, i) => size || !i ? p : { ...p, joined: true as const })) };
+}
+/** Joins the step this image starts to the step before it, or splits its step so it starts a new one. */
+export function joinOrSplit(steps: Photo[][], id: string) {
+  const k = steps.findIndex(step => step.some(p => p.id === id)), j = steps[k]?.findIndex(p => p.id === id);
+  if (k < 0 || !k && !j) return steps;
+  return j ? [...steps.slice(0, k), steps[k].slice(0, j), steps[k].slice(j), ...steps.slice(k + 1)]
+    : [...steps.slice(0, k - 1), [...steps[k - 1], ...steps[k]], ...steps.slice(k + 1)];
 }
 /** How long a sequence step stays, in ms: the longest of its items, each its own duration, else a video's range (its length when unset), else the slide's interval. */
 export const stepDuration = (step: Pick<Photo, 'duration' | 'video' | 'length' | 'from' | 'to'>[], interval = 400) =>
@@ -288,7 +317,7 @@ const validPhoto = (p: Photo, clip = false) =>
   Number.isFinite(p.height) &&
   p.height > 0 &&
   (p.duration === undefined || within(p.duration, 0.04, 600)) &&
-  (p.length === undefined || within(p.length, 0.04, 3600)) && validRange(p, p.length) &&
+  (p.length === undefined || within(p.length, 0.04, 3600)) && validRange(p, p.length) && (p.joined === undefined || p.joined === true && !clip) &&
   (p.video === true ? typeof p.poster === 'string' && p.length !== undefined
     : p.video === undefined && p.poster === undefined && (clip || p.length === undefined && p.from === undefined && p.to === undefined));
 const validRange = (r: Range, length?: number) =>
@@ -339,7 +368,8 @@ export function validDeck(value: unknown): value is Slide[] {
       if (s.kind === 'sequence')
         return Array.isArray(s.photos) && s.photos.length > 0 && s.photos.length <= SEQUENCE_LIMIT && s.photos.every((p: Photo) => validPhoto(p)) &&
           Number.isInteger(s.interval) && within(s.interval, 40, 10000) && ['loop', 'hold', 'next'].includes(s.end) &&
-          (s.perFrame === undefined || Number.isInteger(s.perFrame) && within(s.perFrame, 1, 12));
+          (s.perFrame === undefined || Number.isInteger(s.perFrame) && within(s.perFrame, 1, PER_FRAME_LIMIT)) &&
+          sequenceSteps(s.photos, s.perFrame).every(step => step.length <= GALLERY_LIMIT);
       if (s.kind === 'clip')
         return validPhoto(s.media, true) && ['loop', 'hold', 'next'].includes(s.end);
       if (s.kind === 'gallery' || s.kind === 'folio')

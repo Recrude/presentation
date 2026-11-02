@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validDeck, assetIds, defaultTypography, assetTypes, isFormat, sheetHeight, layoutPhotos, FORMATS, marginOf, storedMargin, stepDuration } from '../app/model.ts';
+import { validDeck, assetIds, defaultTypography, assetTypes, isFormat, sheetHeight, layoutPhotos, FORMATS, marginOf, storedMargin, stepDuration, sequenceSteps, groupSteps, joinOrSplit } from '../app/model.ts';
 import { runs, paragraphs, styleOf, runStyles, fontsIn, styleSample, COMPOSITES } from '../app/composite.ts';
 const photo = id => ({ id, name: id + '.webp', width: 1600, height: 900 });
 const text = { id: 't', title: 'T', kind: 'text', src: '', hidden: false, text: '가 A', typo: { ...defaultTypography } };
@@ -206,4 +206,33 @@ test('a video plays a range: from its start and to its end when unset, inside it
   assert.ok(validDeck([vimeo, { id: 'y', title: 'Y', kind: 'youtube', src: 'https://www.youtube-nocookie.com/embed/QIAcSGkOLDk', hidden: false, from: 3 }, { id: 'lv', title: 'L', kind: 'video', src: '/media/audio-morphology.mp4', hidden: false, to: 60 }]));
   assert.equal(validDeck([{ ...vimeo, from: 20.5 }]), false);
   assert.equal(validDeck([{ ...sequence, from: 1 }]), false, 'a sequence’s videos keep their own ranges');
+});
+
+test('sequence steps: 한 번에 groups evenly, images joined by hand make steps of their own sizes', () => {
+  const ids = steps => steps.map(step => step.map(p => p.id).join('')).join(' ');
+  const ps = [...'abcdefg'].map(photo);
+  assert.equal(ids(sequenceSteps(ps)), 'a b c d e f g');
+  assert.equal(ids(sequenceSteps(ps, 3)), 'abc def g');
+  // Joined images go with the one before them; perFrame no longer applies, and a joined first image starts a step.
+  const joined = ps.map((p, i) => [1, 3, 4].includes(i) || !i ? { ...p, joined: true } : p);
+  assert.equal(ids(sequenceSteps(joined, 3)), 'ab cde f g');
+  // Join the step c starts to the one before, split it again, and split before e.
+  const steps = sequenceSteps(ps, 2);
+  assert.equal(ids(joinOrSplit(steps, 'c')), 'abcd ef g');
+  assert.equal(ids(joinOrSplit(joinOrSplit(steps, 'c'), 'c')), 'ab cd ef g');
+  assert.equal(ids(joinOrSplit(steps, 'f')), 'ab cd e f g');
+  assert.equal(joinOrSplit(steps, 'a'), steps);
+  // Stored as perFrame when the steps chunk evenly (a short sequence keeps its own), else as marks.
+  const stored = steps => { const g = groupSteps(steps.map(step => step.map(photo)), 3); return [g.perFrame, g.photos.map(p => p.joined ? '+' + p.id : p.id).join('')]; };
+  assert.deepEqual(stored([['a', 'b']]), [3, 'ab']);
+  assert.deepEqual(stored([['a', 'b'], ['c', 'd'], ['e']]), [2, 'abcde']);
+  assert.deepEqual(stored([['a'], ['b'], ['c']]), [undefined, 'abc']);
+  assert.deepEqual(stored([['a', 'b'], ['c', 'd', 'e'], [], ['f']]), [undefined, 'a+bc+d+ef']);
+  assert.deepEqual(stored([[...'abcdefghijklm']]), [undefined, 'a+b+c+d+e+f+g+h+i+j+k+l+m']);
+  const marked = groupSteps(sequenceSteps(joined)).photos;
+  assert.ok(validDeck([{ ...sequence, photos: marked }]) && validDeck([{ ...sequence, kind: 'gallery', photos: marked }]));
+  assert.equal(validDeck([{ ...sequence, photos: [photo('a'), { ...photo('b'), joined: 1 }] }]), false);
+  assert.equal(validDeck([{ ...clip, media: { ...photo('m'), joined: true } }]), false);
+  assert.equal(validDeck([{ ...sequence, photos: Array.from({ length: 61 }, (_, i) => i ? { ...photo('p' + i), joined: true } : photo('p0')) }]), false);
+  assert.ok(validDeck([{ ...sequence, photos: Array.from({ length: 61 }, (_, i) => i && i !== 30 ? { ...photo('p' + i), joined: true } : photo('p' + i)) }]));
 });

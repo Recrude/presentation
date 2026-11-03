@@ -22,5 +22,5 @@ export default async function handler(req: IncomingMessage & {body?: unknown}, r
     else if(typeof body==='string') {if(Buffer.byteLength(body)>3*1024*1024)throw new PublishError('요청 크기가 너무 큽니다.',413);body=JSON.parse(body);}
     else if(Buffer.byteLength(JSON.stringify(body))>3*1024*1024)throw new PublishError('요청 크기가 너무 큽니다.',413);
     end(200,await executePublish(body,githubTransport(token),config.sessionKey));
-  } catch(e) {end(e instanceof PublishError?e.status:502,{error:e instanceof PublishError?e.message:'게시를 완료하지 못했습니다. 편집 내용은 유지됩니다.'});}
+  } catch(e) {end(e instanceof PublishError?e.status:502,e instanceof PublishError?{error:e.message,...(e.retryAfter?{retryAfter:e.retryAfter}:{})}:{error:'게시를 완료하지 못했습니다. 편집 내용은 유지됩니다.'});}
 }

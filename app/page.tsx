@@ -1076,8 +1076,8 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       const { deck, assets: prepared } = await outlineTexts(stateRef.current, assets);
       await saveDeck(deck, entry.slug, prepared, format);
       setDirty(false);
-      await publishDeck(entry.slug, deck, prepared, setStatus, format);
-      setStatus('게시됨 · 배포 완료 후 공개 링크에 반영됩니다');
+      const { sent } = await publishDeck(entry.slug, deck, prepared, setStatus, format);
+      setStatus(`게시됨 · 새 파일 ${sent}개 · 배포 완료 후 공개 링크에 반영됩니다`);
     } catch (e) { setStatus(e instanceof Error ? e.message : '게시 실패 · 편집 내용은 유지됩니다'); }
     finally { setBusy(false); }
   }

@@ -7,7 +7,8 @@ const extensions = assetTypes;
 export type GitApi = (path: string, method?: string, body?: unknown) => Promise<any>;
 export class PublishError extends Error {
   status: number;
-  constructor(message: string, status = 400) { super(message); this.status = status; }
+  retryAfter?: number;
+  constructor(message: string, status = 400, retryAfter?: number) { super(message); this.status = status; this.retryAfter = retryAfter; }
 }
 type ProofData = { kind: 'chunk' | 'asset'; slug: string; hash: string; sha: string; mime: string; index: number; count: number; length: number; expires: number };
 type Proof = { data: ProofData; signature: string };
@@ -148,7 +149,10 @@ export async function executePublish(input: any, git: GitApi, secret: string) {
 export function githubTransport(token: string): GitApi {
   return async (path,method='GET',body) => {
     const r=await fetch(`https://api.github.com/repos/Recrude/presentation/${path}`,{method,headers:{Accept:'application/vnd.github+json',Authorization:`Bearer ${token}`,'Content-Type':'application/json','X-GitHub-Api-Version':'2022-11-28'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(45000)});
-    if(!r.ok)throw new PublishError(r.status===409 || r.status===422 ? '다른 게시가 먼저 반영되었습니다. 다시 게시하세요.' : r.status===403 || r.status===429 ? '게시 요청이 잠시 제한되었습니다. 잠시 후 다시 시도하세요.' : '서버에서 GitHub에 연결하지 못했습니다.',r.status===409 || r.status===422 ? 409 : 502);
+    // GitHub's rate limits (429, or 403 saying so) answer 429 with the wait, which the editor sits out and carries on.
+    if(r.status===429 || r.status===403 && (r.headers.has('retry-after') || r.headers.get('x-ratelimit-remaining')==='0' || /rate limit/i.test(await r.text())))
+      throw new PublishError('게시 요청이 잠시 제한되었습니다. 잠시 후 다시 시도하세요.',429,Number(r.headers.get('retry-after')) || 60);
+    if(!r.ok)throw new PublishError(r.status===409 || r.status===422 ? '다른 게시가 먼저 반영되었습니다. 다시 게시하세요.' : '서버에서 GitHub에 연결하지 못했습니다.',r.status===409 || r.status===422 ? 409 : 502);
     return r.json();
   };
 }

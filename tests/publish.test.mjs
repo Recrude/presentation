@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash, createHmac, randomBytes } from 'node:crypto';
-import { executePublish, CHUNK_SIZE, safeSvg } from '../server/publish.ts';
+import { executePublish, githubTransport, CHUNK_SIZE, safeSvg } from '../server/publish.ts';
 import { catalogEntries, LEGACY_SLUG } from '../app/catalog.ts';
 import handler from '../api/publish.ts';
 const secret='test-upload-signature-key';
@@ -73,6 +73,8 @@ test('HTTP publisher requires session, same-origin custom header, and keeps GitH
     assert.equal((await invoke({...headers,'x-presentation-publish':''})).statusCode,403);
     assert.equal((await invoke(headers,{},'GET')).statusCode,405);assert.equal(repo.calls.length,0);
     const result=await invoke(headers);assert.equal(result.statusCode,200);assert.equal(result.body.published,true);assert.ok(!JSON.stringify(result.body).includes(process.env.PRESENTATION_GITHUB_TOKEN));assert.match(result.headers['Cache-Control'],/no-store/);
+    globalThis.fetch=async()=>new Response('{}',{status:429,headers:{'retry-after':'7'}});
+    const limited=await invoke(headers);assert.equal(limited.statusCode,429);assert.deepEqual(limited.body,{error:'게시 요청이 잠시 제한되었습니다. 잠시 후 다시 시도하세요.',retryAfter:7});
   }finally{globalThis.fetch=realFetch;if(oldAuth===undefined)delete process.env.PRESENTATION_AUTH;else process.env.PRESENTATION_AUTH=oldAuth;if(oldToken===undefined)delete process.env.PRESENTATION_GITHUB_TOKEN;else process.env.PRESENTATION_GITHUB_TOKEN=oldToken;}
 });
 
@@ -123,4 +125,19 @@ test('text outlines and clips publish; scripted or external SVG never does',asyn
   await assert.rejects(()=>executePublish({action:'upload',slug:LEGACY_SLUG,mime:'image/svg+xml',hash:hash(bad),count:1,index:0,content:bad.toString('base64')},git,secret));
   await assert.rejects(()=>executePublish({action:'upload',slug:LEGACY_SLUG,mime:'constructor',hash:hash(svg),count:1,index:0,content:svg.toString('base64')},git,secret));
   assert.ok(calls.length>0);
+});
+
+test('GitHub rate limits answer 429 with the wait to sit out; other refusals do not',async()=>{
+  const realFetch=globalThis.fetch,git=githubTransport('test-token');
+  const answer=(status,headers={},body='{}')=>{globalThis.fetch=async()=>new Response(body,{status,headers});};
+  try {
+    for(const [status,headers,body,wait] of [[429,{'retry-after':'7'},'{}',7],[403,{'x-ratelimit-remaining':'0'},'{}',60],[403,{},'{"message":"You have exceeded a secondary rate limit."}',60],[403,{'retry-after':'30'},'{}',30]]) {
+      answer(status,headers,body);
+      await assert.rejects(()=>git('git/blobs','POST',{}),e=>e.status===429 && e.retryAfter===wait,`${status} ${JSON.stringify(headers)} ${body}`);
+    }
+    answer(403,{},'{"message":"Resource not accessible by personal access token"}');
+    await assert.rejects(()=>git('git/blobs','POST',{}),e=>e.status===502 && e.retryAfter===undefined);
+    answer(422);
+    await assert.rejects(()=>git('git/trees','POST',{}),e=>e.status===409);
+  } finally {globalThis.fetch=realFetch;}
 });

@@ -52,7 +52,7 @@ try {
   const photo={id:'uploaded',name:'test',width:1,height:1};
   const slides=[{id:'gallery',title:'photo',src:'',kind:'gallery',hidden:false,photos:[photo]},{id:'secret',title:'hidden',src:'https://ved.kr/',kind:'web',hidden:true}];
   try{
-   const snap=await publishDeck(slug,slides,{uploaded:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6mQAAAAASUVORK5CYII='},()=>{});
+   const {snapshot:snap}=await publishDeck(slug,slides,{uploaded:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6mQAAAAASUVORK5CYII='},()=>{});
    fail=true;let conflict='';try{await publishDeck(slug,[],{},()=>{});}catch(e){conflict=e.message;}
    return {snap,calls,conflict};
   }finally{window.fetch=originalFetch;}

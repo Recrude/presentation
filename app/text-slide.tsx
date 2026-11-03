@@ -14,10 +14,12 @@ export function TextBody({ slide, caption }: { slide: Slide; caption?: 'left' | 
     if (!element) return;
     const align = () => layoutText(element, t);
     align();
-    const observer = new ResizeObserver(align);
+    // The element's own window and fonts: the presenter window shows slides too.
+    const doc = element.ownerDocument, view = doc.defaultView as (Window & typeof globalThis) | null;
+    const observer = new (view || window).ResizeObserver(align);
     observer.observe(element);
-    document.fonts.addEventListener('loadingdone', align);
-    return () => { observer.disconnect(); document.fonts.removeEventListener('loadingdone', align); };
+    doc.fonts.addEventListener('loadingdone', align);
+    return () => { observer.disconnect(); doc.fonts.removeEventListener('loadingdone', align); };
   }, [slide.text, t]);
   const vars = { '--size': t.size, '--leading': t.leading, '--paragraph': t.paragraph, '--tracking': t.tracking, '--top': t.top, '--left': t.left, '--right': t.right, '--indent': t.indent || 0 } as CSSProperties;
   return <div className={caption ? 'text-frame caption' : 'text-frame'} ref={frame}>
@@ -93,11 +95,12 @@ export function alignInk(frame: HTMLElement) {
   if (first) {
     const spans = [...body.querySelectorAll<HTMLElement>('[data-run]')];
     // Until a face has loaded the canvas would measure a fallback; loadingdone measures again.
-    if (spans.some(span => !document.fonts.check(`16px "${family(runStyles[Number(span.dataset.run)].font)}"`, span.textContent || ''))) return;
-    const css = getComputedStyle(body), box = body.getBoundingClientRect(), range = document.createRange();
+    const doc = frame.ownerDocument;
+    if (spans.some(span => !doc.fonts.check(`16px "${family(runStyles[Number(span.dataset.run)].font)}"`, span.textContent || ''))) return;
+    const css = getComputedStyle(body), box = body.getBoundingClientRect(), range = doc.createRange();
     const top = box.top + parseFloat(css.paddingTop), left = box.left + parseFloat(css.paddingLeft), end = top + parseFloat(css.lineHeight);
     // The first line's baseline, from a zero-size marker at the start of the paragraph (it cannot change the wrap).
-    const marker = document.createElement('i');
+    const marker = doc.createElement('i');
     marker.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
     first.prepend(marker);
     const baseline = marker.getBoundingClientRect().bottom;

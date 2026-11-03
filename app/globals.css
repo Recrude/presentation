@@ -731,3 +731,11 @@ select:disabled { color: var(--muted); cursor: not-allowed; }
 .drag-ghost > span { position: absolute; right: -8px; top: -8px; padding: 0 6px; background: var(--ink); color: var(--paper); }
 .properties > .row.picked { border-bottom-color: var(--ink); }
 .import-source { display: inline-flex; align-items: center; gap: var(--half); }
+/* Presenter window on the laptop's screen while a second display shows the slides: one size of type, and
+   the panel color around the sheets as in the editor, so their edges show. */
+.presenter { position: fixed; inset: 0; display: grid; grid-template: auto minmax(0, 1fr) / minmax(0, 3fr) minmax(0, 2fr); gap: var(--space); align-content: start; padding: var(--double); background: var(--paper); color: var(--ink); font-size: 24px; }
+.presenter-sheet .slide-viewport { background: transparent; }
+.presenter > p, .presenter-next > p { margin: 0; }
+.presenter-clock { text-align: right; }
+.presenter-sheet { position: relative; aspect-ratio: var(--sheet-ratio, 16/9); }
+.presenter-next { display: grid; gap: var(--half); align-content: start; color: var(--muted); }

@@ -7,13 +7,23 @@ const request = (postscript: string) => new Request(new URL(`/presentation-fonts
 type LocalFont = { postscriptName: string; blob(): Promise<Blob> };
 export type FontData = Record<string, ArrayBuffer>;
 const registered = new Set<string>();
+// Every face added, in order, so the presenter window can have the same ones (shareFonts).
+const faces: [string, string | ArrayBuffer][] = [];
 let localFaces = false;
 // Installed fonts first; faces added later from file bytes take precedence for the same family.
 function addLocalFaces() {
   if (localFaces) return;
   localFaces = true;
-  for (const postscript of FONTS)
-    document.fonts.add(new FontFace(family(postscript), LOCAL_NAMES[postscript].map(name => `local("${name}")`).join(', '), descriptors));
+  for (const postscript of FONTS) {
+    const source = LOCAL_NAMES[postscript].map(name => `local("${name}")`).join(', ');
+    document.fonts.add(new FontFace(family(postscript), source, descriptors));
+    faces.push([family(postscript), source]);
+  }
+}
+/** The same faces in another window's document (the presenter window). */
+export function shareFonts(doc: Document) {
+  const view = doc.defaultView as (Window & typeof globalThis) | null;
+  if (view) for (const [name, source] of faces) doc.fonts.add(new view.FontFace(name, source, descriptors));
 }
 async function cached(fonts: string[]): Promise<FontData> {
   const result: FontData = {};
@@ -33,6 +43,7 @@ async function register(data: FontData) {
     const face = new FontFace(family(postscript), bytes, descriptors);
     await face.load();
     document.fonts.add(face);
+    faces.push([family(postscript), bytes]);
     registered.add(postscript);
   }
 }

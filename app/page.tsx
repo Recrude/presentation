@@ -53,6 +53,7 @@ import { COMPOSITES, fontsIn, setWeight } from './composite';
 import { readDeck, saveDeck, readImage, readImages, saveImages } from './storage';
 import { SheetHeight, SlideView } from './slide-view';
 import { PresentationStage } from './presentation-stage';
+import { PresenterView, enterFullscreen } from './presenter';
 import { exhibitionVideo, prepareVideo } from './video-cache';
 import { previewSource } from './previews';
 import { originalSource, warmSlides } from './slide-assets';
@@ -167,6 +168,8 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     [position, setPosition] = useState(0),
     [paused, setPaused] = useState(false),
     [printing, setPrinting] = useState(false);
+  // With a second display: the presenter window on the laptop's screen (see enterFullscreen).
+  const [presenter, setPresenter] = useState<Window | null>(null);
   const [dragUI, setDragUI] = useState<{ ids: string[]; slot: number } | null>(
       null,
     ),
@@ -592,9 +595,11 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       if (e.key === 'Home') setPosition(0);
       if (e.key === 'End') setPosition(visible.length - 1);
     };
-    window.addEventListener('keydown', key, true);
-    return () => window.removeEventListener('keydown', key, true);
-  }, [present, visible.length, publicView]);
+    // The presenter window has the keys while it has focus (a clicker types into the focused window).
+    const windows = presenter ? [window, presenter] : [window];
+    windows.forEach(w => w.addEventListener('keydown', key, true));
+    return () => windows.forEach(w => w.removeEventListener('keydown', key, true));
+  }, [present, visible.length, publicView, presenter]);
   useEffect(() => {
     const exit = () => {
       if (!document.fullscreenElement && !publicView) setPresent(false);
@@ -602,6 +607,24 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     document.addEventListener('fullscreenchange', exit);
     return () => document.removeEventListener('fullscreenchange', exit);
   }, []);
+  // Esc in the presenter window ends the talk here too, so the slides leave full screen on the other display.
+  useEffect(() => {
+    if (!present && !publicView && document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+  }, [present]);
+  // The presenter window lasts as long as full screen; closing it leaves the slides as they are.
+  useEffect(() => {
+    if (!presenter) return;
+    const closed = () => setPresenter(null), left = () => { if (!document.fullscreenElement) setPresenter(null); }, leaving = () => presenter.close();
+    presenter.addEventListener('pagehide', closed);
+    document.addEventListener('fullscreenchange', left);
+    window.addEventListener('pagehide', leaving);
+    return () => {
+      presenter.removeEventListener('pagehide', closed);
+      document.removeEventListener('fullscreenchange', left);
+      window.removeEventListener('pagehide', leaving);
+      presenter.close();
+    };
+  }, [presenter]);
   // Starting takes the keys from the 발표 button (else Space, Home and End would stay with it). Leaving
   // (Esc or leaving full screen) selects the slide it was showing and brings its card into view, so the
   // editor stays where the talk got to.
@@ -1118,9 +1141,9 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       ),
     );
     setPresent(true);
-    try {
-      await document.documentElement.requestFullscreen();
-    } catch {}
+    const presenterWindow = await enterFullscreen();
+    if (presenterWindow === 'again') { setPresent(false); setStatus('디스플레이 권한을 받았습니다. 발표를 다시 누르세요.'); return; }
+    setPresenter(presenterWindow);
   }
   async function preparePreview(slide: Slide, file?: File) {
     let blob: Blob, toolbar: Pick<Slide, 'tint' | 'tintDark'> = {};
@@ -1650,7 +1673,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
             onFinish={finish}
           />
           <nav className={`present-controls${navigationVisible || current.kind === 'web' || current.kind === 'youtube' ? ' is-visible' : ''}`} aria-label="발표 이동">
-            {publicView && <button aria-label="전체화면" onClick={() => { void document.documentElement.requestFullscreen().catch(() => {}); }}>⛶</button>}
+            {publicView && <button aria-label="전체화면" onClick={() => { if (!document.fullscreenElement) void enterFullscreen().then(w => { if (w !== 'again') setPresenter(w); }); }}>⛶</button>}
             <button
               disabled={position === 0}
               onClick={() => setPosition((p) => Math.max(0, p - 1))}
@@ -1671,6 +1694,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
           </nav>
         </div>
       )}
+      {present && presenter && <PresenterView popup={presenter} slides={visible} position={position} assets={assets} outlined={publicView}/>}
       {printing && <div className="print-deck">
         {/* PDF pages follow the 판형: 320mm wide, height from the sheet ratio. */}
         <style>{`@page{size:320mm ${(320 * height / 1920).toFixed(2)}mm}@media print{.print-slide,.print-slide .slide-viewport{height:${(320 * height / 1920).toFixed(2)}mm}}`}</style>

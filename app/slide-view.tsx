@@ -21,6 +21,7 @@ export function SlideView({
   outlined = false,
   guides = false,
   paused = false,
+  step,
   onFinish,
 }: {
   slide: Slide;
@@ -36,6 +37,8 @@ export function SlideView({
   guides?: boolean;
   /** Sequence held where it is (Space in the presentation): its step and that step's videos stop. */
   paused?: boolean;
+  /** Sequence standing still (a PDF page): the step it shows, the first by default. */
+  step?: number;
   /** Sequence or clip reached its end with “다음 장” selected. */
   onFinish?: () => void;
 }) {
@@ -102,7 +105,7 @@ export function SlideView({
               {guides && <MarginGuides typo={slide.typo || defaultTypography} height={height}/>}
             </>
         ) : slide.kind === 'sequence' ? (
-          <Sequence key={slide.id} slide={slide} assets={assets} moving={moving} paused={paused} eager={live || print || playing} outlined={outlined} onFinish={playing ? onFinish : undefined} onError={() => setFailed(true)}/>
+          <Sequence key={slide.id} slide={slide} assets={assets} moving={moving} paused={paused} still={step} eager={live || print || playing} outlined={outlined} onFinish={playing ? onFinish : undefined} onError={() => setFailed(true)}/>
         ) : slide.kind === 'clip' ? (
           moving && slide.media && assets[slide.media.id]
             ? <Clip key={slide.id} slide={slide} range={slide.media} src={assets[slide.media.id]} poster={preview} onFinish={playing ? onFinish : undefined}/>
@@ -179,7 +182,7 @@ function LocalVideo({ slide, src, preview, playing }: { slide: Slide; src: strin
 // Steps (see sequenceSteps) flip in place, each after its images' durations (the slide's interval for
 // images without one). Only steps around the current one are mounted and decoded ahead, so long sequences stay light.
 // Paused, the current step keeps the time it has left and goes on from there.
-function Sequence({ slide, assets, moving, paused, eager, outlined, onFinish, onError }: { slide: Slide; assets: Record<string, string>; moving: boolean; paused: boolean; eager: boolean; outlined: boolean; onFinish?: () => void; onError: () => void }) {
+function Sequence({ slide, assets, moving, paused, still = 0, eager, outlined, onFinish, onError }: { slide: Slide; assets: Record<string, string>; moving: boolean; paused: boolean; still?: number; eager: boolean; outlined: boolean; onFinish?: () => void; onError: () => void }) {
   const steps = sequenceSteps(slide.photos || [], slide.perFrame || 1), height = useContext(SheetHeight);
   // Every step keeps the room of the slide's longest caption, so images keep their size from step to step.
   const below = captionRoom(slide.photos);
@@ -202,11 +205,12 @@ function Sequence({ slide, assets, moving, paused, eager, outlined, onFinish, on
     }, ms);
     return () => { cancelled = true; clearTimeout(timer); left.current = { index, delay, ms: Math.max(0, ms - (performance.now() - start)) }; };
   }, [moving, paused, index, steps.length, delay, slide.end]);
-  const mounted = new Set(moving ? [-1, 0, 1, 2, 3].map(d => index + d).map(i => slide.end === 'loop' ? (i + steps.length) % steps.length : i) : [0]);
+  const shown = moving ? index : still;
+  const mounted = new Set(moving ? [-1, 0, 1, 2, 3].map(d => index + d).map(i => slide.end === 'loop' ? (i + steps.length) % steps.length : i) : [shown]);
   return <>{steps.map((step, i) => {
     if (!mounted.has(i)) return null;
     const boxes = layoutPhotos(step, height, slide, marginOf(slide), below);
-    return <div key={step[0].id} className="sequence-step" style={{ visibility: i === index ? 'visible' : 'hidden' }}>
+    return <div key={step[0].id} className="sequence-step" style={{ visibility: i === shown ? 'visible' : 'hidden' }}>
       {step.map((p, j) => <div key={p.id} className="photo-placement" style={{ left: `${boxes[j].x / 19.2}%`, top: `${boxes[j].y / height * 100}%`, width: `${boxes[j].width / 19.2}%`, height: `${boxes[j].height / height * 100}%` }}>
         <PhotoMedia photo={p} assets={assets} fit={slide.fit} moving={moving} active={moving && i === index} paused={paused} eager={eager} onError={onError}
           imageRef={node => { const list = images.current.get(i) || []; if (node) images.current.set(i, [...list.filter(n => n.isConnected), node]); }}/>

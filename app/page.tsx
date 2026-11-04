@@ -1188,11 +1188,10 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       const sources = stateRef.current.filter(s => !s.hidden).flatMap((s) =>
         s.kind === 'image'
           ? [originalSource(s.src)]
-          : s.kind === 'gallery' || s.kind === 'folio'
+          : s.kind === 'gallery' || s.kind === 'folio' || s.kind === 'sequence'
             ? (s.photos || []).map((p) => preparedAssets[still(p)])
-            : s.kind === 'sequence' ? sequenceSteps(s.photos!, s.perFrame)[0].map(p => preparedAssets[still(p)])
-              : s.kind === 'text' ? []
-                : [previewSource(s, preparedAssets)],
+            : s.kind === 'text' ? []
+              : [previewSource(s, preparedAssets)],
       );
       await document.fonts.ready;
       await Promise.all(
@@ -1700,11 +1699,12 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       {printing && <div className="print-deck">
         {/* PDF pages follow the 판형: 320mm wide, height from the sheet ratio. */}
         <style>{`@page{size:320mm ${(320 * height / 1920).toFixed(2)}mm}.print-slide,.print-slide .slide-viewport{height:${(320 * height / 1920).toFixed(2)}mm}`}</style>
-        {visible.map((s, i) => (
-          <section key={s.id} className="print-slide">
-            <SlideView slide={s} number={i + 1} assets={assets} print />
+        {/* A sequence gives every step a page of its own; its videos print as their still frames. */}
+        {visible.flatMap((s, i) => (s.kind === 'sequence' ? sequenceSteps(s.photos || [], s.perFrame) : [null]).map((_, k) => (
+          <section key={`${s.id}-${k}`} className="print-slide">
+            <SlideView slide={s} number={i + 1} assets={assets} print step={k} />
           </section>
-        ))}
+        )))}
       </div>}
     </SheetHeight.Provider>
   );

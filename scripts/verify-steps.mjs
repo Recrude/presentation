@@ -2,11 +2,14 @@
 // starts a step there. Checks each row's thumbnail (same box, names in one column, it moves with its image),
 // the panel's blocks (a rule above each step), moving and removing rows keeps
 // the other steps, 격자 and back keeps them, undo, playback 2·3·1 images per step in the editor and after
-// publishing (mock GitHub, real checks), and 한 번에 regrouping everything.
-// Needs the dev server on 3100 and Google Chrome; the 11/3 deck starts empty (published file answered 404).
+// publishing (mock GitHub, real checks), a PDF page per step (2·3·1 images), and 한 번에 regrouping everything.
+// Needs the dev server on 3100, Google Chrome and pdfimages (poppler); the 11/3 deck starts empty (published file answered 404).
 import puppeteer from 'puppeteer-core';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { executePublish } from '../server/publish.ts';
 import { catalogEntries } from '../app/catalog.ts';
@@ -140,6 +143,25 @@ try {
   const live = await playback('.preview');
   assert.ok(live.length >= 4 && live.every((s, i) => s === expected[(expected.indexOf(live[0]) + i) % 3]), `editor plays 2 · 3 · 1: ${live.map(s => s.split(',').length)}`);
   await button('미리보기 닫기');
+
+  // PDF: every step a page of its own, 2 · 3 · 1 images, all loaded. The print dialog takes the pages as they
+  // are when print() is called: a copy of them then becomes a real PDF, whose pages and images are counted.
+  await page.evaluate(() => { window.print = () => {
+    const deck = document.querySelector('.print-deck');
+    window.__printed = [...deck.querySelectorAll('.print-slide')].map(slide => [...slide.querySelectorAll('.sequence-step')]
+      .filter(step => step.style.visibility === 'visible').map(step => [...step.querySelectorAll('img')].map(i => i.naturalWidth > 0 ? i.alt : 'unloaded ' + i.alt).join()));
+    document.body.append(deck.cloneNode(true));
+  }; });
+  await button('PDF');
+  await page.waitForFunction(() => window.__printed, { timeout: 30000 });
+  assert.deepEqual(await page.evaluate(() => window.__printed), expected.map(step => [step]), 'one page per step, in order');
+  await page.waitForFunction(() => document.querySelectorAll('.print-deck').length === 1);
+  const pdf = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'verify-steps-')), 'deck.pdf');
+  fs.writeFileSync(pdf, await page.pdf({ preferCSSPageSize: true, printBackground: true }));
+  await page.evaluate(() => document.querySelector('.print-deck').remove());
+  const perPage = {};
+  for (const line of execFileSync('pdfimages', ['-list', pdf]).toString().split('\n').slice(2)) { const n = +line.trim().split(/\s+/)[0]; if (n) perPage[n] = (perPage[n] || 0) + 1; }
+  assert.deepEqual(perPage, { 1: 2, 2: 3, 3: 1 }, `PDF pages and their images: ${JSON.stringify(perPage)}`);
   if (process.env.VERIFY_OUT) await (await page.$('.photo-list')).screenshot({ path: process.env.VERIFY_OUT + '/steps-panel.png' });
 
   // Published through the real checks, and played publicly the same way.
@@ -167,7 +189,7 @@ try {
   await assertPanel('abcdef', 'one step');
   assert.deepEqual(await perFrame(), ['6', '—'], 'even steps are 한 번에 again');
   assert.deepEqual(errors, []);
-  console.log('steps: 한 번에 2 → 묶기/풀기 to 2·3·1, rules mark the steps, move swaps places, remove shrinks a step, undo, 격자 and back keep them, editor and public play 2·3·1 (published as joined images), 한 번에 3 regroups, one even step is 한 번에 6');
+  console.log('steps: 한 번에 2 → 묶기/풀기 to 2·3·1, rules mark the steps, move swaps places, remove shrinks a step, undo, 격자 and back keep them, editor and public play 2·3·1 (published as joined images), PDF has a page per step (2·3·1 images), 한 번에 3 regroups, one even step is 한 번에 6');
 } finally {
   await browser.close();
 }

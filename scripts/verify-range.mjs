@@ -170,6 +170,23 @@ try {
   const lasted = Date.now() - stepStart;
   assert.ok(lasted > 700 && lasted < 1700, `then the sequence moves on after about 1 s: ${lasted} ms`);
   await click('미리보기 닫기');
+  // PDF: the clip, then a page per step of the sequence; videos print as their stills, redrawn at the range
+  // start (blue), not as video elements.
+  await page.evaluate(() => { window.print = () => {
+    window.__printed = [...document.querySelectorAll('.print-slide')].map(slide => {
+      const shown = [...slide.querySelectorAll('img')].filter(i => !i.closest('.sequence-step') || i.closest('.sequence-step').style.visibility === 'visible');
+      return { videos: slide.querySelectorAll('video').length, colors: shown.map(img => {
+        const c = document.createElement('canvas'); c.width = c.height = 1;
+        c.getContext('2d').drawImage(img, img.naturalWidth / 2, img.naturalHeight / 2, 1, 1, 0, 0, 1, 1);
+        const [r, , b] = c.getContext('2d').getImageData(0, 0, 1, 1).data;
+        return r > 150 && b < 100 ? 'red' : b > 150 && r < 100 ? 'blue' : 'image';
+      }) };
+    });
+  }; });
+  await click('PDF');
+  await page.waitForFunction(() => window.__printed, { timeout: 30000 });
+  const printed = await page.evaluate(() => window.__printed);
+  assert.deepEqual(printed, [{ videos: 0, colors: ['blue'] }, { videos: 0, colors: ['image'] }, { videos: 0, colors: ['blue'] }], `PDF pages: ${JSON.stringify(printed)}`);
 
   // YouTube: whole seconds, widened.
   await click('추가');
@@ -239,7 +256,7 @@ try {
   times = (await sample('.presentation video', 1500)).filter(([, paused]) => !paused).map(([t]) => t);
   assert.ok(times.every(t => t >= 2.45 && t <= 3.56), `public playback stays inside the range: ${times.map(t => t.toFixed(2))}`);
   assert.deepEqual(errors, []);
-  console.log('range: clip 2.5–3.5 loops and holds, still redrawn at the start and undone with it; sequence video plays its range for a 1 s step; YouTube start=12 end=31; Vimeo sought to 10 and looped at 12 (pause without loop); exhibition video stops at 101; published and played publicly inside the range');
+  console.log('range: clip 2.5–3.5 loops and holds, still redrawn at the start and undone with it; sequence video plays its range for a 1 s step; PDF prints the clip and each sequence step as stills; YouTube start=12 end=31; Vimeo sought to 10 and looped at 12 (pause without loop); exhibition video stops at 101; published and played publicly inside the range');
 } finally {
   await browser.close();
   fs.rmSync(work, { recursive: true, force: true });

@@ -1,7 +1,7 @@
 // Publishing sends each file once and only what the site lacks: the first publish puts every file up, three at a
-// time (a video over 2 MB in chunks, then assembled); publishing again unchanged sends nothing but deck.json, and a
-// changed text slide sends only its new outline. A GitHub rate limit (429 with its wait) is sat out and the publish
-// carries on. Through the real server checks (mock GitHub, each request held 150 ms); the site answers HEAD for
+// time (a video over 2 MB in chunks, then assembled), a 6000×4000 JPEG as a 3840 px WebP; publishing again unchanged
+// sends nothing but deck.json, and a changed text slide sends only its new outline. A GitHub rate limit (429 with its
+// wait) is sat out and the publish carries on; after a failed publish, publishing again reuses what went up. Through the real server checks (mock GitHub, each request held 150 ms); the site answers HEAD for
 // what has been published. Needs the dev server on 3100, Google Chrome and the composite fonts in
 // ~/Library/Fonts and /Library/Fonts; the 11/3 deck starts empty (published file answered 404).
 import puppeteer from 'puppeteer-core';
@@ -10,6 +10,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { executePublish } from '../server/publish.ts';
 import { catalogEntries } from '../app/catalog.ts';
 const base = 'http://127.0.0.1:3100/presentations/';
@@ -25,6 +26,11 @@ const material = new URL('../../261103-yun/', import.meta.url).pathname;
 const imageDir = material + 'portfolio-images/2025.12-audio-morphology/';
 const images = fs.readdirSync(imageDir).filter(n => n.endsWith('.webp')).sort().slice(0, 9).map(n => imageDir + n);
 const clip = material + 'instagram-B4IWh8EHPvK/10.mp4';
+// A large photo: 6000×4000, grainy enough to be several MB as JPEG.
+const big = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'verify-publish-')), 'big.jpg');
+execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'gradients=s=6000x4000:seed=3', '-vf', 'noise=alls=12:allf=t', '-frames:v', '1', '-q:v', '2', big]);
+assert.ok(fs.statSync(big).size > 2 * 1024 * 1024, 'the photo is over 2 MB');
+images.push(big);
 assert.ok(fs.statSync(clip).size > 2 * 1024 * 1024, 'the clip goes up in chunks');
 const registry = { version: 1, items: catalogEntries.map(e => ({ id: e.id, public: true })) };
 const blobs = new Map(), published = new Map();
@@ -43,7 +49,7 @@ const git = async (p, method = 'GET', body) => {
 const types = { json: 'application/json', svg: 'image/svg+xml', webp: 'image/webp', jpg: 'image/jpeg', png: 'image/png', mp4: 'video/mp4' };
 const pause = ms => new Promise(r => setTimeout(r, ms));
 // Requests to the publish API in the current run, the most at once, and a rate limit to answer next.
-let calls = [], flying = 0, most = 0, limit = 0;
+let calls = [], flying = 0, most = 0, limit = 0, failDeck = 0;
 
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-sandbox'] });
 try {
@@ -58,6 +64,7 @@ try {
     if (url.pathname.endsWith('/api/publish/')) {
       const input = JSON.parse(req.postData());
       calls.push(input.action);
+      if (input.action === 'deck' && failDeck) { failDeck--; return req.respond({ status: 409, contentType: 'application/json', body: JSON.stringify({ error: '다른 게시가 먼저 반영되었습니다. 다시 게시하세요.' }) }); }
       if (input.action === 'upload' && limit) { limit--; return req.respond({ status: 429, contentType: 'application/json', body: JSON.stringify({ error: '게시 요청이 잠시 제한되었습니다. 잠시 후 다시 시도하세요.', retryAfter: 1 }) }); }
       flying++; most = Math.max(most, flying);
       try { await pause(150); return req.respond({ status: 200, contentType: 'application/json', body: JSON.stringify(await executePublish(input, git, 'test-secret')) }); }
@@ -100,7 +107,7 @@ try {
   // Every status the editor shows, kept for the checks.
   await page.evaluate(() => new MutationObserver(() => window.statuses?.push(document.querySelector('[role=status]').textContent)).observe(document.querySelector('[role=status]'), { childList: true, subtree: true, characterData: true }));
 
-  // A sequence of 9 images, a clip over 2 MB and two text slides.
+  // A sequence of 9 images and the large photo, a clip over 2 MB and two text slides.
   await button('추가', '.toolbar');
   let [chooser] = await Promise.all([page.waitForFileChooser(), button('시퀀스')]);
   await chooser.accept(images);
@@ -117,16 +124,25 @@ try {
   }
   await page.waitForFunction(() => document.querySelectorAll('.card').length === 4);
 
-  // First publish: every file once (9 images, the clip and its poster, 2 outlines), three at a time.
+  // First publish: every file once (10 images, the clip and its poster, 2 outlines), three at a time.
   const first = await publish();
   const deck = deckJson(), files = new Set(Object.values(deck.assets));
-  assert.equal(files.size, 13, '9 images, the clip, its poster and 2 outlines');
-  for (const file of files) assert.ok(published.has('public/' + file.slice('/presentations/'.length)), `${file} is in the commit`);
-  assert.equal(first.upload, 12 + 2, '12 files in one piece, the clip in two chunks');
-  assert.equal(first.assemble, 1, 'the clip assembled');
+  assert.equal(files.size, 14, '10 images, the clip, its poster and 2 outlines');
+  const sizes = [...files].map(file => published.get('public/' + file.slice('/presentations/'.length))?.length);
+  assert.ok(sizes.every(n => n > 0), 'every file is in the commit');
+  const chunks = sizes.reduce((sum, n) => sum + Math.ceil(n / (2 * 1024 * 1024)), 0), assembled = sizes.filter(n => n > 2 * 1024 * 1024).length;
+  assert.deepEqual([first.upload, first.assemble], [chunks, assembled], 'one request per 2 MB of what went up, files over 2 MB assembled');
   assert.equal(first.most, 3, 'three requests at once');
-  assert.match(first.final, /^게시됨 · 새 파일 13개 · /);
-  assert.ok(first.shown.some(s => /^파일 게시 \d+\/13$/.test(s)), `files counted out of 13: ${JSON.stringify([...new Set(first.shown)])}`);
+  assert.match(first.final, /^게시됨 · 새 파일 14개 · /);
+  assert.ok(first.shown.some(s => /^파일 게시 \d+\/14 · \d+MB$/.test(s)), `files counted out of 14 with the megabytes sent: ${JSON.stringify([...new Set(first.shown)])}`);
+  // The large photo went up as a 3840 × 2560 WebP, its slide's layout as before.
+  const photo = deck.slides[0].photos.find(p => p.name === 'big.jpg');
+  assert.deepEqual([photo.width, photo.height], [6000, 4000], 'the layout keeps the photo’s own size');
+  const sent = deck.assets[photo.id], sentBytes = published.get('public/' + sent.slice('/presentations/'.length));
+  assert.match(sent, /\.webp$/);
+  assert.deepEqual(await page.evaluate(async url => { const b = await createImageBitmap(await (await fetch(url)).blob()); return [b.width, b.height]; }, sent), [3840, 2560]);
+  assert.ok(sentBytes.length < fs.statSync(big).size / 2, `${sentBytes.length} bytes from ${fs.statSync(big).size}`);
+  assert.ok(sizes.reduce((a, n) => a + n, 0) < [...images, clip].reduce((a, f) => a + fs.statSync(f).size, 0), 'less than the originals');
 
   // Unchanged: nothing goes up, deck.json keeps every file where it is.
   const again = await publish();
@@ -153,6 +169,15 @@ try {
   assert.ok(limited.shown.some(s => s === 'GitHub 요청 제한 · 1초 뒤 이어서 올립니다'), 'it says it waits');
   assert.deepEqual([limited.upload, limited.final.startsWith('게시됨 · 새 파일 1개')], [2, true], 'the outline went up after the wait');
   assert.ok(limited.seconds >= 1, 'it waited');
+
+  // A publish that fails at the end (another publish got in first): publishing again sends nothing it already sent.
+  await page.focus('.text-editor'); await page.keyboard.type('?');
+  calls = []; failDeck = 1;
+  await button('게시', '.toolbar'); await status('다른 게시가 먼저 반영되었습니다');
+  assert.deepEqual(calls, ['upload', 'deck'], 'the new outline went up, then the deck failed');
+  const resumed = await publish();
+  assert.deepEqual([resumed.upload, resumed.deck], [0, 1], 'the outline is not sent again');
+  assert.match(resumed.final, /^게시됨 · 새 파일 1개 · /, 'it is still a new file on the site');
   assert.deepEqual(errors, []);
-  console.log(`publish: first 13 files (14 chunks + 1 assemble, 3 at once) in ${first.seconds.toFixed(1)}s; unchanged → 0 files in ${again.seconds.toFixed(1)}s; one text edit → 1 file in ${edited.seconds.toFixed(1)}s; a 429 waits 1s and carries on (${limited.seconds.toFixed(1)}s)`);
+  console.log(`publish: first 14 files (${chunks} chunks + ${assembled} assemble, 3 at once; the ${(fs.statSync(big).size / 1048576).toFixed(1)} MB 6000×4000 JPEG went as a ${(sentBytes.length / 1048576).toFixed(2)} MB 3840×2560 WebP) in ${first.seconds.toFixed(1)}s; a failed publish resumes with nothing sent again; unchanged → 0 files in ${again.seconds.toFixed(1)}s; one text edit → 1 file in ${edited.seconds.toFixed(1)}s; a 429 waits 1s and carries on (${limited.seconds.toFixed(1)}s)`);
 } finally { await browser.close(); }

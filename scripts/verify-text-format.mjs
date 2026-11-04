@@ -44,6 +44,7 @@ const git = async (p, method = 'GET', body) => {
   if (p === 'git/trees') { pending = body.tree; return { sha: 'c'.repeat(40) }; }
   if (p === 'git/commits') return { sha: 'd'.repeat(40) };
   if (p === 'git/refs/heads/main') { for (const t of pending) files.set(t.path, t.content !== undefined ? Buffer.from(t.content) : blobs.get(t.sha)); return {}; }
+  if (p === 'contents/public/decks?ref=main') return []; // nothing published yet
   throw Error('Unexpected Git request ' + p);
 };
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-sandbox'] });

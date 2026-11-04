@@ -62,11 +62,25 @@ async function currentCatalog(git:GitApi, ref='main'):Promise<CatalogConfig> {
   if(!validCatalog(config))throw new PublishError('발표 목록 형식을 확인하세요.',502);
   return config;
 }
+// The deck's files on main (hash.ext). The repository answers, never the site: a request for a file not yet
+// deployed caches its 404 for a year in front of the site (immutable deck assets), and viewers then get it.
+async function publishedFiles(git:GitApi,slug:string):Promise<string[]> {
+  const decks=await git('contents/public/decks?ref=main');
+  const deck=Array.isArray(decks) ? decks.find((e:any)=>e.name===slug && e.type==='dir') : undefined;
+  const assets=deck && (await git(`git/trees/${deck.sha}`)).tree?.find((e:any)=>e.path==='assets' && e.type==='tree');
+  if(!assets)return [];
+  const list=await git(`git/trees/${assets.sha}`);
+  return (list.tree||[]).filter((e:any)=>e.type==='blob').map((e:any)=>e.path);
+}
 async function registered(git:GitApi,id:string) {
   if(!(await currentCatalog(git)).items.some(i=>i.id===id))throw new PublishError('먼저 발표 목록에서 새 발표를 추가하세요.');
 }
 export async function executePublish(input: any, git: GitApi, secret: string) {
   if (!input || typeof input !== 'object') throw new PublishError('게시 내용을 확인하세요.');
+  if (input.action === 'have') {
+    if (!validDeckId(input.slug)) throw new PublishError('발표 형식을 확인하세요.');
+    return {files:await publishedFiles(git,input.slug)};
+  }
   if (input.action === 'upload') {
     const {slug,mime,content,index,count,hash:expectedHash}=input;
     if (!validDeckId(slug) || !extensions[mime] || !/^[a-f0-9]{64}$/.test(expectedHash) ||

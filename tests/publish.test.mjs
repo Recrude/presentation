@@ -24,6 +24,19 @@ function repository() {
   };
   return {git,calls,blobs};
 }
+test('a deck’s published files come from the repository’s listing, never from the site',async()=>{
+  const listing={
+    'contents/public/decks?ref=main':[{name:'catalog.json',type:'file',sha:'f'},{name:LEGACY_SLUG,type:'dir',sha:'deck'}],
+    'git/trees/deck':{tree:[{path:'deck.json',type:'blob'},{path:'assets',type:'tree',sha:'assets'}]},
+    'git/trees/assets':{tree:[{path:hash(png)+'.png',type:'blob'},{path:'nested',type:'tree'}]},
+  };
+  const git=async path=>{if(!(path in listing))throw Error('Unexpected request '+path);return listing[path];};
+  assert.deepEqual(await executePublish({action:'have',slug:LEGACY_SLUG},git,secret),{files:[hash(png)+'.png']});
+  // A deck never published has none yet.
+  const other=catalogEntries.find(e=>e.id!==LEGACY_SLUG).id;
+  assert.deepEqual(await executePublish({action:'have',slug:other},git,secret),{files:[]});
+  await assert.rejects(()=>executePublish({action:'have',slug:'../catalog'},git,secret),/발표 형식/);
+});
 test('server validates actions, paths and image receipts before committing only presentation data',async()=>{
   const {git,calls,blobs}=repository();
   const upload=await executePublish({action:'upload',slug:LEGACY_SLUG,mime:'image/png',hash:hash(png),count:1,index:0,content:png.toString('base64')},git,secret);

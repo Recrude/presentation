@@ -1,8 +1,9 @@
 // Publishing sends each file once and only what the site lacks: the first publish puts every file up, three at a
 // time (a video over 2 MB in chunks, then assembled), a 6000×4000 JPEG as a 3840 px WebP; publishing again unchanged
 // sends nothing but deck.json, and a changed text slide sends only its new outline. A GitHub rate limit (429 with its
-// wait) is sat out and the publish carries on; after a failed publish, publishing again reuses what went up. Through the real server checks (mock GitHub, each request held 150 ms); the site answers HEAD for
-// what has been published. Needs the dev server on 3100, Google Chrome and the composite fonts in
+// wait) is sat out and the publish carries on; after a failed publish, publishing again reuses what went up. Through the real server checks (mock GitHub, each request held 150 ms); the repository's listing
+// answers what has been published, and no request reaches the site for a file before it is published (its 404 would
+// be cached in front of the site for a year). Needs the dev server on 3100, Google Chrome and the composite fonts in
 // ~/Library/Fonts and /Library/Fonts; the 11/3 deck starts empty (published file answered 404).
 import puppeteer from 'puppeteer-core';
 import assert from 'node:assert/strict';
@@ -42,6 +43,10 @@ const git = async (p, method = 'GET', body) => {
   if (p === 'git/ref/heads/main') return { object: { sha: 'a'.repeat(40) } };
   if (p === 'git/commits/' + 'a'.repeat(40)) return { tree: { sha: 'b'.repeat(40) } };
   if (p === 'git/trees') { pending = body.tree; return { sha: 'c'.repeat(40) }; }
+  // The repository's listing: deck folders, then a deck's assets folder.
+  if (p === 'contents/public/decks?ref=main') return [...new Set([...published.keys()].map(k => k.split('/')).filter(k => k.length > 3).map(k => k[2]))].map(name => ({ name, type: 'dir', sha: 'deck:' + name }));
+  if (p.startsWith('git/trees/deck:')) return { tree: [{ path: 'assets', type: 'tree', sha: 'assets:' + p.slice('git/trees/deck:'.length) }] };
+  if (p.startsWith('git/trees/assets:')) { const dir = `public/decks/${p.slice('git/trees/assets:'.length)}/assets/`; return { tree: [...published.keys()].filter(k => k.startsWith(dir)).map(k => ({ path: k.slice(dir.length), type: 'blob' })) }; }
   if (p === 'git/commits') return { sha: 'd'.repeat(40) };
   if (p === 'git/refs/heads/main') { for (const t of pending) published.set(t.path, t.content !== undefined ? Buffer.from(t.content) : blobs.get(t.sha)); return {}; }
   throw Error('Unexpected Git request ' + p);
@@ -50,6 +55,8 @@ const types = { json: 'application/json', svg: 'image/svg+xml', webp: 'image/web
 const pause = ms => new Promise(r => setTimeout(r, ms));
 // Requests to the publish API in the current run, the most at once, and a rate limit to answer next.
 let calls = [], flying = 0, most = 0, limit = 0, failDeck = 0;
+// Requests that reached the site for a deck file not yet published.
+const early = [];
 
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-sandbox'] });
 try {
@@ -73,6 +80,7 @@ try {
     }
     if (url.pathname.startsWith(`/presentations/decks/${ID}/`)) {
       const file = published.get('public/' + url.pathname.slice('/presentations/'.length));
+      if (!file && url.pathname.includes('/assets/')) early.push(`${req.method()} ${url.pathname}`);
       return req.respond(file ? { status: 200, contentType: types[url.pathname.split('.').pop()] || 'application/octet-stream', body: file } : { status: 404, contentType: 'text/plain', body: 'not found' });
     }
     return req.continue();
@@ -174,10 +182,11 @@ try {
   await page.focus('.text-editor'); await page.keyboard.type('?');
   calls = []; failDeck = 1;
   await button('게시', '.toolbar'); await status('다른 게시가 먼저 반영되었습니다');
-  assert.deepEqual(calls, ['upload', 'deck'], 'the new outline went up, then the deck failed');
+  assert.deepEqual(calls, ['have', 'upload', 'deck'], 'the new outline went up, then the deck failed');
   const resumed = await publish();
   assert.deepEqual([resumed.upload, resumed.deck], [0, 1], 'the outline is not sent again');
   assert.match(resumed.final, /^게시됨 · 새 파일 1개 · /, 'it is still a new file on the site');
   assert.deepEqual(errors, []);
+  assert.deepEqual(early, [], 'nothing asked the site for a file before it was published');
   console.log(`publish: first 14 files (${chunks} chunks + ${assembled} assemble, 3 at once; the ${(fs.statSync(big).size / 1048576).toFixed(1)} MB 6000×4000 JPEG went as a ${(sentBytes.length / 1048576).toFixed(2)} MB 3840×2560 WebP) in ${first.seconds.toFixed(1)}s; a failed publish resumes with nothing sent again; unchanged → 0 files in ${again.seconds.toFixed(1)}s; one text edit → 1 file in ${edited.seconds.toFixed(1)}s; a 429 waits 1s and carries on (${limited.seconds.toFixed(1)}s)`);
 } finally { await browser.close(); }

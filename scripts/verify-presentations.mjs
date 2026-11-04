@@ -44,9 +44,9 @@ try {
   window.fetch=async(url,opts)=>{
    if(!String(url).endsWith('api/publish/'))return originalFetch(url,opts);
    const body=JSON.parse(opts.body);calls.push(body);
-   if(fail)return new Response(JSON.stringify({error:'다른 게시가 먼저 반영되었습니다. 다시 게시하세요.'}),{status:409});
+   if(fail && body.action==='deck')return new Response(JSON.stringify({error:'다른 게시가 먼저 반영되었습니다. 다시 게시하세요.'}),{status:409});
    const proof={data:{hash:body.hash},signature:'signed-upload'};
-   const data=body.action==='upload'?{proof}:{snapshot:{version:1,slug,slides:body.slides,assets:{uploaded:`/presentations/decks/${slug}/assets/${body.assets.uploaded.data.hash}.png`}}};
+   const data=body.action==='have'?{files:[]}:body.action==='upload'?{proof}:{snapshot:{version:1,slug,slides:body.slides,assets:{uploaded:`/presentations/decks/${slug}/assets/${body.assets.uploaded.data.hash}.png`}}};
    return new Response(JSON.stringify(data),{headers:{'Content-Type':'application/json'}});
   };
   const photo={id:'uploaded',name:'test',width:1,height:1};
@@ -57,6 +57,6 @@ try {
    return {snap,calls,conflict};
   }finally{window.fetch=originalFetch;}
  },nov);
- assert.equal(result.snap.slides.length,1);assert.match(result.snap.assets.uploaded,/^\/presentations\/decks\/.+\/assets\/[a-f0-9]{64}\.png$/);assert.deepEqual(result.calls.map(c=>c.action),['upload','deck','deck']);assert.equal(result.calls[1].slides.length,1);assert.equal(result.calls[1].assets.uploaded.signature,'signed-upload');assert.match(result.conflict,/다른 게시/);
+ assert.equal(result.snap.slides.length,1);assert.match(result.snap.assets.uploaded,/^\/presentations\/decks\/.+\/assets\/[a-f0-9]{64}\.png$/);assert.deepEqual(result.calls.map(c=>c.action),['have','upload','deck','have','deck']);assert.equal(result.calls[2].slides.length,1);assert.equal(result.calls[2].assets.uploaded.signature,'signed-upload');assert.match(result.conflict,/다른 게시/);
  assert.deepEqual(errors,[]);console.log('PASS: public/editor separation, 92-slide archive, blank November deck, isolated drafts, unchanged legacy state, atomic publish with assets, safe conflict handling');
 }finally{await browser.close();}

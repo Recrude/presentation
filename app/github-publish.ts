@@ -49,13 +49,15 @@ export async function publishDeck(slug: string, slides: Slide[], assets: Record<
   let next=0, done=0, sent=0, bytesSent=0, failed=false;
   // Where it is: files done of all, and the megabytes sent so far (they move while a large file goes up).
   const report=()=>progress(`파일 게시 ${done}/${ids.length} · ${Math.round(bytesSent/1048576)}MB`);
+  // What the repository already has for this deck. Never ask the site: its 404 for a file not yet there would be
+  // cached in front of it for a year, and viewers would get that instead of the file.
+  const have=new Set<string>((await api({action:'have',slug},progress)).files);
   const upload=async (mime: string, hash: string, bytes: Uint8Array) => {
-    const path=`${BASE}decks/${slug}/assets/${hash}.${assetTypes[mime]}`, key=`${slug}/${hash}`;
+    const name=`${hash}.${assetTypes[mime]}`, path=`${BASE}decks/${slug}/assets/${name}`, key=`${slug}/${hash}`;
     const kept=receipts.get(key);
     if(kept && kept.data.expires-Date.now()>600000){sent++;return kept;}
-    // The file's name is its content's hash, so the same name with the same type on the site is the same file.
-    const there=await fetch(path,{method:'HEAD',cache:'no-store',signal:AbortSignal.timeout(15000)}).catch(()=>null);
-    if(there?.ok && there.headers.get('content-type')?.split(';')[0].trim()===mime)return path;
+    // The file's name is its content's hash and type, so the same name is the same file.
+    if(have.has(name))return path;
     sent++;
     const count=Math.ceil(bytes.length/CHUNK_SIZE),parts=[];
     for(let index=0;index<count;index++) {

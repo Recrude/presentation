@@ -28,6 +28,7 @@ const git = async (p, method = 'GET', body) => {
   if (p === 'git/trees') { pending = body.tree; return { sha: 'c'.repeat(40) }; }
   if (p === 'git/commits') return { sha: 'd'.repeat(40) };
   if (p === 'git/refs/heads/main') { for (const t of pending) published.set(t.path, t.content !== undefined ? Buffer.from(t.content) : blobs.get(t.sha)); return {}; }
+  if (p === 'contents/public/decks?ref=main') return []; // nothing published yet
   throw Error('Unexpected Git request ' + p);
 };
 const types = { mp4: 'video/mp4', webp: 'image/webp', png: 'image/png', jpg: 'image/jpeg' };

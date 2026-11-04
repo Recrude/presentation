@@ -12,6 +12,7 @@ const git=async(path,method='GET',body)=>{
  if(path==='git/trees'){pending=body.tree;return {sha:'c'.repeat(40)};}
  if(path==='git/commits')return {sha:'d'.repeat(40)};
  if(path==='git/refs/heads/main'){for(const t of pending){if(t.path==='public/decks/catalog.json')registry=JSON.parse(t.content);else decks.set(t.path,JSON.parse(t.content));}return {};}
+ if(path==='contents/public/decks?ref=main')return []; // nothing published yet
  throw Error('Unexpected Git request '+path);
 };
 const browser=await puppeteer.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true,args:['--no-sandbox']});

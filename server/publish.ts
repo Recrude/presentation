@@ -63,7 +63,8 @@ async function currentCatalog(git:GitApi, ref='main'):Promise<CatalogConfig> {
   return config;
 }
 // The deck's files on main (hash.ext). The repository answers, never the site: a request for a file not yet
-// deployed caches its 404 for a year in front of the site (immutable deck assets), and viewers then get it.
+// deployed caches its 404 in front of the site and in the browser, and viewers then get it (vercel.json headers
+// apply to 404s too; deck assets are kept 10 minutes so such a 404 does not last).
 async function publishedFiles(git:GitApi,slug:string):Promise<string[]> {
   const decks=await git('contents/public/decks?ref=main');
   const deck=Array.isArray(decks) ? decks.find((e:any)=>e.name===slug && e.type==='dir') : undefined;

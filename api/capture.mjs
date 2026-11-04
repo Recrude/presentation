@@ -24,6 +24,11 @@ export function captureTarget(raw) {
   }
   return {kind:'web',url:u.href};
 }
+/** The page's window in CSS px: the size the slide shows it at (w, h on the 1920 sheet), else 1920×1080. */
+export function captureViewport(w,h) {
+  const size=(v,min,fallback)=>Number.isFinite(v) && v>0 ? Math.min(Math.max(Math.round(v),min),3840) : fallback;
+  return {width:size(w,320,1920),height:size(h,180,1080)};
+}
 /**
  * The browser window's toolbar color, always read in the light color scheme (runs inside the captured
  * page): the theme-color meta for light; else the body's background; else the root's; else white.
@@ -47,7 +52,7 @@ export function pageToolbarColor() {
 }
 const color = value => /^#[0-9a-f]{6}$/.test(value || '') ? value : undefined;
 /** The preview image and, for web pages, the browser window's toolbar color (light color scheme). */
-export async function capture(raw) {
+export async function capture(raw,viewport=captureViewport()) {
   const target=captureTarget(raw);
   if(target.kind==='youtube') {
     for(const size of ['maxresdefault','hqdefault']) {
@@ -65,7 +70,7 @@ export async function capture(raw) {
   const browser=await puppeteer.launch({executablePath,args:local?[]:await puppeteer.defaultArgs({args:chromium.args,headless:'shell'}),headless:local?true:'shell'});
   try {
     // The preview and the toolbar color are both the page's light color scheme, whatever the viewer uses.
-    const page=await browser.newPage(); await page.setViewport({width:1920,height:1080,deviceScaleFactor:1});
+    const page=await browser.newPage(); await page.setViewport({...viewport,deviceScaleFactor:1});
     await page.emulateMediaFeatures([{name:'prefers-color-scheme',value:'light'}]);
     const checked=new Map();
     async function safe(url) {
@@ -99,8 +104,9 @@ export default async function handler(req,res) {
   const url=query.get('url');
   if(!url || url.length>2048){res.statusCode=400;res.end('주소를 확인하세요.');return;}
   try {
-    const {bytes,toolbar}=await capture(url);res.statusCode=200;
+    const {bytes,toolbar}=await capture(url,captureViewport(Number(query.get('w')),Number(query.get('h'))));res.statusCode=200;
     if(toolbar)res.setHeader('X-Toolbar-Color',toolbar);
-    res.setHeader('Content-Type','image/jpeg');res.setHeader('Cache-Control','public, max-age=300, s-maxage=3600');res.end(bytes);
+    // Never kept: 캡처 갱신 means the page as it is now.
+    res.setHeader('Content-Type','image/jpeg');res.setHeader('Cache-Control','private, no-store');res.end(bytes);
   } catch(e) {res.statusCode=422;res.setHeader('Content-Type','text/plain; charset=utf-8');res.end(e instanceof Error?e.message:'캡처 실패');}
 }

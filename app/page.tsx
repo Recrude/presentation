@@ -51,7 +51,7 @@ import {
 import { fontData, missingFonts, importFontFiles } from './fonts';
 import { COMPOSITES, fontsIn, setWeight } from './composite';
 import { readDeck, saveDeck, readImage, readImages, saveImages } from './storage';
-import { SheetHeight, SlideView } from './slide-view';
+import { SheetHeight, SlideView, pageViewport } from './slide-view';
 import { PresentationStage } from './presentation-stage';
 import { PresenterView, enterFullscreen } from './presenter';
 import { exhibitionVideo, prepareVideo } from './video-cache';
@@ -1149,7 +1149,9 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
     let blob: Blob, toolbar: Pick<Slide, 'tint' | 'tintDark'> = {};
     if (file) blob = file;
     else {
-      const response = await fetch(BASE + 'api/capture?url=' + encodeURIComponent(slide.src), { signal: AbortSignal.timeout(55000) });
+      // A web page is captured at the size the slide shows it (its margins, the window), so it is never cut.
+      const { w, h } = pageViewport(slide, height);
+      const response = await fetch(BASE + 'api/capture?url=' + encodeURIComponent(slide.src) + (slide.kind === 'web' ? `&w=${w}&h=${h}` : ''), { signal: AbortSignal.timeout(55000) });
       if (!response.ok) throw Error(await response.text());
       blob = await response.blob();
       // The window's toolbar color for this page (light scheme); a capture image picked by hand keeps the
@@ -1697,7 +1699,7 @@ export default function Home({entry, publicView = false}: {entry: {slug: string;
       {present && presenter && <PresenterView popup={presenter} slides={visible} position={position} assets={assets} outlined={publicView}/>}
       {printing && <div className="print-deck">
         {/* PDF pages follow the 판형: 320mm wide, height from the sheet ratio. */}
-        <style>{`@page{size:320mm ${(320 * height / 1920).toFixed(2)}mm}@media print{.print-slide,.print-slide .slide-viewport{height:${(320 * height / 1920).toFixed(2)}mm}}`}</style>
+        <style>{`@page{size:320mm ${(320 * height / 1920).toFixed(2)}mm}.print-slide,.print-slide .slide-viewport{height:${(320 * height / 1920).toFixed(2)}mm}`}</style>
         {visible.map((s, i) => (
           <section key={s.id} className="print-slide">
             <SlideView slide={s} number={i + 1} assets={assets} print />

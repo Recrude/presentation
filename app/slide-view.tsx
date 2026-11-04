@@ -335,6 +335,12 @@ function EmbedFrame({ slide, playing }: { slide: Slide; playing: boolean }) {
   />;
 }
 
+// The page's area on the 1920 sheet, inside the window (52pt toolbar, 1pt border) or the margins: a capture
+// taken at this size fills it exactly, however the margins have changed.
+export function pageViewport(slide: Slide, height: number) {
+  const box = pageBox(slide, height), framed = slide.kind === 'web' && slide.frame === 'browser';
+  return { w: Math.round(box.width - (framed ? 2 : 0)), h: Math.round(box.height - (framed ? 54 : 0)) };
+}
 function browserFrame(slide: Slide, live: boolean, preview: string, content: ReactNode) {
   return slide.kind === 'web' && slide.frame === 'browser' ? <BrowserFrame slide={slide} live={live} preview={preview}>{content}</BrowserFrame> : content;
 }

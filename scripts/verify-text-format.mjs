@@ -240,10 +240,29 @@ try {
   }
 
   // PDF pages follow the 판형 (320mm wide).
-  await page.evaluate(() => { window.print = () => { window.__printed = document.querySelector('.print-deck style')?.textContent; }; });
+  // The print dialog takes the pages as they are when print() is called (no script runs while printing):
+  // a copy of them at that moment becomes a real PDF, where the tabs must still reach their stops.
+  await page.evaluate(() => { window.print = () => {
+    const deck = document.querySelector('.print-deck');
+    window.__printed = deck?.querySelector('style')?.textContent;
+    document.body.append(deck.cloneNode(true));
+  }; });
   await button('PDF');
   await page.waitForFunction(() => window.__printed !== undefined, { timeout: 30000 });
   assert.match(await page.evaluate(() => window.__printed), /size:320mm 240\.00mm/);
+  await page.waitForFunction(() => document.querySelectorAll('.print-deck').length === 1);
+  const pdf = path.join(out, 'deck.pdf');
+  fs.writeFileSync(pdf, await page.pdf({ preferCSSPageSize: true, printBackground: true }));
+  // Words of the tabbed pages with their left edges in sheet px (the page is 320mm, 1920 sheet px, wide).
+  const { execFileSync } = await import('node:child_process');
+  const words = page => [...execFileSync('pdftotext', ['-bbox', '-f', page, '-l', page, pdf, '-']).toString()
+    .matchAll(/<word xMin="([\d.]+)"[^>]*>([^<]+)<\/word>/g)].map(([, x, text]) => ({ x: +x / (320 / 25.4 * 72) * 1920, text }));
+  const gap = (list, from, to) => { const a = list.find(w => w.text === from), b = list.find(w => w.text === to); return a && b ? +(b.x - a.x).toFixed(1) : null; };
+  const page1 = words(cases.length + 1), page2 = words(cases.length + 2);
+  const printed = [gap(page1, "전시", "제"), gap(page1, "A", "B"), gap(page2, "기타", "두"), gap(page2, "격자", "열두")];
+  // The words start at their stops, give or take a glyph's side bearing.
+  printed.forEach((g, i) => assert.ok(g !== null && Math.abs(g - [240, 480, 480, 240][i]) <= 6, `tabs in the PDF: ${JSON.stringify(printed)}`));
+  console.log('PDF tab gaps', printed);
   assert.deepEqual(errors, []);
   console.log('text margins and 판형 verified ·', out);
 } finally {

@@ -26,9 +26,8 @@ const seq = path.join(work, 'seq');
 fs.mkdirSync(seq);
 const image = (name, color, size) => execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', `color=c=${color}:s=${size}:d=1`, '-frames:v', '1', path.join(seq, name)]);
 image('a.png', 'red', '1600x900'); image('b.png', 'green', '900x1200'); image('c.png', 'blue', '1200x900');
-// The capture of the web page (answered for the capture API) and the page itself.
-execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=gray:s=1440x900:d=1', '-frames:v', '1', path.join(work, 'capture.png')]);
-const capture = fs.readFileSync(path.join(work, 'capture.png'));
+// Captures of the web page (answered for the capture API at the size asked) and the page itself.
+const captures = [], captured = (w, h) => execFileSync('ffmpeg', ['-loglevel', 'error', '-f', 'lavfi', '-i', `color=c=gray:s=${w}x${h}:d=1`, '-frames:v', '1', '-f', 'image2pipe', '-c:v', 'png', '-']);
 const registry = { version: 1, items: catalogEntries.map(e => ({ id: e.id, public: true })) };
 const blobs = new Map(), files = new Map();
 let pending = [];
@@ -55,7 +54,12 @@ try {
   page.on('request', async req => {
     const url = new URL(req.url());
     if (url.pathname.endsWith('/decks/catalog.json')) return req.respond({ status: 200, contentType: 'application/json', body: JSON.stringify(registry) });
-    if (url.pathname.endsWith('/api/capture')) return req.respond({ status: 200, contentType: 'image/png', headers: { 'X-Toolbar-Color': '#ffffff' }, body: capture });
+    if (url.pathname.endsWith('/api/capture')) {
+      // Asked at the size the slide shows the page: answered as a picture of exactly that size.
+      const w = +url.searchParams.get('w'), h = +url.searchParams.get('h');
+      captures.push([w, h]);
+      return req.respond({ status: 200, contentType: 'image/png', headers: { 'X-Toolbar-Color': '#ffffff' }, body: captured(w, h) });
+    }
     if (url.hostname === 'caption.test') return req.respond({ status: 200, contentType: 'text/html', body: '<body style="margin:0;background:#888"></body>' });
     if (url.pathname.endsWith('/api/publish/')) {
       try { return req.respond({ status: 200, contentType: 'application/json', body: JSON.stringify(await executePublish(JSON.parse(req.postData()), git, 'test-secret')) }); }
@@ -206,6 +210,8 @@ try {
   await button('링크 추가');
   await status('캡처 완료');
   await page.waitForFunction(() => document.querySelectorAll('.card').length === 3);
+  // The page inside the window at margin 48: 1920 − 96 − the 1 px border each side, 1080 − 96 − the 52 px toolbar and border.
+  assert.deepEqual(captures.at(-1), [1822, 930], 'captured at the window page size');
   assert.equal(await page.$$eval('.properties label', l => l.some(x => x.textContent.startsWith('캡션 정렬'))), false, 'no 캡션 정렬 before a caption');
   await page.focus('textarea[aria-label="캡션"]');
   await page.keyboard.type('caption.test\n웹 페이지 2026');
@@ -222,6 +228,13 @@ try {
   await page.evaluate(() => [...document.querySelectorAll('.properties label.check')].find(l => l.textContent.includes('브라우저 창')).querySelector('input').click());
   await page.evaluate(() => { const i = document.querySelector('.field input[aria-label="바깥 여백"]'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(i, '64'); i.dispatchEvent(new Event('input', { bubbles: true })); });
   await choose('캡션 정렬', 'center');
+  // After the margin and caption changed, 캡처 갱신 takes the new size (the page inside margin 64, above the
+  // two-line caption room) and the picture fills its box uncut.
+  await button('캡처 갱신', '.properties');
+  await status('캡처 완료');
+  assert.deepEqual(captures.at(-1), [1920 - 128, 1080 - 128 - 60], 'captured again at the new page size');
+  const fit = await page.$eval('.preview .capture-preview', i => [i.naturalWidth / i.naturalHeight, i.clientWidth / i.clientHeight]);
+  close(fit[0], fit[1], 0.005, 'the capture has its box\'s proportions');
   await select(3);
   await present();
   const plain = await pageRect('.slide-inset');

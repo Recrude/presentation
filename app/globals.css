@@ -423,8 +423,24 @@ aside {
   opacity: .65;
   pointer-events: auto;
 }
+/* PDF pages: laid out off screen and unseen while the PDF is prepared, at their printed size, so text
+   slides measure their tabs and ink margins before print() (the print dialog runs no script). */
 .print-deck {
-  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: -1;
+}
+.print-slide {
+  width: 320mm;
+  height: 180mm;
+  overflow: hidden;
+}
+.print-slide .slide-viewport {
+  width: 320mm;
+  height: 180mm;
 }
 @media (min-width: 1800px) {
   .grid {
@@ -532,14 +548,12 @@ aside {
     display: none !important;
   }
   .print-deck {
-    display: block;
+    position: static;
+    visibility: visible;
   }
   .print-slide {
-    width: 320mm;
-    height: 180mm;
     break-after: page;
     break-inside: avoid;
-    overflow: hidden;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
@@ -548,10 +562,6 @@ aside {
   }
   .print-slide .embed-placeholder {
     font-size: 14pt;
-  }
-  .print-slide .slide-viewport {
-    width: 320mm;
-    height: 180mm;
   }
   .print-slide .new-folio {
     font-size: 12pt;

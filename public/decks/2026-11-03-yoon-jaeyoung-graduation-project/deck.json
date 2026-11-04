@@ -1,7 +1,3139 @@
 {
   "version": 1,
   "slug": "2026-11-03-yoon-jaeyoung-graduation-project",
-  "slides": [],
-  "assets": {},
-  "publishedAt": ""
+  "slides": [
+    {
+      "id": "9d52783a-8947-4c7c-a348-7e7c3d94f356",
+      "title": "표지: 명함",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "405d943b-9b6c-4da0-9125-da3dce4d483b",
+          "name": "개인 아카이빙 플랜_대지 1 사본 14.png",
+          "width": 4500,
+          "height": 5625
+        }
+      ],
+      "layout": "rows"
+    },
+    {
+      "id": "3b749c8a-adb4-4824-9f54-b89b8ef2e8ba",
+      "title": "jaeyeonkim.kr",
+      "kind": "web",
+      "src": "https://jaeyeonkim.kr/",
+      "frame": "browser",
+      "hidden": false,
+      "autoplay": true,
+      "controls": true,
+      "muted": true,
+      "margin": {
+        "top": 96,
+        "right": 320,
+        "bottom": 96,
+        "left": 320
+      },
+      "previewId": "bdd6e343-614b-4130-9d9d-3cb64f352fd9",
+      "tint": "#000000"
+    },
+    {
+      "id": "56613b7e-0e98-4ae5-a065-d6a0d8f20663",
+      "title": "2609_1p_overview",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "de07b00a-629d-4408-b6d6-843b52046f7f",
+          "name": "2609_1p_overview.jpg",
+          "width": 8000,
+          "height": 4500
+        }
+      ],
+      "margin": 96
+    },
+    {
+      "id": "f0a5dc9f-0df7-4c1b-bd3a-53df3c18802f",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "시각  Visual \t공학  Engineering\t디자인  Design\n\n감각하는 몸, 작용하는 힘에 반응하는 매체를 만듭니다.\nMediate senses with technology in visual media.\n\n",
+      "typo": {
+        "size": 60,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -45,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "composite": "bold",
+        "tabSize": 144
+      },
+      "previewId": "284cd091-4d44-4d11-a8c1-775d456d610c"
+    },
+    {
+      "id": "7927ae23-e050-4030-a3d6-9d0be783d241",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "시각 공학 Visual Engineering\t디자인  Design\n\n시각\tVisual\t\t\t\t디자인  Design\n\tGraphic Typography\t\t\t    미학적인 Aesthetic\n\tCommunication\t\t\t\t    감상적인 Imagery\n\n공학\tEngineering\t\t\t디자인  Design\n\tComputing Programming\t\t    설계적인 Architectural\n\tInteractive Media\t\t\t    이성적인 Logical\n",
+      "typo": {
+        "size": 60,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -45,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "composite": "bold",
+        "tabSize": 144
+      },
+      "previewId": "0df075f5-ba55-4eb9-9a81-67fe4b101fc7"
+    },
+    {
+      "id": "210c7606-ce2c-46b6-a1c9-d356d12b5a66",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "나는 \t\t어떤 사람이고\n\t\t무엇에 관심이 많으며\n\t\t왜 이것을 하고 있는가?\n\n무엇을?  어떻게?  왜?",
+      "typo": {
+        "size": 64,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "composite": "bold",
+        "tabSize": 144
+      },
+      "previewId": "eaa5f60f-47d2-4baa-8dc5-2eb20ede2ade"
+    },
+    {
+      "id": "69bb368f-e508-40ba-86c8-194e4f066c7c",
+      "title": "2022.05-pigment",
+      "kind": "sequence",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "841add46-7090-4a6e-91df-46101de5795a",
+          "name": "p64-02.webp",
+          "width": 1818,
+          "height": 2560,
+          "caption": "2022 홍익대학교 미술대학 도예유리과 졸업전시 《Pigment》",
+          "captionId": "a97fe66b-419e-4481-b386-6fcb99c8655d"
+        },
+        {
+          "id": "856f2df7-c549-4ecc-a520-ee6a69de1be7",
+          "name": "p65-01.webp",
+          "width": 1707,
+          "height": 2560,
+          "caption": "홍익대학교 미술대학 도예유리과 졸업전시 《Pigment》, 2022",
+          "captionId": "b3675e76-7839-48f2-8b8d-95c12e4ccf51"
+        },
+        {
+          "id": "dac84052-7df9-4855-b033-130ee7bacb71",
+          "name": "p65-02.webp",
+          "width": 1706,
+          "height": 2560,
+          "joined": true
+        },
+        {
+          "id": "2d133dc8-3a43-4b38-bc8d-5a561a9b9798",
+          "name": "p66-01.webp",
+          "width": 1707,
+          "height": 2560,
+          "caption": "홍익대학교 미술대학 도예유리과 졸업전시 《Pigment》, 2022",
+          "captionId": "d3765e0f-6bea-40af-a8d1-4b25c3bbdfff"
+        },
+        {
+          "id": "3ca759e2-f67e-46f2-8dd8-f874ab1981e4",
+          "name": "p66-02.webp",
+          "width": 1709,
+          "height": 2560,
+          "joined": true
+        },
+        {
+          "id": "a0932199-24f9-4f2b-a044-7b523a62ffd2",
+          "name": "p67-01.webp",
+          "width": 1181,
+          "height": 1748,
+          "caption": "홍익대학교 미술대학 도예유리과 졸업전시 《Pigment》, 2022",
+          "captionId": "b3014b7b-7816-4d8a-bea6-6eb926ec8c73"
+        },
+        {
+          "id": "06a52260-2883-43fc-889d-1c518962e23d",
+          "name": "p67-02.webp",
+          "width": 1181,
+          "height": 1748,
+          "joined": true
+        },
+        {
+          "id": "6aae90c0-f0bb-4e12-9f86-0703aa4d49e5",
+          "name": "p67-03.webp",
+          "width": 1181,
+          "height": 1748,
+          "joined": true
+        }
+      ],
+      "interval": 800,
+      "end": "loop",
+      "layout": "rows",
+      "margin": 128
+    },
+    {
+      "id": "67efc056-8888-4949-9650-91700e6d6275",
+      "title": "r777-dice-roll.vercel.app",
+      "kind": "web",
+      "src": "https://r777-dice-roll.vercel.app/",
+      "frame": "browser",
+      "hidden": false,
+      "autoplay": true,
+      "controls": true,
+      "muted": true,
+      "margin": {
+        "top": 80,
+        "right": 480,
+        "bottom": 80,
+        "left": 480
+      },
+      "previewId": "21974faa-4d48-4414-ae94-b4810075c9a7",
+      "tint": "#ffffff",
+      "caption": "2021 홍익대학교 시각디자인과 졸업주간 《R777》",
+      "captionId": "c13a40de-1af6-4e16-8663-2138aeee42e9"
+    },
+    {
+      "id": "d5394993-8fd7-4af0-ab33-8b00266d70e7",
+      "title": "sidi-hongik-newsletter.xyz",
+      "kind": "web",
+      "src": "https://sidi-hongik-newsletter.xyz/",
+      "frame": "browser",
+      "hidden": false,
+      "autoplay": true,
+      "controls": true,
+      "muted": true,
+      "margin": {
+        "top": 48,
+        "right": 480,
+        "bottom": 48,
+        "left": 480
+      },
+      "previewId": "e5fcf7d9-d6a2-46df-b2f7-9108a9f78969",
+      "tint": "#ffffff",
+      "caption": "홍익시디 소식지, 2021",
+      "captionId": "d3e6c229-07f5-4387-8536-ff95b070c8a2"
+    },
+    {
+      "id": "0ef687bb-3a0b-4763-bb10-891fc850a529",
+      "title": "sidi-hongik-newsletter.xyz",
+      "kind": "web",
+      "src": "https://sidi-hongik-newsletter.xyz/2021-08",
+      "frame": "browser",
+      "hidden": false,
+      "autoplay": true,
+      "controls": true,
+      "muted": true,
+      "margin": {
+        "top": 48,
+        "right": 480,
+        "bottom": 48,
+        "left": 480
+      },
+      "previewId": "36fc917a-8bd5-443e-aa04-8c3ef4ac6f2f",
+      "tint": "#ffffff",
+      "caption": "홍익시디 소식지, 2021",
+      "captionId": "615bc3f1-2a02-4c6f-ad24-41163abc1560"
+    },
+    {
+      "id": "93984c62-56da-4594-b7df-d9c6410b6828",
+      "title": "my computer has a virus",
+      "kind": "web",
+      "src": "https://player.vimeo.com/video/496745199?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&muted=1",
+      "hidden": false,
+      "autoplay": true,
+      "controls": true,
+      "muted": true,
+      "margin": 96,
+      "from": 26,
+      "caption": "〈My Computer Has a Virus〉, 2020",
+      "captionId": "a874d539-71fb-44b5-81a8-732e850030ac"
+    },
+    {
+      "id": "d16ef20f-30c2-4da8-9cb7-cfe4222d69e0",
+      "title": "흐름지각",
+      "kind": "sequence",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "5bc86976-1707-4506-8397-ad5d3fdd7686",
+          "name": "01.jpg",
+          "width": 1080,
+          "height": 1080,
+          "caption": "〈흐름지각〉, 2019",
+          "captionId": "28236629-c92e-42ba-ba38-8709474f86d7"
+        },
+        {
+          "id": "35133cf2-c488-4dfe-a6ec-f49f832abd3d",
+          "name": "05.jpg",
+          "width": 960,
+          "height": 960,
+          "caption": "〈흐름지각〉, 2019",
+          "captionId": "b87bc9c0-c20b-4054-afcf-96bcff2b003f"
+        },
+        {
+          "id": "ee673034-6d5d-4135-9bb7-271a83d23805",
+          "name": "06.jpg",
+          "width": 960,
+          "height": 960,
+          "joined": true
+        },
+        {
+          "id": "8b4e2a6e-0333-4b5e-a3e2-0035cc979c30",
+          "name": "07.jpg",
+          "width": 960,
+          "height": 960,
+          "joined": true
+        },
+        {
+          "id": "c450eff9-8b69-41ca-97f6-280bba18e6a4",
+          "name": "03.mp4",
+          "width": 720,
+          "height": 720,
+          "video": true,
+          "poster": "88a2b654-bec2-43c4-9593-6476ddfed5e9",
+          "length": 12.17,
+          "caption": "〈흐름지각〉, 2019",
+          "captionId": "3cf4c612-eddd-47fe-83a4-dfa7f8f47cfd"
+        },
+        {
+          "id": "9c9e628a-1edb-43b0-b9e5-6873a169af2c",
+          "name": "10.mp4",
+          "width": 720,
+          "height": 720,
+          "video": true,
+          "poster": "d445e1ce-314d-4332-be95-d51f246fe3d2",
+          "length": 22.04,
+          "joined": true
+        }
+      ],
+      "interval": 2000,
+      "end": "loop",
+      "layout": "rows",
+      "margin": 192
+    },
+    {
+      "id": "200fb915-f2cf-4518-92a7-0077471b12ba",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "**①\t인터랙티브 미디어아트는 좋아하는데\n\t왜 IxD는 유독 관심이 없을까?**\n\n**②**\t내가 하려는 것은 디자인이 아니라 예술인가?\n",
+      "typo": {
+        "size": 64,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "tabSize": 144
+      },
+      "previewId": "2f15bab5-fc79-470f-bd9e-77fc2ac53dc4"
+    },
+    {
+      "id": "20101998-f056-4950-b911-82a88765a111",
+      "title": "9788995257616",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "9ab8735c-19b3-4cfd-a0b3-cb3e43651df5",
+          "name": "9788995257616.jpg",
+          "width": 400,
+          "height": 587,
+          "caption": "『헤르츠 이야기』  Anthony Dunne",
+          "captionId": "d12338d2-6ef7-4b6a-905a-6f2e37c0b085"
+        },
+        {
+          "id": "3bd2c2ae-228b-4fdd-87c2-2899d3ab1d59",
+          "name": "speculative-design.jpeg",
+          "width": 860,
+          "height": 1200,
+          "caption": "『스페큘러티브 디자인』  Anthony Dunne & Fiona Raby",
+          "captionId": "02f9dc34-0399-4496-9444-d2efd6d91109"
+        }
+      ],
+      "interval": 400,
+      "end": "loop",
+      "layout": "rows",
+      "margin": 192,
+      "gap": 128
+    },
+    {
+      "id": "2e462412-ff07-45cc-b7d2-a64b1ec15d9c",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "**탈—최적화된 사물  Post—Optimal Object**\n\n기능, 성능, 사용성은 이미 충분히 최적화된\n그다음 디자인이 할 일은 성능을 더 올리는 게 아니라 \n일상에 시적이고 비판적인 경험을 주는 것\n\n사용자 비친화성(user-unfriendliness)\n준기능성(para-functionality)\n허구적 기능 / 기능적 허구",
+      "typo": {
+        "size": 64,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "tabSize": 144
+      },
+      "previewId": "bc73d281-2bf3-47e0-8920-d53e3185bfe9"
+    },
+    {
+      "id": "61198384-b742-4038-9e2b-837e659a6d1f",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "디자인을 문제를 푸는 도구가 아니라, \n사람들이 \"**어떤 미래를 원하는가, 또 원하지 않는가**\"를 \n**상상하고 토론하게 만드는 매체**로\n\n**비판적·사변적 디자인**\n기존의 긍정의 디자인의 대체가 아닌 공존의 필요성",
+      "typo": {
+        "size": 64,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "tabSize": 144
+      },
+      "previewId": "11125a04-832b-4b97-a9dd-a6268c13b57e"
+    },
+    {
+      "id": "d7334084-0760-43f5-9459-4b8e9eedd2c4",
+      "title": "way",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "96c747d1-c434-4bf9-8ce5-c9c1ea22fca7",
+          "name": "way.png",
+          "width": 3336,
+          "height": 1575
+        }
+      ],
+      "layout": "rows"
+    },
+    {
+      "id": "fd202b04-2257-48d0-adb7-4b91e79a434c",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "**①**\t인터랙티브 미디어아트는 좋아하는데\n\t왜 IxD는 유독 관심이 없을까?\n\n**②\t내가 하려는 것은 디자인이 아니라 예술인가?**\n",
+      "typo": {
+        "size": 64,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "tabSize": 144
+      },
+      "previewId": "747690fb-ad7e-4ae3-8049-cd28ed594671"
+    },
+    {
+      "id": "805ddb9f-775d-47a6-a8b0-79a1a41d5fbf",
+      "title": "whitecube",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "5b78eac9-3cbd-495a-8add-e8bb3bd0d067",
+          "name": "whitecube.jpeg",
+          "width": 363,
+          "height": 550,
+          "caption": "『누가 화이트 큐브를 두려워하랴』  최성민 · 최슬기",
+          "captionId": "74132222-bab9-46ed-bd6f-939939482d58"
+        },
+        {
+          "id": "eefbe05d-fa7a-451b-8295-972bb3e08ecc",
+          "name": "K262837709_b.jpg",
+          "width": 500,
+          "height": 750
+        }
+      ],
+      "layout": "rows",
+      "margin": 192,
+      "gap": 48
+    },
+    {
+      "id": "f1274294-f26e-458f-a16e-034c9ab7cf9a",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "디자인과 작품\t디자이너의 작품\n\t\t\t작가의 작품\n\n디자인과 전시\t디자이너의 전시\n\t\t\t작가의 전시\n\n\n",
+      "typo": {
+        "size": 64,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "composite": "bold",
+        "tabSize": 160
+      },
+      "previewId": "17838b32-b266-4176-b568-1edf3f63d1c7"
+    },
+    {
+      "id": "2972175d-f0b7-43f3-af83-4edfc5c72ebe",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "디자인과 작품\t디자이너의 작품\n\t\t\t작가의 작품\n\n디자인과 전시\t디자이너의 전시\n\t\t\t작가의 전시\n \n  **ㅤ\n전하려는 메시지의 발원점이 어디에 있는가?\n디자인을 전시하려는 목적은 무엇인가?**\n\n",
+      "typo": {
+        "size": 64,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "tabSize": 160
+      },
+      "previewId": "29e98eab-c921-4fa5-a1ae-8ecb7e8886a1"
+    },
+    {
+      "id": "9f492b19-881e-4df4-af6f-8c6daf2cebe6",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "개발  Programming\t\t연산\tComputation\n\t\t\t\t\t생성\tGeneration\n\n디자인  Design\n\n",
+      "typo": {
+        "size": 64,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "composite": "bold",
+        "tabSize": 160
+      },
+      "previewId": "2d9f957c-5cc7-4d73-8865-3e3f046c16a2"
+    },
+    {
+      "id": "99c02fd2-dbd2-42ac-8a34-418abe2b9039",
+      "title": "9780262632447",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "829b47e5-1c6c-4128-9fe4-14c4e7f40eaa",
+          "name": "9780262632447.jpg",
+          "width": 400,
+          "height": 406,
+          "caption": "『Design By Numbers』  John Maeda",
+          "captionId": "87a61ec0-6932-4f30-b36d-f0527fd18dfb"
+        },
+        {
+          "id": "d4d803f1-dd15-4828-9a25-7fde9063519c",
+          "name": "designing-programmes.jpeg",
+          "width": 846,
+          "height": 1200,
+          "caption": "『Designing Programmes』  Karl Gerstner",
+          "captionId": "5bb137a7-0d2c-4a30-bacf-dd67e16384df"
+        },
+        {
+          "id": "de743f9e-0d13-424c-8f95-f3fd52806053",
+          "name": "codeascm.avif",
+          "width": 596,
+          "height": 464,
+          "caption": "『Code as Creative Medium』  MIT Press",
+          "captionId": "a4c7e103-9ba4-4655-b019-1cb177fc6e28"
+        }
+      ],
+      "interval": 400,
+      "end": "loop",
+      "layout": "rows",
+      "margin": 192,
+      "gap": 64
+    },
+    {
+      "id": "48309423-9830-4d05-bc2c-8bad78213a41",
+      "title": "kyuhashim.com",
+      "kind": "web",
+      "src": "https://kyuhashim.com/",
+      "frame": "browser",
+      "hidden": false,
+      "autoplay": true,
+      "controls": true,
+      "muted": true,
+      "margin": {
+        "top": 96,
+        "right": 240,
+        "bottom": 96,
+        "left": 240
+      }
+    },
+    {
+      "id": "c9c7190d-4c36-4167-84f0-3d9ad8b0d3af",
+      "title": "eroonkang.com",
+      "kind": "web",
+      "src": "https://eroonkang.com/",
+      "frame": "browser",
+      "hidden": false,
+      "autoplay": true,
+      "controls": true,
+      "muted": true,
+      "previewId": "ac8cc183-5e1c-4dd6-9f6e-3d57dea0798e",
+      "tint": "#ffffff",
+      "margin": {
+        "top": 96,
+        "right": 240,
+        "bottom": 96,
+        "left": 240
+      }
+    },
+    {
+      "id": "f1ad048a-bfb7-4dfa-bac8-faedabc6bbf2",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "**Computational Design**\n\t연산적 사고를 기반으로 한 구조를 통해 디자인하는\n\n**디자인 도구 비평**\n\t우리의 삶을 지탱하는 수 많은 사회의 시스템 안에서\n\t도구의 역할과 의미",
+      "typo": {
+        "size": 64,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "tabSize": 160
+      },
+      "previewId": "c86763fc-357a-4824-8b21-37101ac1352a"
+    },
+    {
+      "id": "c5fa2f66-0dda-49f2-b50f-b15832d83621",
+      "title": "scm22866496042",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "15aae44f-030e-4edd-80df-48a746cb0025",
+          "name": "scm22866496042.jpg",
+          "width": 1600,
+          "height": 1600,
+          "caption": "『몸짓과 멋짓』  안병학",
+          "captionId": "d7e4d5df-818b-430e-8cc5-269f67ab7fa1"
+        },
+        {
+          "id": "99fcaf41-5f12-4ce5-9997-bf4c425bb36d",
+          "name": "scm22866496014.jpg",
+          "width": 1600,
+          "height": 1600
+        }
+      ],
+      "layout": "rows",
+      "margin": 192,
+      "gap": 48
+    },
+    {
+      "id": "9457728a-2a81-42bb-896e-026cd4cd72d9",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "디자인의 창의성은 \n머리(관념, 계량, 문자)에서가 아니라 \n몸(감각, 움직임, 접촉)에서 나온다",
+      "typo": {
+        "size": 64,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "composite": "bold",
+        "tabSize": 144
+      },
+      "previewId": "f34d672c-4e63-420d-ab66-159eaab73908"
+    },
+    {
+      "id": "938d0266-ffef-453e-aab6-646ab9fcc7d6",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "내가 하고싶은 디자인은 어떤 디자인인가?\n\n\n디자인이 태도에 관한 것이라면\n나의 태도와 관심사를 어떻게 가장 효과적으로 보여줄 수 있을까?\n\n특정 매체 안에 갇혀 가상의 것을 만들기보다 \n전시의 환경에 더 효과적일 수 있는 매체는 무엇인가?",
+      "typo": {
+        "size": 64,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "composite": "bold",
+        "tabSize": 160
+      },
+      "previewId": "be289a49-0c9a-403a-9fd6-df53802349c8"
+    },
+    {
+      "id": "48577cb7-83ca-48d8-b56a-8c802482e133",
+      "title": "명함 2025_",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "57440f69-6ab7-4242-a1b2-4d60a146189a",
+          "name": "명함 2025_.png",
+          "width": 1004,
+          "height": 638
+        },
+        {
+          "id": "12057084-b66a-4409-9b00-5e3d710850da",
+          "name": "명함 2025_2.png",
+          "width": 1004,
+          "height": 638
+        }
+      ],
+      "interval": 400,
+      "end": "loop",
+      "layout": "rows",
+      "margin": 192,
+      "gap": 96
+    },
+    {
+      "id": "26d2ffe6-c341-43b7-b21b-659cad2c5c7c",
+      "title": "동아리주간장표14",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "e6d3b42e-cef2-47d3-912a-e92cdf86e469",
+          "name": "동아리주간장표14.png",
+          "width": 4000,
+          "height": 2250
+        }
+      ],
+      "layout": "rows"
+    },
+    {
+      "id": "d5db7b8b-75eb-45a2-8d40-edd708f21e3c",
+      "title": "동아리주간장표15",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "e3738b54-7181-40bb-b87c-20e34c01d44f",
+          "name": "동아리주간장표15.png",
+          "width": 4000,
+          "height": 2250
+        }
+      ],
+      "layout": "rows"
+    },
+    {
+      "id": "012c6738-34f5-4b3a-b0fa-661e6c508561",
+      "title": "동아리주간장표16",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "ab800024-c695-49a8-a92e-97d33b794e7b",
+          "name": "동아리주간장표16.png",
+          "width": 4000,
+          "height": 2250
+        }
+      ],
+      "layout": "rows"
+    },
+    {
+      "id": "567a5f2d-dd15-4aef-bd46-8004e915d734",
+      "title": "동아리주간장표17",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "70c1ede8-2f02-4620-a51a-061f8a439f9b",
+          "name": "동아리주간장표17.png",
+          "width": 4000,
+          "height": 2250
+        }
+      ],
+      "layout": "rows"
+    },
+    {
+      "id": "ddea4f20-371a-4cc5-86c5-c8d8cf1added",
+      "title": "동아리주간장표18",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "4ee73edc-f6f3-47d8-84c5-18a9ddefd99b",
+          "name": "동아리주간장표18.png",
+          "width": 4000,
+          "height": 2250
+        }
+      ],
+      "layout": "rows"
+    },
+    {
+      "id": "4b8ba89a-873a-4af8-975e-ea0b3160af01",
+      "title": "동아리주간장표19",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "172d8b8a-550b-45c8-b5b1-f2dcc6fc9976",
+          "name": "동아리주간장표19.png",
+          "width": 4000,
+          "height": 2250
+        }
+      ],
+      "layout": "rows"
+    },
+    {
+      "id": "27bac13e-e83f-44cc-bcf3-27ae1103d194",
+      "title": "동아리주간장표20",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "61547351-608b-4e59-a7bd-d40b82420bd0",
+          "name": "동아리주간장표20.png",
+          "width": 4000,
+          "height": 2250
+        }
+      ],
+      "layout": "rows"
+    },
+    {
+      "id": "576224b8-4a6e-4cd0-8c02-9231c2d3d688",
+      "title": "What are you doing now?",
+      "kind": "web",
+      "src": "https://whatareyoudoingnow.vercel.app/",
+      "frame": "browser",
+      "hidden": false,
+      "autoplay": true,
+      "controls": true,
+      "muted": true,
+      "margin": 96,
+      "previewId": "0e9c9e6f-6b47-4406-a3af-892eb726f674",
+      "tint": "#000000"
+    },
+    {
+      "id": "b7b58361-abe2-4b3f-8f18-ee25b04abf0c",
+      "title": "strangeInterface_white",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "bd6c19ee-d1dd-4a2c-bd93-c0553bae8996",
+          "name": "strangeInterface_white.png",
+          "width": 3544,
+          "height": 1418
+        }
+      ],
+      "layout": "rows",
+      "margin": 400
+    },
+    {
+      "id": "79b419be-f2ed-4eb6-93a6-4801be848fd5",
+      "title": "p25-01",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "de271a33-14e8-40d1-8151-dae2e67d3afb",
+          "name": "p25-01.webp",
+          "width": 1707,
+          "height": 2560
+        },
+        {
+          "id": "058214ae-2a84-49a2-b31e-03cda09d49a4",
+          "name": "p25-02.webp",
+          "width": 1711,
+          "height": 2560
+        }
+      ],
+      "interval": 400,
+      "end": "loop",
+      "layout": "rows",
+      "margin": 128,
+      "gap": 64
+    },
+    {
+      "id": "2b528eb9-3ba4-4bcf-b538-ac4e5dd408d6",
+      "title": "p26-01",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "dc85e338-78f2-43a2-9e8f-842d52ab938b",
+          "name": "p26-01.webp",
+          "width": 1707,
+          "height": 2560
+        },
+        {
+          "id": "5353c92d-205f-4ed8-b171-dcb92010ffa0",
+          "name": "p26-02.webp",
+          "width": 1707,
+          "height": 2560
+        }
+      ],
+      "interval": 400,
+      "end": "loop",
+      "layout": "rows",
+      "margin": 128,
+      "gap": 48
+    },
+    {
+      "id": "ff60a1ac-9836-4a0f-abcc-9a0a56ccbcca",
+      "title": "p27-01",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "83b61011-f6fb-4ee6-95a3-5edc87e46891",
+          "name": "p27-01.webp",
+          "width": 1707,
+          "height": 2560
+        },
+        {
+          "id": "eb1ad335-c610-40bb-99ec-381bbc5fb8d2",
+          "name": "p27-02.webp",
+          "width": 1707,
+          "height": 2560
+        }
+      ],
+      "interval": 400,
+      "end": "loop",
+      "layout": "rows",
+      "margin": 128,
+      "gap": 64
+    },
+    {
+      "id": "bbf2305f-964a-4023-a555-3281f4aa0ae7",
+      "title": "process-p51-55",
+      "kind": "sequence",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "5a2e37dd-1d26-48e2-bf90-e1d1acbdd08c",
+          "name": "51-1.jpg",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "id": "f5f78760-f16c-49c4-9816-0355c958bdb8",
+          "name": "51-3.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "b8c3a0d3-5a9e-4eff-93b6-d7e744e9c69c",
+          "name": "51-4.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "d4124169-8f4d-4737-af26-498d34beae9a",
+          "name": "51-5.jpg",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "id": "13876594-bc84-47a4-9e0b-334b02252b3f",
+          "name": "51-8.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "66b731e0-b269-4502-8e23-93e97c4ceb81",
+          "name": "52-1.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "af6e06c4-620b-4282-b92c-029867708a4d",
+          "name": "52-2.jpg",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "id": "5c1ea171-63b6-413d-ad7a-6a84fbf5d52e",
+          "name": "52-3.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "996d2eb2-4903-41c7-b09a-67d3a2fa7410",
+          "name": "52-4.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "672f6e13-b1f8-4789-956f-e2651169a96d",
+          "name": "52-8.jpg",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "id": "08f3c0c3-f326-4214-b0b5-feee42956605",
+          "name": "53-1.jpg",
+          "width": 1564,
+          "height": 1812,
+          "joined": true
+        },
+        {
+          "id": "0a221107-bf21-408d-a9bd-7e3cc722fdab",
+          "name": "53-2.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "6f9fcb5d-8495-463a-8b0d-ebe636bf6a94",
+          "name": "53-3.jpg",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "id": "b3bf72cd-5ce3-416f-991c-14a2bd0ffe76",
+          "name": "53-4.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "30b4fb84-0fd5-4825-a94d-9b41f135757a",
+          "name": "53-5.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "63c85b18-cefb-411c-b4bb-d009df193d45",
+          "name": "53-6.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "5a09d1ba-9300-42d6-bd8d-80b061f78aba",
+          "name": "53-7.jpg",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "id": "b670cb69-0916-4503-9aec-0cdf059299b0",
+          "name": "53-8.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "137ca2b6-6dc9-4bcb-90b7-65061cce0609",
+          "name": "54-1.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "f63740a9-b707-48ee-8d10-04882d8f389d",
+          "name": "54-2.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "1c592541-e79f-4fac-9412-42c47124f8dd",
+          "name": "54-3.jpg",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "id": "ecd0112a-12d0-4295-8072-62fb0a9680ca",
+          "name": "54-4.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "ba3e1bba-045b-4b97-91c9-769372f2972c",
+          "name": "54-5.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "b89f390f-fc79-4818-9aee-a8d6dfc68bf3",
+          "name": "54-6.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "68861d43-f023-4f14-af4e-be6056e9a94f",
+          "name": "54-7.jpg",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "id": "70788c2b-2047-45bf-b912-e1c800630399",
+          "name": "54-8.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "7196ce97-e601-4b31-b5ac-eb82ba8de6a5",
+          "name": "55-1.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "b06e9fa1-46a0-41ac-a0fa-dac6dd4a8089",
+          "name": "55-2.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "1b1cfee8-b0d5-45e3-9990-345801156cd4",
+          "name": "55-3.jpg",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "id": "20cb2259-b2bb-4ce9-b555-195b64f8d081",
+          "name": "55-4.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "79d4a2d1-db24-4040-9cfb-324f274496b9",
+          "name": "55-5.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        },
+        {
+          "id": "be1efc9e-67dd-4ece-ae1c-0906e33b0c2f",
+          "name": "55-6.jpg",
+          "width": 3024,
+          "height": 4032,
+          "joined": true
+        }
+      ],
+      "interval": 800,
+      "end": "loop",
+      "layout": "rows",
+      "margin": 128,
+      "gap": 48
+    },
+    {
+      "id": "45ae47fa-3cf9-4c4b-a973-4d19d1fe9bf2",
+      "title": "지난 12월 1일부터 6일까지, 홍익대학교 시각디자인과 졸업주간 전시를…",
+      "kind": "sequence",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "04e0954c-e484-4491-b8ea-be13df4e6932",
+          "name": "DStpydME1m2-05.jpg",
+          "width": 1440,
+          "height": 1814,
+          "duration": 4
+        },
+        {
+          "id": "32753a66-ee29-48c0-b9af-37e2f44325df",
+          "name": "DStpydME1m2-06.jpg",
+          "width": 1440,
+          "height": 1814,
+          "joined": true
+        },
+        {
+          "id": "291ecb3b-aa4f-40b5-a500-56e5af9ed347",
+          "name": "DStpydME1m2-07.jpg",
+          "width": 1440,
+          "height": 1814,
+          "joined": true
+        },
+        {
+          "id": "a9e067e7-bd99-4b52-87ff-ab91b032e339",
+          "name": "DStpydME1m2-08.mp4",
+          "width": 720,
+          "height": 908,
+          "video": true,
+          "poster": "07002559-cb6f-49a9-8f6d-c1df17694043",
+          "length": 2.63,
+          "duration": 4.6
+        },
+        {
+          "id": "679cac3f-fade-42eb-9c07-72fe6f5720b1",
+          "name": "DStpydME1m2-09.mp4",
+          "width": 716,
+          "height": 902,
+          "video": true,
+          "poster": "bd0644e1-b36e-4b93-b5b9-b992223ae914",
+          "length": 4.6,
+          "joined": true
+        },
+        {
+          "id": "996ec811-9dbe-431b-8d8f-7cdf1851d1c4",
+          "name": "DStpydME1m2-12.jpg",
+          "width": 1440,
+          "height": 1806,
+          "duration": 4
+        },
+        {
+          "id": "abaa4c7c-c81d-47f3-9378-6b98920ecde9",
+          "name": "DStpydME1m2-13.jpg",
+          "width": 1440,
+          "height": 1806,
+          "joined": true
+        },
+        {
+          "id": "88b84110-e5d2-4dbb-8753-2e7035ed737d",
+          "name": "DStpydME1m2-14.jpg",
+          "width": 980,
+          "height": 1234,
+          "duration": 4
+        },
+        {
+          "id": "91d7c58e-e219-4eda-ad96-ed1a0cdae9ae",
+          "name": "DStpydME1m2-15.jpg",
+          "width": 1440,
+          "height": 1814,
+          "joined": true
+        },
+        {
+          "id": "d62f4b1a-56bf-4605-b338-8a6347b6b843",
+          "name": "DStpydME1m2-16.jpg",
+          "width": 1440,
+          "height": 1814,
+          "joined": true
+        },
+        {
+          "id": "afc4bc81-25b3-47a5-8094-6ee85b0abcd3",
+          "name": "DStpydME1m2-17.mp4",
+          "width": 716,
+          "height": 902,
+          "video": true,
+          "poster": "e8867b4a-798d-4d93-893d-0ce95b17f429",
+          "length": 6.63
+        },
+        {
+          "id": "48560f4f-7380-4981-97dd-84856b035b60",
+          "name": "DStpydME1m2-18.jpg",
+          "width": 1440,
+          "height": 1814,
+          "joined": true
+        },
+        {
+          "id": "94502135-c341-42e8-a752-ea8c425e913f",
+          "name": "DStpydME1m2-20.jpg",
+          "width": 1440,
+          "height": 1814,
+          "joined": true
+        }
+      ],
+      "interval": 2000,
+      "end": "loop",
+      "layout": "rows",
+      "gap": 48,
+      "margin": 96
+    },
+    {
+      "id": "b4c7c265-7018-4f69-a70d-d49be452c277",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "낯섦과 불친절함\t\t\t\t\t\t익숙함과 친절함",
+      "typo": {
+        "size": 64,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "composite": "bold",
+        "tabSize": 160
+      },
+      "previewId": "7cfab02e-9ccc-4369-b5d9-cfbc0f0fcc41"
+    },
+    {
+      "id": "1e7a31ff-b9ab-42c5-b4bf-7f0e4c4b90d9",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "**낯섦과 불친절함**\t\t\t\t\t\t\n\n낯설지만 매력적인, 관심이 가는 형태\n탐구 / 체험 / 발견해보고싶은 마음을 유도\n깊게 알고 싶다면 옆에 상주하는 친절한 도슨트...",
+      "typo": {
+        "size": 64,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "tabSize": 160
+      },
+      "previewId": "5cbac608-061a-4703-bab6-38f4fe4e728c"
+    },
+    {
+      "id": "55de263b-b14b-41b0-9689-7f302651daeb",
+      "title": "p28-01",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "10bf5aa6-b786-4254-9716-b1d25c51fc12",
+          "name": "p29-01.webp",
+          "width": 1709,
+          "height": 2560,
+          "duration": 3
+        }
+      ],
+      "interval": 400,
+      "end": "loop",
+      "layout": "rows",
+      "gap": 48,
+      "margin": 48
+    },
+    {
+      "id": "b727fd9d-cdc9-4264-88c2-d7d7459e3bb7",
+      "title": "p29-02",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "a9ec10c7-0978-42a0-b08b-b4ddf6371535",
+          "name": "p29-02.webp",
+          "width": 1707,
+          "height": 2560
+        },
+        {
+          "id": "1bae7af7-7186-40af-9525-2a7350511439",
+          "name": "p30-01.webp",
+          "width": 1707,
+          "height": 2560
+        },
+        {
+          "id": "f2f428ca-999e-487b-a4ae-3cd39c821d1b",
+          "name": "p30-02.webp",
+          "width": 1706,
+          "height": 2560
+        },
+        {
+          "id": "36cddaf9-1bff-483a-a065-7f67b72e48c5",
+          "name": "p30-03.webp",
+          "width": 1706,
+          "height": 2560
+        }
+      ],
+      "interval": 400,
+      "end": "loop",
+      "layout": "rows",
+      "gap": 48
+    },
+    {
+      "id": "fc3d55a3-5c43-4cb6-bf2c-1add40418383",
+      "title": "DSC09303",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "a0362d2b-2e1c-470e-a6f4-ce667d6b8966",
+          "name": "DSC09303.JPG",
+          "width": 3000,
+          "height": 2000
+        },
+        {
+          "id": "d5e99b9a-14ee-459a-bc58-8a4bd46e1e46",
+          "name": "DSC09347.JPG",
+          "width": 3000,
+          "height": 2000
+        },
+        {
+          "id": "d02d257b-909e-4c45-974b-966b9e2c472a",
+          "name": "DSC09371.JPG",
+          "width": 3000,
+          "height": 2000
+        },
+        {
+          "id": "c4e0d92d-baac-4639-ac12-daa9939bb28e",
+          "name": "DSC09375.JPG",
+          "width": 3000,
+          "height": 2000
+        }
+      ],
+      "interval": 400,
+      "end": "loop",
+      "layout": "rows",
+      "margin": 96,
+      "gap": 48
+    },
+    {
+      "id": "d5777a50-bd46-4ff8-a674-ecdbcf876d27",
+      "title": "영상",
+      "kind": "youtube",
+      "src": "https://www.youtube-nocookie.com/embed/QIAcSGkOLDk",
+      "hidden": false,
+      "autoplay": true,
+      "controls": true,
+      "muted": true
+    },
+    {
+      "id": "c7807bd3-2615-43e0-bdd2-a36b8980bbfb",
+      "title": "p16-01",
+      "kind": "sequence",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "1fbc18b3-a562-4d69-91fe-fc6d2dc75257",
+          "name": "p17-01.webp",
+          "width": 1811,
+          "height": 2560,
+          "duration": 1
+        },
+        {
+          "id": "d563b149-b873-41ba-a362-9df318f66e9a",
+          "name": "p17-02.webp",
+          "width": 1811,
+          "height": 2560,
+          "duration": 1,
+          "joined": true
+        },
+        {
+          "id": "8eb44e78-0b99-462c-862f-fcea7a770b61",
+          "name": "p18-02.webp",
+          "width": 1810,
+          "height": 2560,
+          "duration": 1
+        },
+        {
+          "id": "12c8b4d6-8770-45c4-a69a-6229bf4b5d65",
+          "name": "p18-03.webp",
+          "width": 1810,
+          "height": 2560,
+          "duration": 1,
+          "joined": true
+        },
+        {
+          "id": "4107408d-e993-4bea-bf83-d1a95e79967e",
+          "name": "p18-01.webp",
+          "width": 1810,
+          "height": 2560,
+          "duration": 1,
+          "joined": true
+        },
+        {
+          "id": "66c641f4-939b-4842-94cb-f13cf1d13808",
+          "name": "p19-05.webp",
+          "width": 1241,
+          "height": 1748,
+          "duration": 1
+        },
+        {
+          "id": "e0fefb50-5f31-4fb1-b9ad-8e0d67469c19",
+          "name": "p19-06.webp",
+          "width": 1241,
+          "height": 1748,
+          "joined": true
+        },
+        {
+          "id": "0ffbfd6c-c01a-4bc2-9776-4c5c8fe3b6b7",
+          "name": "p19-07.webp",
+          "width": 1241,
+          "height": 1748,
+          "joined": true
+        },
+        {
+          "id": "ca8849dc-dcf2-4634-892b-fa2745794ced",
+          "name": "p19-08.webp",
+          "width": 1241,
+          "height": 1748,
+          "joined": true
+        },
+        {
+          "id": "dfeb1515-3510-4048-9a19-7a33eb9626b0",
+          "name": "p16-01.webp",
+          "width": 2000,
+          "height": 2528,
+          "duration": 1
+        },
+        {
+          "id": "17b50a43-ef17-416d-a5b7-128f663b4193",
+          "name": "p20-01.webp",
+          "width": 1707,
+          "height": 2560,
+          "joined": true
+        },
+        {
+          "id": "237131a0-268b-48ae-b0fd-f4dd1972d72b",
+          "name": "p20-02.webp",
+          "width": 1707,
+          "height": 2560,
+          "joined": true
+        },
+        {
+          "id": "dac73f71-ebf9-455b-a5ae-87841741cff0",
+          "name": "p20-03.webp",
+          "width": 1707,
+          "height": 2560,
+          "duration": 1
+        },
+        {
+          "id": "c6f0bc95-7b7e-4988-bad9-e92b48e1810f",
+          "name": "p21-01.webp",
+          "width": 1707,
+          "height": 2560,
+          "joined": true
+        },
+        {
+          "id": "052d79a2-3e08-459e-9c3d-43def2d11ff8",
+          "name": "p21-02.webp",
+          "width": 1645,
+          "height": 2460,
+          "joined": true
+        },
+        {
+          "id": "975df58f-8dca-4f6b-968f-24d5b18390e6",
+          "name": "p22-01.webp",
+          "width": 1754,
+          "height": 2481,
+          "duration": 1
+        },
+        {
+          "id": "ba2e6077-6f1b-441a-9afa-8c1b3186f829",
+          "name": "p22-02.webp",
+          "width": 1754,
+          "height": 2481,
+          "joined": true
+        },
+        {
+          "id": "5cbcdf21-7df2-4d58-b435-a80448892f85",
+          "name": "p23-01.webp",
+          "width": 1901,
+          "height": 2560,
+          "duration": 1
+        },
+        {
+          "id": "b48e9e3b-5d5b-4c7f-ba8e-87f0b3e2e9dd",
+          "name": "p23-02.webp",
+          "width": 1707,
+          "height": 2560,
+          "joined": true
+        }
+      ],
+      "interval": 400,
+      "end": "loop",
+      "layout": "rows",
+      "gap": 48,
+      "margin": 96
+    },
+    {
+      "id": "fdbb3311-fb7a-4d48-980b-44481ea14997",
+      "title": "음향형태론 전시 영상",
+      "kind": "video",
+      "src": "/media/audio-morphology.mp4",
+      "hidden": false,
+      "autoplay": true,
+      "muted": true,
+      "controls": true
+    },
+    {
+      "id": "d31ddb13-c4fe-47e8-9874-52069de5747e",
+      "title": "visual-instruments.kaist.ac.kr",
+      "kind": "web",
+      "src": "https://visual-instruments.kaist.ac.kr/",
+      "frame": "browser",
+      "hidden": false,
+      "autoplay": true,
+      "controls": true,
+      "muted": true,
+      "margin": {
+        "top": 96,
+        "right": 192,
+        "bottom": 96,
+        "left": 192
+      },
+      "previewId": "f8143e9d-3a1a-4302-a5a6-d25b9be5f925",
+      "tint": "#d7dad6"
+    },
+    {
+      "id": "4d8883ef-8544-481f-96b6-13a189fa3ebd",
+      "title": "올해 3월부터 한국과학기술원 KAIST 산업디자인학과…",
+      "kind": "sequence",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "1ba46c1d-b1f2-4594-a126-70816b649c7f",
+          "name": "DWgkhLNFGbC-02.jpg",
+          "width": 1440,
+          "height": 1920
+        },
+        {
+          "id": "b0bfaeeb-d209-4291-8277-fd4c95870cd7",
+          "name": "DWgkhLNFGbC-01.jpg",
+          "width": 1440,
+          "height": 1920,
+          "joined": true
+        },
+        {
+          "id": "e82cc278-4ff6-49e5-a668-30f996b29a99",
+          "name": "DWgkhLNFGbC-03.jpg",
+          "width": 1440,
+          "height": 1920
+        },
+        {
+          "id": "73c8ecf9-46a2-4ccf-b118-3c9cec74fa94",
+          "name": "DWgkhLNFGbC-04.jpg",
+          "width": 1440,
+          "height": 1920,
+          "joined": true
+        },
+        {
+          "id": "a9473dee-7a78-46eb-8a3e-bc17c357218e",
+          "name": "DWgkhLNFGbC-05.jpg",
+          "width": 1440,
+          "height": 1920,
+          "joined": true
+        },
+        {
+          "id": "e0897782-26c7-47eb-a555-775d78b927dd",
+          "name": "DWgkhLNFGbC-06.jpg",
+          "width": 1440,
+          "height": 1920,
+          "joined": true
+        },
+        {
+          "id": "bca32932-8f19-4d93-868a-7b1299b51cc9",
+          "name": "DWgkhLNFGbC-07.jpg",
+          "width": 1440,
+          "height": 1920
+        },
+        {
+          "id": "1ed3fa1b-5787-46c4-890e-e86d63ba3a18",
+          "name": "DWgkhLNFGbC-08.jpg",
+          "width": 1440,
+          "height": 1920,
+          "joined": true
+        },
+        {
+          "id": "1c692606-6320-4939-a78a-21b229f3b436",
+          "name": "DWgkhLNFGbC-09.jpg",
+          "width": 1440,
+          "height": 1920,
+          "joined": true
+        },
+        {
+          "id": "e80c8c0c-f6ad-4adf-8c55-6eb8cf1d8b55",
+          "name": "DWgkhLNFGbC-10.jpg",
+          "width": 1440,
+          "height": 1920,
+          "joined": true
+        }
+      ],
+      "interval": 1500,
+      "end": "loop",
+      "layout": "rows",
+      "margin": 96,
+      "gap": 48
+    },
+    {
+      "id": "bd669c2c-81be-4080-981d-9915e6669dec",
+      "title": "p08-01",
+      "kind": "sequence",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "ffe55740-cd4d-44a5-87d9-b92752e74d5d",
+          "name": "p08-01.webp",
+          "width": 2031,
+          "height": 2560
+        },
+        {
+          "id": "b6556a35-380c-49a1-9f22-0401568203df",
+          "name": "p09-01.webp",
+          "width": 1808,
+          "height": 2560
+        },
+        {
+          "id": "22bf7d15-5a45-4a4f-b609-4fea1b04fc9d",
+          "name": "p09-02.webp",
+          "width": 1808,
+          "height": 2560,
+          "joined": true
+        },
+        {
+          "id": "234a7561-0eff-4371-bee9-01f820c85ce2",
+          "name": "p09-03.webp",
+          "width": 1808,
+          "height": 2560,
+          "joined": true
+        },
+        {
+          "id": "9bc8e733-4b14-4218-927a-685e7f196961",
+          "name": "p10-01.webp",
+          "width": 2560,
+          "height": 1515
+        },
+        {
+          "id": "e83e79d6-6458-4b9f-b213-0c7202bbeb71",
+          "name": "p12-01.webp",
+          "width": 2560,
+          "height": 1707
+        },
+        {
+          "id": "8d1e0720-0f00-44e8-a378-3b337b4f2321",
+          "name": "p12-02.webp",
+          "width": 1707,
+          "height": 2560,
+          "joined": true
+        }
+      ],
+      "interval": 800,
+      "end": "loop",
+      "layout": "rows",
+      "margin": 96,
+      "gap": 48
+    },
+    {
+      "id": "44a4f810-bf02-4370-a0fe-b82158162850",
+      "title": "p04-01",
+      "kind": "sequence",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "77df37dc-86f3-4769-aa05-e56b2b021bd9",
+          "name": "p04-01.webp",
+          "width": 1805,
+          "height": 2560
+        },
+        {
+          "id": "d1fcb046-fa31-4ac0-932f-4c47f49dbde3",
+          "name": "p04-02.webp",
+          "width": 1803,
+          "height": 2560
+        },
+        {
+          "id": "923d83bb-3f48-40d3-9e6c-8dcfd001ff82",
+          "name": "p04-03.webp",
+          "width": 1810,
+          "height": 2560
+        },
+        {
+          "id": "e9bf0b63-2e73-4fdc-bc75-83df0cd09623",
+          "name": "p05-01.webp",
+          "width": 1805,
+          "height": 2560
+        },
+        {
+          "id": "b303a660-f63e-4921-b549-35ade50373b0",
+          "name": "p05-02.webp",
+          "width": 1803,
+          "height": 2560
+        },
+        {
+          "id": "5571c906-b5d3-4738-a7e6-9eda0891e1d7",
+          "name": "p05-03.webp",
+          "width": 1810,
+          "height": 2560
+        },
+        {
+          "id": "fb766f0c-093c-4d8b-a2b0-4356963f3b67",
+          "name": "p06-01.webp",
+          "width": 1805,
+          "height": 2560
+        },
+        {
+          "id": "9e90e777-2858-49af-9f73-b21ab06dae69",
+          "name": "p06-02.webp",
+          "width": 1803,
+          "height": 2560
+        },
+        {
+          "id": "1ef445d4-607d-418b-9a5d-c890db97031f",
+          "name": "p06-03.webp",
+          "width": 1803,
+          "height": 2560
+        }
+      ],
+      "interval": 800,
+      "end": "loop",
+      "layout": "rows",
+      "perFrame": 3,
+      "margin": 96,
+      "gap": 48
+    },
+    {
+      "id": "716bfae5-3235-4375-b9f5-905554c68853",
+      "title": "VED",
+      "kind": "web",
+      "src": "https://ved.kr/",
+      "frame": "browser",
+      "hidden": false,
+      "autoplay": true,
+      "controls": true,
+      "muted": true,
+      "previewId": "43d5d4e9-77a9-43f2-9bd7-fbb1bd02a47d",
+      "tint": "#e9eced",
+      "margin": {
+        "top": 96,
+        "right": 192,
+        "bottom": 96,
+        "left": 192
+      }
+    },
+    {
+      "id": "fb560209-f9a9-41b7-a4a6-fa7264b1f94d",
+      "title": "beta.nau-studio.workers.dev",
+      "kind": "web",
+      "src": "https://beta.nau-studio.workers.dev/",
+      "frame": "browser",
+      "hidden": false,
+      "autoplay": true,
+      "controls": true,
+      "muted": true,
+      "margin": {
+        "top": 96,
+        "right": 192,
+        "bottom": 96,
+        "left": 192
+      }
+    },
+    {
+      "id": "7d9fdae9-0365-4d35-91e4-2373c1293721",
+      "title": "Screenshot 2026-11-03 at 3.45.56 AM",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "7fe17a40-e210-4f88-912e-10380935741c",
+          "name": "Screenshot 2026-11-03 at 3.45.56 AM.png",
+          "width": 2754,
+          "height": 1768
+        }
+      ],
+      "layout": "rows"
+    },
+    {
+      "id": "ef23b31d-74b5-4928-9d8c-6efd72e54a44",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "전시\t\t\t\t\t\t\t\t\t\t전략",
+      "typo": {
+        "size": 64,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "composite": "bold",
+        "tabSize": 160
+      },
+      "previewId": "6ca06519-abe4-4a72-b4ce-d39ad668cf29"
+    },
+    {
+      "id": "e4c12545-f5ff-4f7e-b0df-d7ca71a59eff",
+      "title": "p16-01",
+      "kind": "sequence",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "1fbc18b3-a562-4d69-91fe-fc6d2dc75257",
+          "name": "p17-01.webp",
+          "width": 1811,
+          "height": 2560,
+          "duration": 1
+        },
+        {
+          "id": "d563b149-b873-41ba-a362-9df318f66e9a",
+          "name": "p17-02.webp",
+          "width": 1811,
+          "height": 2560,
+          "duration": 1,
+          "joined": true
+        },
+        {
+          "id": "8eb44e78-0b99-462c-862f-fcea7a770b61",
+          "name": "p18-02.webp",
+          "width": 1810,
+          "height": 2560,
+          "duration": 1
+        },
+        {
+          "id": "12c8b4d6-8770-45c4-a69a-6229bf4b5d65",
+          "name": "p18-03.webp",
+          "width": 1810,
+          "height": 2560,
+          "duration": 1,
+          "joined": true
+        },
+        {
+          "id": "4107408d-e993-4bea-bf83-d1a95e79967e",
+          "name": "p18-01.webp",
+          "width": 1810,
+          "height": 2560,
+          "duration": 1,
+          "joined": true
+        },
+        {
+          "id": "ca8849dc-dcf2-4634-892b-fa2745794ced",
+          "name": "p19-08.webp",
+          "width": 1241,
+          "height": 1748
+        },
+        {
+          "id": "66c641f4-939b-4842-94cb-f13cf1d13808",
+          "name": "p19-05.webp",
+          "width": 1241,
+          "height": 1748,
+          "duration": 5,
+          "joined": true
+        },
+        {
+          "id": "e0fefb50-5f31-4fb1-b9ad-8e0d67469c19",
+          "name": "p19-06.webp",
+          "width": 1241,
+          "height": 1748,
+          "joined": true
+        },
+        {
+          "id": "0ffbfd6c-c01a-4bc2-9776-4c5c8fe3b6b7",
+          "name": "p19-07.webp",
+          "width": 1241,
+          "height": 1748,
+          "joined": true
+        },
+        {
+          "id": "dfeb1515-3510-4048-9a19-7a33eb9626b0",
+          "name": "p16-01.webp",
+          "width": 2000,
+          "height": 2528,
+          "duration": 1
+        },
+        {
+          "id": "17b50a43-ef17-416d-a5b7-128f663b4193",
+          "name": "p20-01.webp",
+          "width": 1707,
+          "height": 2560,
+          "joined": true
+        },
+        {
+          "id": "237131a0-268b-48ae-b0fd-f4dd1972d72b",
+          "name": "p20-02.webp",
+          "width": 1707,
+          "height": 2560,
+          "joined": true
+        },
+        {
+          "id": "dac73f71-ebf9-455b-a5ae-87841741cff0",
+          "name": "p20-03.webp",
+          "width": 1707,
+          "height": 2560,
+          "duration": 1
+        },
+        {
+          "id": "c6f0bc95-7b7e-4988-bad9-e92b48e1810f",
+          "name": "p21-01.webp",
+          "width": 1707,
+          "height": 2560,
+          "joined": true
+        },
+        {
+          "id": "052d79a2-3e08-459e-9c3d-43def2d11ff8",
+          "name": "p21-02.webp",
+          "width": 1645,
+          "height": 2460,
+          "joined": true
+        },
+        {
+          "id": "975df58f-8dca-4f6b-968f-24d5b18390e6",
+          "name": "p22-01.webp",
+          "width": 1754,
+          "height": 2481,
+          "duration": 1
+        },
+        {
+          "id": "ba2e6077-6f1b-441a-9afa-8c1b3186f829",
+          "name": "p22-02.webp",
+          "width": 1754,
+          "height": 2481,
+          "joined": true
+        },
+        {
+          "id": "5cbcdf21-7df2-4d58-b435-a80448892f85",
+          "name": "p23-01.webp",
+          "width": 1901,
+          "height": 2560,
+          "duration": 1
+        },
+        {
+          "id": "b48e9e3b-5d5b-4c7f-ba8e-87f0b3e2e9dd",
+          "name": "p23-02.webp",
+          "width": 1707,
+          "height": 2560,
+          "joined": true
+        }
+      ],
+      "interval": 400,
+      "end": "loop",
+      "layout": "rows",
+      "gap": 48,
+      "margin": 96
+    },
+    {
+      "id": "dd496f22-7e60-497e-8566-48e8244090e1",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "음향형태론\t\t일반적인 전시의 형태, 기획과 큐레이션부터 시작하여 \n\t\t\t작품간의 공유 속성에 집중한 디자인\n",
+      "typo": {
+        "size": 48,
+        "leading": 84,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "composite": "bold",
+        "tabSize": 160
+      },
+      "previewId": "4a82027a-f6b0-4e2c-bcf9-8b6adb49b4af"
+    },
+    {
+      "id": "5931a42b-7133-4d5b-bbe9-109a469463e5",
+      "title": "지난 12월 1일부터 6일까지, 홍익대학교 시각디자인과 졸업주간 전시를…",
+      "kind": "sequence",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "ba466d78-8508-4c09-9d82-2b74b60c8ff7",
+          "name": "3_졸업전시_반전시-포스터.png",
+          "width": 2409,
+          "height": 3189
+        },
+        {
+          "id": "dca81822-b68f-48b8-8c90-18c23a63242f",
+          "name": "4_졸업전시_반전시-포스터.png",
+          "width": 2409,
+          "height": 3189
+        },
+        {
+          "id": "4e66f9c5-423d-49f7-8cde-c4422f1cf5d8",
+          "name": "DStpydME1m2-10.jpg",
+          "width": 1440,
+          "height": 1806
+        },
+        {
+          "id": "16d25126-4608-4d3c-a844-5ffd027624cb",
+          "name": "DStpydME1m2-11.jpg",
+          "width": 1440,
+          "height": 1806
+        },
+        {
+          "id": "8c1db9b9-f7d6-4947-8667-4c59e9a0d31e",
+          "name": "interaction_web_대지 1.png",
+          "width": 8000,
+          "height": 4500
+        }
+      ],
+      "interval": 2000,
+      "end": "loop",
+      "layout": "rows",
+      "perFrame": 2,
+      "gap": 48,
+      "margin": 96
+    },
+    {
+      "id": "f53a7009-5054-4a8c-aa8f-ca4c34dacb95",
+      "title": "What are you doing now?",
+      "kind": "web",
+      "src": "https://whatareyoudoingnow.vercel.app/",
+      "frame": "browser",
+      "hidden": false,
+      "autoplay": true,
+      "controls": true,
+      "muted": true,
+      "margin": 96,
+      "previewId": "0e9c9e6f-6b47-4406-a3af-892eb726f674",
+      "tint": "#000000"
+    },
+    {
+      "id": "26b0c3f9-ccd2-4249-a029-a7b3e4b65534",
+      "title": "2025-ahnnyeong-272",
+      "kind": "sequence",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "94cdabb0-0ba6-4cdd-a765-b3ed18374380",
+          "name": "2025-ahnnyeong-272.jpg",
+          "width": 6000,
+          "height": 4000
+        },
+        {
+          "id": "7161989a-fb11-4956-b9cf-841c6a61d84b",
+          "name": "2025-ahnnyeong-280.jpg",
+          "width": 6000,
+          "height": 4000
+        },
+        {
+          "id": "145ca218-2e43-4316-8afa-69fb96a05e30",
+          "name": "2025-ahnnyeong-281 (1).jpg",
+          "width": 6000,
+          "height": 4000
+        }
+      ],
+      "interval": 2000,
+      "end": "loop",
+      "layout": "rows"
+    },
+    {
+      "id": "cf5ddfc1-2fc4-42f7-8732-0b6a405213a2",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "음향형태론\t\t일반적인 전시의 형태, 기획과 큐레이션부터 시작하여 \n\t\t\t작품간의 공유 속성에 집중한 디자인\n\n**안녕 (ㅤㅤㅤㅤ)\t\t졸업전시의 특성, 구성원 각자의 메시지를 돋보이게 \n\t\t\t강하지 않은 조연의 역할을 맡은 디자인**\n\n",
+      "typo": {
+        "size": 48,
+        "leading": 84,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "tabSize": 160
+      },
+      "previewId": "5226af22-9d85-4b27-8932-0babb5bbdf44"
+    },
+    {
+      "id": "219357aa-eac5-458f-9483-f9d5a17b5baa",
+      "title": "p31-01",
+      "kind": "sequence",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "95c988e0-2f9e-4b03-8d76-301593d35ec7",
+          "name": "p32-02.webp",
+          "width": 2048,
+          "height": 2560
+        },
+        {
+          "id": "1fa081e8-12ea-42b7-bdae-1c0dffacddff",
+          "name": "p32-03.webp",
+          "width": 2048,
+          "height": 2560
+        },
+        {
+          "id": "adc2552b-bded-473d-8456-793a51e98af2",
+          "name": "p32-04.webp",
+          "width": 2048,
+          "height": 2560
+        },
+        {
+          "id": "c04338cc-dfcf-491f-8771-dd7b639b1291",
+          "name": "p32-01.webp",
+          "width": 2048,
+          "height": 2560
+        }
+      ],
+      "interval": 1200,
+      "end": "loop",
+      "layout": "rows",
+      "perFrame": 4
+    },
+    {
+      "id": "9fa0afc7-6010-4fc7-81ac-9a1cab9dceb7",
+      "title": "p31-01",
+      "kind": "sequence",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "f6d794ca-0bb9-4e28-96a1-b2f74efb4959",
+          "name": "p31-01.webp",
+          "width": 2560,
+          "height": 1097
+        },
+        {
+          "id": "645ba652-0604-4b25-a081-4d8e503ac7ef",
+          "name": "p33-01.webp",
+          "width": 1811,
+          "height": 2560
+        },
+        {
+          "id": "c49fc338-10be-4d9b-82dd-c0461a92784d",
+          "name": "p33-02.webp",
+          "width": 1811,
+          "height": 2560,
+          "joined": true
+        },
+        {
+          "id": "8e3f3e2c-0283-427b-86d4-e57850028bdb",
+          "name": "p33-03.webp",
+          "width": 1811,
+          "height": 2560,
+          "joined": true
+        },
+        {
+          "id": "bde5a3f4-768b-44a3-85e2-cd54d9654c52",
+          "name": "p34-01.webp",
+          "width": 1811,
+          "height": 2560
+        },
+        {
+          "id": "746599bc-b470-4753-85b1-0344304e2f76",
+          "name": "p34-02.webp",
+          "width": 1811,
+          "height": 2560,
+          "joined": true
+        },
+        {
+          "id": "7ff01dc8-67b3-43d8-96ed-f57c5dbb8c40",
+          "name": "p34-03.webp",
+          "width": 1811,
+          "height": 2560,
+          "joined": true
+        },
+        {
+          "id": "89919cdf-59ef-4153-af74-9e920f77788a",
+          "name": "p35-01.webp",
+          "width": 1653,
+          "height": 1653
+        },
+        {
+          "id": "b9b473e1-08ba-4ae5-9069-03ad72aa76d3",
+          "name": "p35-02.webp",
+          "width": 1365,
+          "height": 2048,
+          "joined": true
+        },
+        {
+          "id": "0fc32f30-a4b3-4d94-8c18-e28756d178b0",
+          "name": "p36-01.webp",
+          "width": 2560,
+          "height": 1707
+        },
+        {
+          "id": "e820abca-6710-4c5e-a083-43230323bf5f",
+          "name": "p36-02.webp",
+          "width": 2560,
+          "height": 1716
+        },
+        {
+          "id": "4c8b7a74-62c7-4c01-975d-9c3794de5560",
+          "name": "p37-01.webp",
+          "width": 2560,
+          "height": 1710
+        },
+        {
+          "id": "b23d30c1-2303-4d3a-ba38-c30e0cdfdbd7",
+          "name": "p37-02.webp",
+          "width": 2560,
+          "height": 1710,
+          "joined": true
+        },
+        {
+          "id": "37f83aa1-e097-4808-98ce-e1771e05e454",
+          "name": "p38-01.webp",
+          "width": 1080,
+          "height": 1350
+        },
+        {
+          "id": "f1d4b7b6-63b6-4e9e-86fa-f1ede42c943d",
+          "name": "p38-02.webp",
+          "width": 1080,
+          "height": 1350,
+          "joined": true
+        },
+        {
+          "id": "3d597afe-2d24-42ce-bd67-b6046e177d3d",
+          "name": "p38-03.webp",
+          "width": 1080,
+          "height": 1350,
+          "joined": true
+        },
+        {
+          "id": "874287d7-d683-4e5b-8535-a295b293e766",
+          "name": "p39-01.webp",
+          "width": 1707,
+          "height": 2560
+        },
+        {
+          "id": "56d96965-ce31-4e58-84cb-364db4df0f4a",
+          "name": "p39-02.webp",
+          "width": 1707,
+          "height": 2560,
+          "joined": true
+        },
+        {
+          "id": "96eda555-a4b8-4a35-8660-8dcbd488ea24",
+          "name": "p40-01.webp",
+          "width": 2560,
+          "height": 1707
+        }
+      ],
+      "interval": 1200,
+      "end": "loop",
+      "layout": "rows",
+      "margin": 96
+    },
+    {
+      "id": "738d4dfe-1da8-45c8-8ef2-977e57310ebf",
+      "title": "〈Vibrant Images〉",
+      "kind": "sequence",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "46290323-0d00-4701-8bb4-984d2a361280",
+          "name": "DOOBCvkiQn1-01.mp4",
+          "width": 720,
+          "height": 900,
+          "video": true,
+          "poster": "d16ba246-2bdc-43f8-8cfb-071737adb00e",
+          "length": 15.05,
+          "duration": 10
+        },
+        {
+          "id": "d09bc58a-cbae-4a43-9b6f-52ab0406ac82",
+          "name": "DOOBCvkiQn1-03.jpg",
+          "width": 1440,
+          "height": 1797,
+          "duration": 4
+        },
+        {
+          "id": "b070c62a-55fc-4144-94bc-c082bf13cac3",
+          "name": "DOOBCvkiQn1-04.jpg",
+          "width": 1440,
+          "height": 1797,
+          "joined": true
+        },
+        {
+          "id": "725373be-99f5-4796-b854-e7d1900df61c",
+          "name": "DOOBCvkiQn1-02.mp4",
+          "width": 720,
+          "height": 900,
+          "video": true,
+          "poster": "2718d14d-8ccc-42ed-899e-faa6be762a14",
+          "length": 60.03,
+          "duration": 8
+        },
+        {
+          "id": "cbd9ff07-4de1-498c-93b4-a55af39d03be",
+          "name": "DOOBCvkiQn1-05.jpg",
+          "width": 1440,
+          "height": 1797
+        },
+        {
+          "id": "1f11f10d-dea1-4aaa-af06-1ee0f5746676",
+          "name": "DOOBCvkiQn1-06.jpg",
+          "width": 1440,
+          "height": 1797,
+          "joined": true
+        },
+        {
+          "id": "0c87db55-7884-4ccb-9c4a-609b30bd1e82",
+          "name": "DOOBCvkiQn1-07.jpg",
+          "width": 1440,
+          "height": 1797,
+          "joined": true
+        },
+        {
+          "id": "38929397-4425-4cfa-9859-973175f3a0f3",
+          "name": "DOOBCvkiQn1-08.jpg",
+          "width": 1440,
+          "height": 1797,
+          "joined": true
+        },
+        {
+          "id": "70784867-fd23-467f-ad20-219a5958ff1f",
+          "name": "DOOBCvkiQn1-09.jpg",
+          "width": 1440,
+          "height": 1797
+        },
+        {
+          "id": "21343f0e-c3d7-460f-b393-32d3e052e605",
+          "name": "DOOBCvkiQn1-10.jpg",
+          "width": 1440,
+          "height": 1797,
+          "joined": true
+        }
+      ],
+      "interval": 2000,
+      "end": "loop",
+      "layout": "rows",
+      "gap": 0
+    },
+    {
+      "id": "b6453380-57fe-41f9-96a4-71092555433a",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "음향형태론\t\t일반적인 전시의 형태, 기획과 큐레이션부터 시작하여 \n\t\t\t작품간의 공유 속성에 집중한 디자인\n\n안녕 (ㅤㅤㅤㅤ)\t졸업전시의 특성, 구성원 각자의 메시지를 돋보이게 \n\t\t\t강하지 않은 조연의 역할을 맡은 디자인\n\n**PWD.SIDI\t\t개인간의 작품들을 하나의 테마로 묶어줄\n\t\t\t공간의 특성을 반영한 강력한 구조를 부각한 디자인**\n\n",
+      "typo": {
+        "size": 48,
+        "leading": 84,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "tabSize": 160
+      },
+      "previewId": "4a9732df-0413-4a08-87f3-6d1d9818762a"
+    },
+    {
+      "id": "a08b7b7f-5d1a-4e5f-82cd-27f9fa22ea60",
+      "title": "민구홍 매뉴팩처링에서 생긴 일",
+      "kind": "sequence",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "7a24335f-4c6f-4c28-ae06-f766c19c65b1",
+          "name": "DbDkMrMFFNa-01.jpg",
+          "width": 2250,
+          "height": 3000,
+          "duration": 1.5
+        },
+        {
+          "id": "0e8cbaae-b218-4dcb-b9c0-2e945dec198a",
+          "name": "DbDkMrMFFNa-02.jpg",
+          "width": 3072,
+          "height": 4096,
+          "duration": 1.5
+        },
+        {
+          "id": "2d91a955-019b-4f1f-84f7-17f1cddf6021",
+          "name": "p03-02.webp",
+          "width": 1803,
+          "height": 2560,
+          "duration": 1.5,
+          "joined": true
+        },
+        {
+          "id": "d75a0b05-8a84-48d2-9c1d-8a9512599238",
+          "name": "DbDkMrMFFNa-03.jpg",
+          "width": 3072,
+          "height": 4096,
+          "duration": 1.5
+        },
+        {
+          "id": "aaf172f8-53bb-4c25-8c17-dcfa7756ac96",
+          "name": "DbDkMrMFFNa-04.jpg",
+          "width": 3072,
+          "height": 4096,
+          "duration": 1.5,
+          "joined": true
+        },
+        {
+          "id": "e8091eb2-3e7e-4766-9fa7-ed200bc3b7b3",
+          "name": "DbDkMrMFFNa-05.jpg",
+          "width": 3072,
+          "height": 4096,
+          "duration": 1.5,
+          "joined": true
+        },
+        {
+          "id": "13e60b7a-9677-4aea-a293-35df3b2a5368",
+          "name": "_DSC2257.jpg",
+          "width": 3648,
+          "height": 5472,
+          "joined": true
+        },
+        {
+          "id": "fc11d55f-f472-4c0c-8ad7-c4441ecf9649",
+          "name": "_DSC2258.jpg",
+          "width": 3648,
+          "height": 5472
+        },
+        {
+          "id": "7a285537-0491-4e56-8b1f-40f5adb926f2",
+          "name": "_DSC2271.jpg",
+          "width": 3366,
+          "height": 5049,
+          "joined": true
+        },
+        {
+          "id": "1e18af19-0369-4178-ad04-02589c4c1fe6",
+          "name": "_DSC2276.jpg",
+          "width": 3571,
+          "height": 5356,
+          "joined": true
+        },
+        {
+          "id": "65ab49b7-9b6a-416a-8bfd-fe3c1c690437",
+          "name": "_DSC2280.jpg",
+          "width": 3521,
+          "height": 5282,
+          "joined": true
+        }
+      ],
+      "interval": 1500,
+      "end": "loop",
+      "layout": "rows",
+      "margin": 96,
+      "gap": 24
+    },
+    {
+      "id": "35d2cc31-b3c8-492c-8b8e-6aa52382672f",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "음향형태론\t\t일반적인 전시의 형태, 기획과 큐레이션부터 시작하여 \n\t\t\t작품간의 공유 속성에 집중한 디자인\n\n안녕 (ㅤㅤㅤㅤ)\t졸업전시의 특성, 구성원 각자의 메시지를 돋보이게 \n\t\t\t강하지 않은 조연의 역할을 맡은 디자인\n\nPWD.SIDI\t\t개인간의 작품들을 하나의 테마로 묶어줄\n\t\t\t공간의 특성을 반영한 강력한 구조를 부각한 디자인\n\n**민구홍 매뉴팩처링\t침투 전략, 그냥 각자 하고 싶은 작업, 기믹을 담아 즐겁게!**",
+      "typo": {
+        "size": 48,
+        "leading": 84,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "tabSize": 160
+      },
+      "previewId": "8095e716-66ac-4e4d-b6b1-8682b643581f"
+    },
+    {
+      "id": "4fa6ae4f-1b49-459f-b867-a5f93b24a9f9",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "①\t무엇을 왜 해야하는지 선명한 상태로\n\n②\t제약조건들과 환경 안에서 가능성을 탐구하고\n\n③\t디테일을 끝까지 집요하게 파고드는 끈기와 체력",
+      "typo": {
+        "size": 64,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "composite": "bold",
+        "tabSize": 144
+      },
+      "previewId": "3330c3e4-c419-49ca-b7ed-77d60b90f009"
+    },
+    {
+      "id": "29459808-9415-487e-9e8b-6ac11a9ea9ae",
+      "title": "IMG_6851",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "ff88e6cd-2969-43a6-b133-a8c07ddc7813",
+          "name": "IMG_6851.jpg",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "id": "47ded0d0-00cc-4b6c-8d5d-6cabe7239606",
+          "name": "IMG_6857.jpg",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "id": "7ee3cc78-ee14-4e0d-ba18-2ab8ba9bd459",
+          "name": "IMG_6852.jpg",
+          "width": 3024,
+          "height": 4032
+        }
+      ],
+      "interval": 400,
+      "end": "loop",
+      "layout": "rows",
+      "margin": 128,
+      "gap": 48
+    },
+    {
+      "id": "96c202b2-ecd7-40d9-8dd6-0963e0956b33",
+      "title": "graph4@4x",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "0ccfd3c6-a80c-4f64-8301-aaa4587b3d34",
+          "name": "graph4@4x.png",
+          "width": 1708,
+          "height": 703
+        }
+      ],
+      "layout": "rows"
+    },
+    {
+      "id": "c375767d-afeb-412d-87e2-4f15c168cf1e",
+      "title": "dices-cyan.vercel.app",
+      "kind": "web",
+      "src": "https://dices-cyan.vercel.app/",
+      "frame": "browser",
+      "hidden": false,
+      "autoplay": true,
+      "controls": true,
+      "muted": true,
+      "margin": 96,
+      "previewId": "cd53d88e-9fe3-4e1e-93c6-619d707b31fb",
+      "tint": "#00a651"
+    },
+    {
+      "id": "c7f5d083-0aff-4554-a47b-e48f4e7dd9a9",
+      "title": "combi-combination.vercel.app",
+      "kind": "web",
+      "src": "https://combi-combination.vercel.app/",
+      "frame": "browser",
+      "hidden": false,
+      "autoplay": true,
+      "controls": true,
+      "muted": true,
+      "previewId": "807804f8-dcb8-4f80-bad7-414e10bf4569",
+      "tint": "#f4f4f1",
+      "margin": 96
+    },
+    {
+      "id": "0e1cce69-ae4c-4d3f-8ba8-1bc9fa507dc9",
+      "title": "Screenshot 2026-11-03 at 4.47.43 AM",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "7e721fae-9b57-46df-96e2-73dbfae0dafd",
+          "name": "Screenshot 2026-11-03 at 4.47.43 AM.png",
+          "width": 3298,
+          "height": 2392
+        }
+      ],
+      "layout": "rows"
+    },
+    {
+      "id": "c470833b-1a14-4929-b415-c5923ea83bce",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "이제는 기술적 구현 만으로는 전혀 흥미롭지 않다.\n웹과 앱을 만드는건 AI 에이전트를 쥐어준 초등학생도 가능하다.\n그러면 우리가 하는 작업은 어떤 면에서 의미를 가지나?\n\n나의 관심사와 취향의 역할은? 무엇이 좋다고 판단할 것인가?\n\n\n",
+      "typo": {
+        "size": 64,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "composite": "bold",
+        "tabSize": 144
+      },
+      "previewId": "199b794e-0abf-4865-9c35-7a3bb85c43db"
+    },
+    {
+      "id": "3a3d6fcf-51dc-42f0-9dd7-3736aa08f9fd",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "모두가 각자의 도구와 플랫폼을 만들 수 있는 \n초-도구 AI를 가진 상황에서\n도구를 만들고 배포하는 것의 의미는?\n\n말만 하면 뭐든지 다 맞춰주는 상황에서 인터페이스의 역할은?\n\n",
+      "typo": {
+        "size": 64,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "composite": "bold",
+        "tabSize": 144
+      },
+      "previewId": "49763d39-5e3e-4af6-9077-aae75fc7a381"
+    },
+    {
+      "id": "c181b5fb-f741-4a67-89f4-a7b28431cc1a",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "뷔페식 전시는 지양하되, \n전시를 강화할 수 있는 요소는 적극 활용한다.\n\n해당 매체 결과물이 전하고자 하는 주제와 메시지를 강화하는가?",
+      "typo": {
+        "size": 64,
+        "leading": 100,
+        "paragraph": 100,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "composite": "bold",
+        "tabSize": 144
+      },
+      "previewId": "8258ebb1-26cf-4052-b5db-21011bf82fc1"
+    },
+    {
+      "id": "9a02ae4e-21e1-4b6e-b433-6c314731e095",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "그리고 작은 몇가지 팁들...\n\n재료와 가공\n\n구조와 결합",
+      "typo": {
+        "size": 48,
+        "leading": 84,
+        "paragraph": 84,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "tabSize": 144
+      },
+      "previewId": "9ab9b24c-8c6e-4106-b97c-e0a77f5695c9"
+    },
+    {
+      "id": "766abfdd-33db-4161-8465-3f73e2b74475",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "그리고 작은 몇가지 팁들...\n\n재료\t철제(스텐, 알루미늄), 목제(MDF, 무늬목), 플라스틱(PP, PET), 유리, 종이\n가공\t레이저 컷팅, 칼날 컷팅, 절곡, 3D 프린트, 사출, CNC, \n\t후가공(샌딩, 아노다이징, 분체도장)\n구조\t알루미늄 프로파일, 아시바 구조물, 목재 가구, 모듈식 가구\n결합\t접착, 볼트/너트, 짜맞춤, 용접\n\n수많은 제작 업체들...\n세일레이저(철제 커팅 및 절곡), 부품다모아(알루미늄프로파일), 굿나잇몰(볼트/너트),\n창성도금(금속 후가공), 메이커스라운지(레이저 가공), 팹하우스(레이저 가공) 등...",
+      "typo": {
+        "size": 48,
+        "leading": 84,
+        "paragraph": 84,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "tabSize": 144
+      },
+      "previewId": "8ca4d37a-c1f3-474c-ae79-7b8bfc2623c9"
+    },
+    {
+      "id": "c1249da0-8ec6-4c12-8dcd-a7796346b6e1",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "그리고 작은 몇가지 팁들...\n\n과정을 사진과 영상으로 꼭 꼭 최대한 많이 남기자...\n철거하면 사라지는 형태가 아니도록, 작품은 최대한 보존하자...\n명함을 대강이라도 만들어서라도 혹은 연락처를 어떻게든 드려보자...\n작품이 망할까봐 초대를 못하거나 하지 말고 최대한 많이 부르자...\n후반으로 갈수록 하루 하루가 너무 소중해지니 꼭 미리미리 하자...\n\n",
+      "typo": {
+        "size": 48,
+        "leading": 84,
+        "paragraph": 84,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "tabSize": 144
+      },
+      "previewId": "3a63e046-c5fb-46d2-b434-37b9f663ef59"
+    },
+    {
+      "id": "5fca640d-a188-4d0b-b97b-a1998f7b0798",
+      "title": "babo poster",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "17c92321-a183-4510-a088-695f7dad9682",
+          "name": "babo poster.jpg",
+          "width": 3508,
+          "height": 4967
+        },
+        {
+          "id": "77801482-405b-4d46-af01-cbf70ffa01e0",
+          "name": "IMG_7432.jpg",
+          "width": 3024,
+          "height": 4032
+        }
+      ],
+      "interval": 400,
+      "end": "loop",
+      "layout": "rows",
+      "margin": 96,
+      "gap": 48
+    },
+    {
+      "id": "a11aabc6-00d2-4dd5-9518-74d571c1a7b3",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "알리 익스프레스에 1,929,508원 쓴 사람...\n아크릴 업체 사장님에게 차단된 사람...\n코드 안뽑고 전원부 조립하다 감전된 사람...\n졸전 기간에 전시 두개를 병행한 사람...\n불량률 50프로에 육박하는 곳에 전부 맡긴 사람...\n매일 매일 라면 먹은 사람...",
+      "typo": {
+        "size": 48,
+        "leading": 84,
+        "paragraph": 84,
+        "tracking": -25,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "tabSize": 144
+      },
+      "previewId": "0ac8ad31-ed6a-47f4-97b2-3b876aadd293"
+    },
+    {
+      "id": "666ab23c-09cf-44e2-947f-70826b1879a2",
+      "title": "Screenshot 2026-11-03 at 4.46.23 AM",
+      "kind": "gallery",
+      "src": "",
+      "hidden": false,
+      "photos": [
+        {
+          "id": "43394e25-a314-407c-8536-84c1538d127f",
+          "name": "Screenshot 2026-11-03 at 4.46.23 AM.png",
+          "width": 2754,
+          "height": 1768
+        }
+      ],
+      "layout": "rows"
+    },
+    {
+      "id": "608f9e5b-132d-45c7-907d-d7fea53dc6f7",
+      "title": "텍스트",
+      "kind": "text",
+      "src": "",
+      "hidden": false,
+      "text": "Q&A",
+      "typo": {
+        "size": 192,
+        "leading": 84,
+        "paragraph": 84,
+        "tracking": -10,
+        "top": 96,
+        "left": 96,
+        "right": 96,
+        "composite": "bold",
+        "tabSize": 144
+      },
+      "previewId": "f757ec9a-99c4-4d7f-b7f2-7802bf2fe697"
+    }
+  ],
+  "assets": {
+    "405d943b-9b6c-4da0-9125-da3dce4d483b": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/1e41ea573b3869d505e48a2935fc980051ae0a889f4d2cdfcc5332230021f66e.png",
+    "bdd6e343-614b-4130-9d9d-3cb64f352fd9": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/2e80007e4b134979b443cae565ae821af2943d859a7d1581ecabc99b1b102c37.jpg",
+    "de07b00a-629d-4408-b6d6-843b52046f7f": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/bec1b247b74614d432ad7473634659197085e7e75f2d260d9d670e695c6a2031.webp",
+    "284cd091-4d44-4d11-a8c1-775d456d610c": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/ade8e9f24a8111c6f1de1587c6541e509517e88f630150aaed31ac477c72e1e1.svg",
+    "0df075f5-ba55-4eb9-9a81-67fe4b101fc7": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/0bcb184ddbe9e5d04dcf02ba713f525209f9a435573bd806a3243af78d6ed83e.svg",
+    "eaa5f60f-47d2-4baa-8dc5-2eb20ede2ade": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/3fac14240cc194f9f88004c82735eb7f847ee27f00950ed8d907bcce6e287b85.svg",
+    "841add46-7090-4a6e-91df-46101de5795a": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/c9307888a0f70f3e209e72197561d186fb7099ead0e0e8a83a23164c8c75d6ed.webp",
+    "a97fe66b-419e-4481-b386-6fcb99c8655d": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/402052f521f3910dc5e1f5a9cd969803198b7aeb10356cbaacd034203bbd9c4e.svg",
+    "856f2df7-c549-4ecc-a520-ee6a69de1be7": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/02022d16df41701431bc07b92a5b5466357d27c678626b36342aebc86406ed06.webp",
+    "b3675e76-7839-48f2-8b8d-95c12e4ccf51": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/836af81c5aac335b4ab4247d9c7269b0c8c935c974841586dd4ef14d5fdeea59.svg",
+    "dac84052-7df9-4855-b033-130ee7bacb71": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/bf66a87ead6879c2389e77dac887a78e8cf8c10cbc63c7d68c3ce91f0d6324c8.webp",
+    "2d133dc8-3a43-4b38-bc8d-5a561a9b9798": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/7b32de80da671bc94a8dd1f020c416f2ff3ee97a11a28ce188ba41c2e73c2a74.webp",
+    "d3765e0f-6bea-40af-a8d1-4b25c3bbdfff": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/458cde4a8eb6f5ffe8f0c3e76c3aa0bbb73811a17eed4cfd72843af1ad44fcbc.svg",
+    "3ca759e2-f67e-46f2-8dd8-f874ab1981e4": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/0c6a1612b0bc041fae5f19c79e7617b167c87616eb00e10b827aaa14090c2e6b.webp",
+    "a0932199-24f9-4f2b-a044-7b523a62ffd2": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/47e74a2d136121fa4a434cbddabb91bfca7aad89e1c71dd1a2528b34c59278b9.webp",
+    "b3014b7b-7816-4d8a-bea6-6eb926ec8c73": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/52289046e37901bdb1b6225c64c9e343c898610ca5fb93efc3ddfc7b3db3a176.svg",
+    "06a52260-2883-43fc-889d-1c518962e23d": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/6555a260dffb4099fa2ded421f3ff326dd3813885665af7a62d4c09d46298d8d.webp",
+    "6aae90c0-f0bb-4e12-9f86-0703aa4d49e5": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/4b7998b266b4dd1596344e6265d2b40cae4117be4798d397a6b8eb12763a0ce9.webp",
+    "21974faa-4d48-4414-ae94-b4810075c9a7": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/cbcab415012ec8ef09a3f68496491194dcff1bafba5028047bfd592d26b2f07b.jpg",
+    "c13a40de-1af6-4e16-8663-2138aeee42e9": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/1af753a9c905243cbbbfdafa87bc537424ce2ba10808510ac44395f35dbfaf4f.svg",
+    "e5fcf7d9-d6a2-46df-b2f7-9108a9f78969": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/9c570b910e7f40dc270825860d92b38ee2fdbdeb3d6d57a03c44214f81ab5d1c.jpg",
+    "d3e6c229-07f5-4387-8536-ff95b070c8a2": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/8c85f59f167debe3610f7a3a10927bd485307332be6704868fb516d4bad01373.svg",
+    "36fc917a-8bd5-443e-aa04-8c3ef4ac6f2f": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/f89491c7ed3b0c6c052841314ebc012c6b94071746045242992517272ac3ddf2.jpg",
+    "615bc3f1-2a02-4c6f-ad24-41163abc1560": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/8c85f59f167debe3610f7a3a10927bd485307332be6704868fb516d4bad01373.svg",
+    "a874d539-71fb-44b5-81a8-732e850030ac": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/fa17fac764d51e0cb0a5e270f5aa8f75e690e175b1f139150ebcb5617a976c28.svg",
+    "5bc86976-1707-4506-8397-ad5d3fdd7686": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/01bdfa5bfe5fff752d10238ab66943e43d2c9488b4e75b5dd4e5c0a02ce26032.jpg",
+    "28236629-c92e-42ba-ba38-8709474f86d7": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/d350981fe98a4d8d36793f50a027e4b7c2759f239c168b60fb59b34956196988.svg",
+    "35133cf2-c488-4dfe-a6ec-f49f832abd3d": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/5e662b7cf40e9350ac2fabcda483a7ede57745c5f378e4742b747448287341f7.jpg",
+    "b87bc9c0-c20b-4054-afcf-96bcff2b003f": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/7888e4c04bfdea220e40541a593147c1144595ff8da03b02117ddefad50b2db1.svg",
+    "ee673034-6d5d-4135-9bb7-271a83d23805": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/b66d5aeb4253bef5263ed5fc3591efe12451a7dba684f6dfc30420dba7586557.jpg",
+    "8b4e2a6e-0333-4b5e-a3e2-0035cc979c30": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/3bb6a01ed41565e7cfbd6835af36c301a69bbcccb57ba56b9bf0dab142e9ade8.jpg",
+    "c450eff9-8b69-41ca-97f6-280bba18e6a4": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/2e8bb9f1655e7c064cd5d94c1415646319845bd7a7557e154c188e6d80ed1166.mp4",
+    "88a2b654-bec2-43c4-9593-6476ddfed5e9": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/d70bf8d7c118cd64185334cc094c671c76ad0efb8fd622a570f91d4cb9c5aaf3.webp",
+    "3cf4c612-eddd-47fe-83a4-dfa7f8f47cfd": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/dfe3543014cb9a043e342ab4e255b2b3d6b9150fe4f3978387ced625acd542ef.svg",
+    "9c9e628a-1edb-43b0-b9e5-6873a169af2c": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/98637b321a6f9af9110ccdd96477b969597df43b0c66aa415867401e6fb8a4cd.mp4",
+    "d445e1ce-314d-4332-be95-d51f246fe3d2": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/49495cf47eac090ee7c36bcd6288813ecdb1147ee135cb41fc64789c546c22fc.webp",
+    "2f15bab5-fc79-470f-bd9e-77fc2ac53dc4": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/d0e621d0d3f44af8a4318bbaa85994a66b150e31bde8d46e932ce4565be59812.svg",
+    "9ab8735c-19b3-4cfd-a0b3-cb3e43651df5": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/21fea49dd87ca088bcc855bc4625be669dfc745eb3aae05dd26940e67a2160a6.jpg",
+    "d12338d2-6ef7-4b6a-905a-6f2e37c0b085": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/7e062786c4b64e2899f690e09302c878d6377304f441954c1f172a1ace1e7f4c.svg",
+    "3bd2c2ae-228b-4fdd-87c2-2899d3ab1d59": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/baaf317c3c1470a2db8dc5ed6e061432e5a0817a10d5e1ae1b0b4ac9c1b09200.jpg",
+    "02f9dc34-0399-4496-9444-d2efd6d91109": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/b6d838541f6f260343cab18ea9e80f9c85e1ef4cba28df0ba625e163c6c85ece.svg",
+    "bc73d281-2bf3-47e0-8920-d53e3185bfe9": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/6e15a54aee23fdb061e34dd00202faea78d8ccb9e27d32cf154c2b339a138fa9.svg",
+    "11125a04-832b-4b97-a9dd-a6268c13b57e": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/bcf9528be85ba59916a57eb26143add4bde5073f87c099ec87d136d0ffe00f95.svg",
+    "96c747d1-c434-4bf9-8ce5-c9c1ea22fca7": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/def6c199e91ae976011bbc1097b2d5d6a6bd9eace54e88093f0e2444d30cc7d8.png",
+    "747690fb-ad7e-4ae3-8049-cd28ed594671": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/55b6f31d9ce153c4aba9b40dfd2f931718740c9a26c5308e6109863cbf40e379.svg",
+    "5b78eac9-3cbd-495a-8add-e8bb3bd0d067": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/8c9316be3942822fb324281e2fe93897583a7a40ab968a12e2c1e2b20493c909.jpg",
+    "74132222-bab9-46ed-bd6f-939939482d58": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/8c83be55a471e04094f60d79d7d16977ced9bb554da9ab98f33414d248143bd5.svg",
+    "eefbe05d-fa7a-451b-8295-972bb3e08ecc": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/d2cefeeaa4846c2a30dd9b8c70245a578e932ba09cefa40eb878c3b64d6f120a.jpg",
+    "17838b32-b266-4176-b568-1edf3f63d1c7": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/50c09d4774008ddc09f0a4f849b921814d4918fc76ebb3e2fc7f8083e9057fa4.svg",
+    "29e98eab-c921-4fa5-a1ae-8ecb7e8886a1": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/46256bee7ec675accca6af0ba14bd3187517ad927a306ec6d9f878f435460083.svg",
+    "2d9f957c-5cc7-4d73-8865-3e3f046c16a2": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/e934db6ff6a47c64d27e69e39488c4a1e128974d43a6dd2fb22b3e6a46f45a1e.svg",
+    "829b47e5-1c6c-4128-9fe4-14c4e7f40eaa": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/34c6b7ca4e4683f051d97dd4a9c1b87743df758868b94d71b762c387795b3b3e.jpg",
+    "87a61ec0-6932-4f30-b36d-f0527fd18dfb": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/6c6b07b8689ac4dbf1250a4eaf5d225f4e1ac7d301fe42aa8f17ceb4190cf7f0.svg",
+    "d4d803f1-dd15-4828-9a25-7fde9063519c": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/e0c1670e4a464cf465d6d472706ee8b65c4c4a7c805ca9587ba6bfbdaf36098a.jpg",
+    "5bb137a7-0d2c-4a30-bacf-dd67e16384df": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/cc8109fda2667bc27f0f396370ae238dab40a390de181b99fcd139a65702d73a.svg",
+    "de743f9e-0d13-424c-8f95-f3fd52806053": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/1df87248ee4c21dff51278f46dfa610a38d83c5937961cdb5f1adab96c3a8eee.avif",
+    "a4c7e103-9ba4-4655-b019-1cb177fc6e28": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/cb99cd089a0a129d72de9050059958080dcfe191903d9a687892438245c096c7.svg",
+    "ac8cc183-5e1c-4dd6-9f6e-3d57dea0798e": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/c6a83d1ba18257e38c8fc7ca6c3b6923e38dfc604febda21cdadb9e682c77256.jpg",
+    "c86763fc-357a-4824-8b21-37101ac1352a": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/7e9f27e5722cf8b95589d0a56b077bef8ff1a44cdce4c4cb5c66e77989539ad2.svg",
+    "15aae44f-030e-4edd-80df-48a746cb0025": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/456f8130cf8b9f3eaf73bfe073ce27eedb825d8521c8f2e53a4753c9dfac616f.jpg",
+    "d7e4d5df-818b-430e-8cc5-269f67ab7fa1": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/2f5c32f17ee4e75b287eaf8da5faa91c96c1b6fb7bc60e9612944c65485eff11.svg",
+    "99fcaf41-5f12-4ce5-9997-bf4c425bb36d": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/73739cad102c24936d5468c2399928c078ab9d60b2b35f2a29902cc9065d79d5.jpg",
+    "f34d672c-4e63-420d-ab66-159eaab73908": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/472d28ef043429026955648d9e42e68ff782a77fdfe358a0e8a7118891af77bf.svg",
+    "be289a49-0c9a-403a-9fd6-df53802349c8": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/38ddd1d08387b62f3343132a1442910851e9c28850a6cac85497c0ea52126a70.svg",
+    "57440f69-6ab7-4242-a1b2-4d60a146189a": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/0e0dd1c4f598c2913abe934c86debbbbe1aea153a4b0455a8a028bb4eb44bdf9.png",
+    "12057084-b66a-4409-9b00-5e3d710850da": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/2667de615e6043e584e266baf9e61271f6fbfb747c01e6dceabddcd414136da4.png",
+    "e6d3b42e-cef2-47d3-912a-e92cdf86e469": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/2d373b20019fd0634e91e9807cfdb123a294cdda0a313ff1df01a34d1cd14127.png",
+    "e3738b54-7181-40bb-b87c-20e34c01d44f": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/c599b3d73ab20823b0c396f793995b118efe66d272c7d2b34986a4ca42501393.png",
+    "ab800024-c695-49a8-a92e-97d33b794e7b": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/de3675b57a97e144eedb7997a337ea3f8aaffe44e01202c2b95b23cf8125b030.png",
+    "70c1ede8-2f02-4620-a51a-061f8a439f9b": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/6f958527dce5f5be30546f00e536b01cdbc799fbfc2868f38cf97ede8fd1314e.png",
+    "4ee73edc-f6f3-47d8-84c5-18a9ddefd99b": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/52f0f44555afc63e2e0c78989708c4346efb18db3ad3ea20c16b1de189254251.png",
+    "172d8b8a-550b-45c8-b5b1-f2dcc6fc9976": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/1c088c0f1cdac1047bd02703616b9d9004acbae0d89f0bbc09e6974489b24022.png",
+    "61547351-608b-4e59-a7bd-d40b82420bd0": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/1246db6005f31cad31305d1d9b9321ce014e42c2ae28e86589db9ed0cc0ed13e.png",
+    "0e9c9e6f-6b47-4406-a3af-892eb726f674": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/0970a16f1555ace5b049876fffd5f839e6fa03023a017a6a8769dfe5b84b26e9.jpg",
+    "bd6c19ee-d1dd-4a2c-bd93-c0553bae8996": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/69da3a9418f31c3d468acfa48f7b3e36d5e29e7cddb116f9cbfce89d277f544f.png",
+    "de271a33-14e8-40d1-8151-dae2e67d3afb": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/21c7b595770ac493d87babdee73b5eef9822af4e5271fd54a72ca1ccbf31bd71.webp",
+    "058214ae-2a84-49a2-b31e-03cda09d49a4": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/f91dba66e4e261c80360dc4877d446ba776fe8453ce49d557450a5f7fa0896cd.webp",
+    "dc85e338-78f2-43a2-9e8f-842d52ab938b": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/8ab7e99de395ea43e3482a9ad89584b77ebb030b4e04881ae8ed224dc45f207a.webp",
+    "5353c92d-205f-4ed8-b171-dcb92010ffa0": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/36b88b6a10ecbe1e3b2c799946f31e714b6513f4a49b278235f231ffe1279643.webp",
+    "83b61011-f6fb-4ee6-95a3-5edc87e46891": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/5a530c0bf5f9818484df9543307d1ab41ffd54c303150465286903d5bd4d4caa.webp",
+    "eb1ad335-c610-40bb-99ec-381bbc5fb8d2": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/d06a69b61a803751865fb01d14b8cbacec285f5911fa483cb336b92d30e6f15c.webp",
+    "5a2e37dd-1d26-48e2-bf90-e1d1acbdd08c": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/55b9eca8ddba117fb3112748ab844e8c55eb03f93c3d1823481973be6fd1c759.webp",
+    "f5f78760-f16c-49c4-9816-0355c958bdb8": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/3c391334da075e8040b02ffeb3a98f5f2b341cd6219e323259ef51b49b974fdc.webp",
+    "b8c3a0d3-5a9e-4eff-93b6-d7e744e9c69c": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/8946f6ad43b0de398c12a9d2a316f40cfedfed5548947b56dce67075c0c116d2.webp",
+    "d4124169-8f4d-4737-af26-498d34beae9a": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/6c576a670aa53ddfbf57730a27e591466350d787e4708fbef158165ee2adcc67.webp",
+    "13876594-bc84-47a4-9e0b-334b02252b3f": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/ef3698333e1f39ed36afe0aac2cce3680245b8d7ba28346da65f60328cf260e8.webp",
+    "66b731e0-b269-4502-8e23-93e97c4ceb81": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/7b445f2cc9dd5999d894ed2901ef3de3f43a812a6ce5a14883e7c73748ff2582.webp",
+    "af6e06c4-620b-4282-b92c-029867708a4d": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/61ccc37a6330244a5bb3fbb94a595b9e627c8eaac4aa3209bc673bca212856cd.webp",
+    "5c1ea171-63b6-413d-ad7a-6a84fbf5d52e": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/e448eea2cf52b63b52781852cabf707c2d549197996db21b96f61d557a858d56.webp",
+    "996d2eb2-4903-41c7-b09a-67d3a2fa7410": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/e07fe5c0721d1ffe4166467c88fd411cfbd11d7c30771b682cb5e5cafd6d439d.webp",
+    "672f6e13-b1f8-4789-956f-e2651169a96d": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/0ffddda2d2d6a310fc4c1bdab84fd85b9efc693e24422f370137b5ce8c8dbe5c.webp",
+    "08f3c0c3-f326-4214-b0b5-feee42956605": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/3a76c06c18603f32cbafed4310d5e6efea3167ead2e8ad4c28865e71f8a1a4ee.jpg",
+    "0a221107-bf21-408d-a9bd-7e3cc722fdab": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/6110a66400b4b655b33c5a460c49f621b0227e4feac9cab67c9a9aefe0d92cf4.webp",
+    "6f9fcb5d-8495-463a-8b0d-ebe636bf6a94": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/62128408bc66b91de0e48e5fe840c3e23158d9a0efd5d1b82624d9f0d39877c5.webp",
+    "b3bf72cd-5ce3-416f-991c-14a2bd0ffe76": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/ab2e1aee491760ca65b22c984d8d3304148dba57107a166ab46812639d0ce028.webp",
+    "30b4fb84-0fd5-4825-a94d-9b41f135757a": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/4a45561c218b5e5df1d5f0f066b94e786d6498f778337506d251f2917a2ab92f.webp",
+    "63c85b18-cefb-411c-b4bb-d009df193d45": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/842172de869b43223443f11c285087db189814d75ba488d19cd5bce42d827fee.webp",
+    "5a09d1ba-9300-42d6-bd8d-80b061f78aba": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/55e6f01f0f743202514eac86720ffb6d5fb258bec21bd00d2b263aeecf93620a.webp",
+    "b670cb69-0916-4503-9aec-0cdf059299b0": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/02c262e205d2f187462ae6845fe1713b48093626cdb924aa8bbd6a9378950e45.webp",
+    "137ca2b6-6dc9-4bcb-90b7-65061cce0609": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/3b58d691728e07e8ba8397f9fe272b317ddc185d902bd692991d77c5636bb91f.webp",
+    "f63740a9-b707-48ee-8d10-04882d8f389d": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/8c242ee672a59919df566b40ffcb85caab673db81f74ad67173f0fdf85e8f418.webp",
+    "1c592541-e79f-4fac-9412-42c47124f8dd": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/3157b92394868cac4395f0fe1ccd418e89833db336d666cba4cbb13ff959e0e7.webp",
+    "ecd0112a-12d0-4295-8072-62fb0a9680ca": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/ac591732d63f781ab4154012111e1c4224f61e1d8eb88c2d74276b394998a94d.webp",
+    "ba3e1bba-045b-4b97-91c9-769372f2972c": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/1a062366c86373a7b03b02f9e8038d17e410c27f66a6a2d1c7741b7565ce9d31.webp",
+    "b89f390f-fc79-4818-9aee-a8d6dfc68bf3": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/f309d3ee96cd17c0a6515eec3e5bda930dd777e2f2681768b962d8fd5ba59c9e.webp",
+    "68861d43-f023-4f14-af4e-be6056e9a94f": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/410ac520afbe386b2e68cdf79b1e53d406b8c2fe95a8a282fd85cb522ba5a56e.webp",
+    "70788c2b-2047-45bf-b912-e1c800630399": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/8644d267fbf86b305a6935fdfe94f66e36494160154025fbe620a8aab9686feb.webp",
+    "7196ce97-e601-4b31-b5ac-eb82ba8de6a5": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/846459efd6a8ffec391147f188c0caf002e48405627dfb3c0360b0024cc07f48.webp",
+    "b06e9fa1-46a0-41ac-a0fa-dac6dd4a8089": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/e6118759d096f06294b39f59d7d3e785bf33712e0a855d4a7cfca2418b5bc99b.webp",
+    "1b1cfee8-b0d5-45e3-9990-345801156cd4": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/e18c1c6b818186dd05ab05da718414a4320ef7daf5b41da659ccf9492cc36327.webp",
+    "20cb2259-b2bb-4ce9-b555-195b64f8d081": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/3c502d56e509d74c70ae5c2c09df55c2b18f54353a8a69645db0e4cebdf2cbc0.webp",
+    "79d4a2d1-db24-4040-9cfb-324f274496b9": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/3bc1af78a7e1e133882263e78deff2bdde72cdf557f2ffed58e4b84dbb31233e.webp",
+    "be1efc9e-67dd-4ece-ae1c-0906e33b0c2f": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/7a2690763c60beb4440c4b5a0d2f1cb87bcc4edb922f6585bb4d308e021745c2.webp",
+    "04e0954c-e484-4491-b8ea-be13df4e6932": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/272585b66bcae94f6532b1b8e6adc862ff00c0d6ec27c8372cf5c9197a8f72d0.jpg",
+    "32753a66-ee29-48c0-b9af-37e2f44325df": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/ebf86794bb1d605b2e6696c51ef209bc943371db871874af192e615f4a090aad.jpg",
+    "291ecb3b-aa4f-40b5-a500-56e5af9ed347": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/e22a61f64e594779b221a96494e5ffaaedb8d15ae0f3fd22a1241364175ab61f.jpg",
+    "a9e067e7-bd99-4b52-87ff-ab91b032e339": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/18f3f862df8eb302ee9536bea530111774a10d70890c642a2d66fed6c0055fc3.mp4",
+    "07002559-cb6f-49a9-8f6d-c1df17694043": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/37bc3bb0039460b5da955a177d5be91a1c595898a2b0a27824f9a2cb06c6e4a7.webp",
+    "679cac3f-fade-42eb-9c07-72fe6f5720b1": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/4641f0fe634bbb2f81f62d78a191c73f37d6e9e4fa0a703d43b704dcf9ae80bd.mp4",
+    "bd0644e1-b36e-4b93-b5b9-b992223ae914": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/965b134f1654d389ff1acedfc7a500ee4659bf65e6197b3bb84456523c105d59.webp",
+    "996ec811-9dbe-431b-8d8f-7cdf1851d1c4": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/a26838a70f7316f8945d21398be74174d62d28b2f557396eb65f33e1d3278fe5.jpg",
+    "abaa4c7c-c81d-47f3-9378-6b98920ecde9": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/4d8aed0c74e745ae436b6ae2d133296514d9e0a796c1ef8e2d7a684bb066ed61.jpg",
+    "88b84110-e5d2-4dbb-8753-2e7035ed737d": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/cfbddc2a50a6f17661f80e1f5c845c6ed505aaf289f31151d58a20d89ab8de36.jpg",
+    "91d7c58e-e219-4eda-ad96-ed1a0cdae9ae": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/ee499fe3e7e71c093702d6e8c3aa543beeab538c4a5a75d04c38299eb528340c.jpg",
+    "d62f4b1a-56bf-4605-b338-8a6347b6b843": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/e644f1c1fb9f14e403b3231e3441a4c33b853af7518d8a6d52c3908641e0fcbc.jpg",
+    "afc4bc81-25b3-47a5-8094-6ee85b0abcd3": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/916edffa9433934bb4a4b7ecc87afb9cf30cc7e4006efa9b6fa2f31950b3a2de.mp4",
+    "e8867b4a-798d-4d93-893d-0ce95b17f429": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/c466ef683b76f85e08ca1aad3baaa1031e38e7ece6af1453da2856e9fa18fbd7.webp",
+    "48560f4f-7380-4981-97dd-84856b035b60": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/10cf0e181e1748e86e650890a475f209f2e9d00c52219374eb1871dd22c59f28.jpg",
+    "94502135-c341-42e8-a752-ea8c425e913f": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/f3a843a81cb2b7a7fd0ea4362d6c16e8f25ddf89a128cfc49d8ed7d3c864fc97.jpg",
+    "7cfab02e-9ccc-4369-b5d9-cfbc0f0fcc41": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/b66afb6ac520d7924174e58297b266b25b579a002dc194821f8911310b35fb73.svg",
+    "5cbac608-061a-4703-bab6-38f4fe4e728c": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/4b99101d0bbb9da266a9f6c75e28f98fd4189ed0e5f4a8bdbcc381c4b68cf08a.svg",
+    "10bf5aa6-b786-4254-9716-b1d25c51fc12": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/42236d8a1b6d096dcbda455e86f0dcd74094c0132f1a249d5ff46ae71aae9d2f.webp",
+    "a9ec10c7-0978-42a0-b08b-b4ddf6371535": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/0d1d66283140ca8c3f5d018e80c04810973cede90f715e22f92b88527684b07a.webp",
+    "1bae7af7-7186-40af-9525-2a7350511439": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/3a2f16c46986948b1933b813573c913ef0535021bc09c8eed54209fc05aa3312.webp",
+    "f2f428ca-999e-487b-a4ae-3cd39c821d1b": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/eb75c36c58bfad9ea14da0bd140e7c641d376400d0bfb081be7eeacd4eb1381a.webp",
+    "36cddaf9-1bff-483a-a065-7f67b72e48c5": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/5f74a6e59997bba7d0c5f9fb842ec1b1d5354d2c2cce7aeec9ddcdf11de5e2eb.webp",
+    "a0362d2b-2e1c-470e-a6f4-ce667d6b8966": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/c8ea1dc80016d599f888ba14df850ae6d0c89c9cc6c15f81a034214595c4b834.webp",
+    "d5e99b9a-14ee-459a-bc58-8a4bd46e1e46": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/4508621fd5552f6fcaec517d6e8312718f93ac59bbef3d2d26c2c339ce473d0d.webp",
+    "d02d257b-909e-4c45-974b-966b9e2c472a": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/4af20b71144a8a8449930045aef58b985f301b2cfd4a5902980f33dadc493d43.webp",
+    "c4e0d92d-baac-4639-ac12-daa9939bb28e": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/fa96ec0a62eea839c82dc0479c6332c68a58ccea85d491d299e4740518a1964c.webp",
+    "1fbc18b3-a562-4d69-91fe-fc6d2dc75257": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/6d43ad2f21b4ae13d8759e8d2ed3e03070588b0c8adb1de3abd801fc223856c2.webp",
+    "d563b149-b873-41ba-a362-9df318f66e9a": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/44b838a4b949eba90b885389ee646e33ec84de354ec9e87f8072b7828685b6c9.webp",
+    "8eb44e78-0b99-462c-862f-fcea7a770b61": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/c43787112ebf02b370cd6e92a167b329d949840a98c8ba0db34bafd9402b7264.webp",
+    "12c8b4d6-8770-45c4-a69a-6229bf4b5d65": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/691461ad38e6a7b1cca57c4d2a639eda700acd70cb158b2aabe2aca5b59ac5a5.webp",
+    "4107408d-e993-4bea-bf83-d1a95e79967e": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/3295610813f2429a215596065de0a30050ca543de8026b5bf447c9ac89eaff4e.webp",
+    "66c641f4-939b-4842-94cb-f13cf1d13808": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/25e0b57136d1b680be26d1b320b7580d69cdcf3dc355d5786abfda8bda44eab7.webp",
+    "e0fefb50-5f31-4fb1-b9ad-8e0d67469c19": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/0fb25ae2e711afe785fccd78b7a4bb2527ad92f4e2e853ed9943016cc0e291b8.webp",
+    "0ffbfd6c-c01a-4bc2-9776-4c5c8fe3b6b7": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/531d21c4ef4cd6fd9cae77d88fbded1c525dfc8e73fa0997894091cec309f826.webp",
+    "ca8849dc-dcf2-4634-892b-fa2745794ced": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/7bff04c534679ff4f58725bbf98de715373ee9bcf74990682a0d17cc675b086c.webp",
+    "dfeb1515-3510-4048-9a19-7a33eb9626b0": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/82e337a218a09dcde97c42044674bdc23353861c87d0bc76e2be8b910564d421.webp",
+    "17b50a43-ef17-416d-a5b7-128f663b4193": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/3f0c5678e4026958effdffcc79a79c40fbea8d845e68267be447d9dbf6a2f7b2.webp",
+    "237131a0-268b-48ae-b0fd-f4dd1972d72b": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/f792bf87eb507d9df71d16302e4128a3cac5757067457a6942a352deed9f6323.webp",
+    "dac73f71-ebf9-455b-a5ae-87841741cff0": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/1be763137fb58fbbb68a001582d57512772d115974fa91314e8d82c4aa6e6f4f.webp",
+    "c6f0bc95-7b7e-4988-bad9-e92b48e1810f": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/e6daebdb680bfb37cca6df79f809ad53ab2c96dd249d5f72c09fd3899b3e30ea.webp",
+    "052d79a2-3e08-459e-9c3d-43def2d11ff8": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/7a180c0d4a1e36dff1486837a900435e1fe918a09976a0616432978b6e5da983.webp",
+    "975df58f-8dca-4f6b-968f-24d5b18390e6": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/aff8450bd9801d941731460a66fb7bea2953021bdd403c138fc1cb28d5120002.webp",
+    "ba2e6077-6f1b-441a-9afa-8c1b3186f829": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/0972d40c601c404fa5d34c7e5c9ac36589c1b45a2031b72385ae3153de766e08.webp",
+    "5cbcdf21-7df2-4d58-b435-a80448892f85": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/e4c08e17144ef5ffd8cf512426e34521669b743223fdcf1ac58c50bfa4338e4c.webp",
+    "b48e9e3b-5d5b-4c7f-ba8e-87f0b3e2e9dd": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/6c44224e6bb82d8eac14a86a203b8bdc701ac2162767aeb4dbc7b2fe5d85b5af.webp",
+    "f8143e9d-3a1a-4302-a5a6-d25b9be5f925": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/666f87a3924510ec7327acdf1797ea547faa5e1bd951ed25dc6a4a4c0de17fda.jpg",
+    "1ba46c1d-b1f2-4594-a126-70816b649c7f": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/e17dec5f9ec7e8f5b94b02d61f2755b2425c0174d2a64e8c6b78b88f4ddff92a.jpg",
+    "b0bfaeeb-d209-4291-8277-fd4c95870cd7": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/02f45256fd951fd90a0e9b98453e680da3cd206995163d2b59077e91225526ad.jpg",
+    "e82cc278-4ff6-49e5-a668-30f996b29a99": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/5529f95289d0952d95ee376cc3510d400cb8a0966d7d0eca3c4f2bcee1ece970.jpg",
+    "73c8ecf9-46a2-4ccf-b118-3c9cec74fa94": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/4653b92c1cdd3512fcc5898f94b36297be7308b454e6ba1867e5b86c2242b89a.jpg",
+    "a9473dee-7a78-46eb-8a3e-bc17c357218e": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/83b700cfc5fcf44f682f1b535e1652ec2a1a3a7aa48e41e5c9d129af69285da9.jpg",
+    "e0897782-26c7-47eb-a555-775d78b927dd": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/35cff80f2a442417e5ca932b3afd3d576b708c088980f48e37b62e2accb6a419.jpg",
+    "bca32932-8f19-4d93-868a-7b1299b51cc9": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/a607269b08be9ad594db0fa4f4ca654899a5664961ccaffe199c69ed3963901a.jpg",
+    "1ed3fa1b-5787-46c4-890e-e86d63ba3a18": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/5890aa09714ecff78533e4991cb0f25f7385c8dce98a4f6fe9a360623105f868.jpg",
+    "1c692606-6320-4939-a78a-21b229f3b436": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/c987a7f00ee028050339b21dab10e70109c6fff17bc013e87dc2da6d3abd9859.jpg",
+    "e80c8c0c-f6ad-4adf-8c55-6eb8cf1d8b55": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/cc7c8c0a2b3af112f36f6e9da6fff1da2428e580e2bf5f5d8ad555314a82db9b.jpg",
+    "ffe55740-cd4d-44a5-87d9-b92752e74d5d": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/3020783a8b7f158eb885c1fc65e569135c0818d6c47abbdc5d275c10ac74414a.webp",
+    "b6556a35-380c-49a1-9f22-0401568203df": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/807d793fee5cc6d90b09cf7e10128abc28a170118af1e4dfbce4067743b1f962.webp",
+    "22bf7d15-5a45-4a4f-b609-4fea1b04fc9d": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/81eaef78aa06378e700e4a889cd664cb1470ee33ebe16fc711471faed59754c7.webp",
+    "234a7561-0eff-4371-bee9-01f820c85ce2": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/034769a38e5d87656808935cd11291273a0fad9c4b06cfe48a87c653c6f6b902.webp",
+    "9bc8e733-4b14-4218-927a-685e7f196961": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/f873e144bdf1ce22b1d855bbe102149bcb6429da98d0457f058dca2808cebf0e.webp",
+    "e83e79d6-6458-4b9f-b213-0c7202bbeb71": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/32b526f8145ad12d0f952e7fb6ea8ada2d4d038b7f7ef2137b0ee3d12a87b7be.webp",
+    "8d1e0720-0f00-44e8-a378-3b337b4f2321": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/b863d53ab02deba08c4f5c5c703367160995e872c230c11f66dc78f3d3071df9.webp",
+    "77df37dc-86f3-4769-aa05-e56b2b021bd9": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/650187b0d5209fb83e53595832278a121a6169703633aba18da3829d24c2f55a.webp",
+    "d1fcb046-fa31-4ac0-932f-4c47f49dbde3": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/3909f45fae8cd34be990034696bc741cbd7d56ab2536c30aca3b9b4968a2a3ec.webp",
+    "923d83bb-3f48-40d3-9e6c-8dcfd001ff82": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/44b0ff30eab7251b0cf0809374c736580599905d18746ac3af8d1611e1c4dc84.webp",
+    "e9bf0b63-2e73-4fdc-bc75-83df0cd09623": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/1d027519add278a404eb063adeb9a337eb3d12337b6cd9b414bb5f9f383a30bc.webp",
+    "b303a660-f63e-4921-b549-35ade50373b0": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/cef31fb2e3ae7182c56454c31486e26d80cace35b9c409789f2aa593ccddfcc7.webp",
+    "5571c906-b5d3-4738-a7e6-9eda0891e1d7": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/59cb0c5f998f0a7e264709f5320e29794db4ecd12f4d03d885cb01b7ecde9f68.webp",
+    "fb766f0c-093c-4d8b-a2b0-4356963f3b67": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/9fa227c9f71e9c7a2fecbe1eacfd40aeb71e21f3cb0529d47a9a9c19785df039.webp",
+    "9e90e777-2858-49af-9f73-b21ab06dae69": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/1ac0ea992b432813e32a38b778c590f7b00dfd7a1d9ef4c818e9849b8fb9638f.webp",
+    "1ef445d4-607d-418b-9a5d-c890db97031f": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/deb4d5a9d4c3d768de9cafadeaca68277c11c4ea62f0c671295b67ccfbd4fc96.webp",
+    "43d5d4e9-77a9-43f2-9bd7-fbb1bd02a47d": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/879450ac755f0dc4c9d5c89aa89767a0e5622c5f3df0b3f3d207e3c220a1483b.jpg",
+    "7fe17a40-e210-4f88-912e-10380935741c": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/a832bba6e04f059c38026524eb08a0d3f92c8aceec200703358430a0252cddd1.webp",
+    "6ca06519-abe4-4a72-b4ce-d39ad668cf29": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/634c91484607aa359786d411cc1c4cdecd3f1af6db439e897a4f45008796112d.svg",
+    "4a82027a-f6b0-4e2c-bcf9-8b6adb49b4af": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/ca263c5ef23620ac4a2b7dd543605d8b301faf86128d240cebc48293c7c52181.svg",
+    "ba466d78-8508-4c09-9d82-2b74b60c8ff7": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/63967e337c4a333f7093e484152d078a2316bfae67274d4ce3ee6471fa050116.png",
+    "dca81822-b68f-48b8-8c90-18c23a63242f": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/1ad2205474eeb015fefaa80bb287936bddcf7314225886964607a0a071967976.png",
+    "4e66f9c5-423d-49f7-8cde-c4422f1cf5d8": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/0d5010617394549b6e7b413be3c6c51b677b4c453304abaaee1ef5c7a0627c2d.jpg",
+    "16d25126-4608-4d3c-a844-5ffd027624cb": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/ad255219b3908beb650f0f6eb0628f01a21e26e28aa24d790bfc1db193fb047c.jpg",
+    "8c1db9b9-f7d6-4947-8667-4c59e9a0d31e": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/a3c6af51587006318ad8872a7c86e702ee93472f149b132dd8dc8cfea2019c67.webp",
+    "94cdabb0-0ba6-4cdd-a765-b3ed18374380": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/0326f04c3baca3c6d79859bed681cfa83e44e852040a941f10c6b98573e405be.webp",
+    "7161989a-fb11-4956-b9cf-841c6a61d84b": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/818f9e31809c6d6a7829e67e95d5d0669921446a4de8481c9179fc47748242db.webp",
+    "145ca218-2e43-4316-8afa-69fb96a05e30": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/c84a573779557b925cf8ed6f7d31ad659952e56dfc1fd3e6393cf84f4f3085c0.webp",
+    "5226af22-9d85-4b27-8932-0babb5bbdf44": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/e24b58bb6e119122714400c2e5034ca33333406449792eacfe9e6f54d6793b54.svg",
+    "95c988e0-2f9e-4b03-8d76-301593d35ec7": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/7e5b7e45f13c88b0d46b2c6c9101cb5d40a2eb38fe8045be041ca3411ac91441.webp",
+    "1fa081e8-12ea-42b7-bdae-1c0dffacddff": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/07048155cea748f5d6d7348b1a6462827a5c752a6124689a7a699874327fc133.webp",
+    "adc2552b-bded-473d-8456-793a51e98af2": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/7a04324b706ddd61d8a18535d9d3dfa10558afcde948aaa515d390eb71317e56.webp",
+    "c04338cc-dfcf-491f-8771-dd7b639b1291": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/cfc876fe3f7c4a0dd4dbee09874d63fb0d496520bc7bb08aa931033b803cfc37.webp",
+    "f6d794ca-0bb9-4e28-96a1-b2f74efb4959": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/beace2f0296405935b9877614474bc3ad0c6e3adfb15456e1ddd21a80826db6e.webp",
+    "645ba652-0604-4b25-a081-4d8e503ac7ef": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/38305310ed165970656da057c11621ca8fe3521dbb6665df77c78ac33cf06ac4.webp",
+    "c49fc338-10be-4d9b-82dd-c0461a92784d": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/faf22f9bb15677e719bd7f103e7839f4e9384c435cc5e0c334decbc12f0f4a30.webp",
+    "8e3f3e2c-0283-427b-86d4-e57850028bdb": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/9b96313e382c46e204a302bd34a05997ae6d512c4c95a0167307b52ecf7e43bc.webp",
+    "bde5a3f4-768b-44a3-85e2-cd54d9654c52": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/af28735326618188c75f574cbcd585d98524fbd729543ee94aa9f064b03db947.webp",
+    "746599bc-b470-4753-85b1-0344304e2f76": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/376319be78cd8cad0478885a725b94bc1f4d1810291aec4bdf75bf4bd0463a92.webp",
+    "7ff01dc8-67b3-43d8-96ed-f57c5dbb8c40": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/af19d56c15f9da4cd3bc022206dad99c16eaa9e4dd231ef0e627556ab5be9d16.webp",
+    "89919cdf-59ef-4153-af74-9e920f77788a": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/625881df60c44f0c1214c3e2d31ff84e44151373d253ebb6739c3d08efc36782.webp",
+    "b9b473e1-08ba-4ae5-9069-03ad72aa76d3": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/f04820d939ef8b0f1d111ffecce4e977b18e9fdcf9918cfbcc54deea005c3fce.webp",
+    "0fc32f30-a4b3-4d94-8c18-e28756d178b0": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/498724fc6b2e7913c00ca2531ff17e558353b5edc01367e7762514a48277817f.webp",
+    "e820abca-6710-4c5e-a083-43230323bf5f": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/f8e93e12820bbc76d978d833ee7254b4a1689246e63709e5c699d828ecfea10f.webp",
+    "4c8b7a74-62c7-4c01-975d-9c3794de5560": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/65b53eb42463c98640bb013b13844151d9c41c5da65fab82f6a834dc3f2cafea.webp",
+    "b23d30c1-2303-4d3a-ba38-c30e0cdfdbd7": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/77a4bd9f3909aa22b6c91acf3f2b6daa924d5e01701f0c2d093bf7948cf52ede.webp",
+    "37f83aa1-e097-4808-98ce-e1771e05e454": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/d4e9ab7ab790da64357d618345328abb8f2af6592b1d34b3b231b32a20f07314.webp",
+    "f1d4b7b6-63b6-4e9e-86fa-f1ede42c943d": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/f544a84afc703df228a9af4a0cf7d00ce4b7ff5b3006df74157762d08d1e42a1.webp",
+    "3d597afe-2d24-42ce-bd67-b6046e177d3d": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/01954b09d93dd0ae027a2cafcc68f532ca88b4d63de149550dbffb98624a79d4.webp",
+    "874287d7-d683-4e5b-8535-a295b293e766": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/104c8442f2ea465956c94df58b328cd0f05689a7fc9e89890fb3694c1eacca83.webp",
+    "56d96965-ce31-4e58-84cb-364db4df0f4a": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/89c1b5af5a688515cca9d94a9e3b99d08fec2df9fc06b91d0214783eaa38b966.webp",
+    "96eda555-a4b8-4a35-8660-8dcbd488ea24": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/ab2c6e89d229fb331c0a0e911e143ebb91d9a8d46b2dd4f1c7c30d074aeab906.webp",
+    "46290323-0d00-4701-8bb4-984d2a361280": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/7be007025eab0fa394f18f640eeaabb40b159a9c6b013cf64d2f13fbe618707c.mp4",
+    "d16ba246-2bdc-43f8-8cfb-071737adb00e": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/ead57524cee15f16aabbdabb5eee79fffd4b807fc3ec2616660869f27b793581.webp",
+    "d09bc58a-cbae-4a43-9b6f-52ab0406ac82": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/4f386bba38ad9696da0e703ae504b85cf9682f63cefd9773c690d7bee32dd14d.jpg",
+    "b070c62a-55fc-4144-94bc-c082bf13cac3": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/2ba3f33bb47ebc6a59b9a723939dcb84b7ba3f0ce4ec205dbc4d8beb275f4c0c.jpg",
+    "725373be-99f5-4796-b854-e7d1900df61c": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/1fce59efea99120a24ad886e0514a962ee5a4715539164b4098de7c4867b84cc.mp4",
+    "2718d14d-8ccc-42ed-899e-faa6be762a14": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/72e891e08ff05c854710895fa56449f5bed08064696451259b08f7e3bcd88507.webp",
+    "cbd9ff07-4de1-498c-93b4-a55af39d03be": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/9e0796b488cfe5dcd2ba33184735d8086fddb42b369738d8a1c7875717ac132f.jpg",
+    "1f11f10d-dea1-4aaa-af06-1ee0f5746676": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/c1329af22ec60c7916ae415deb5107f9b9b4e7359f49e3e6af56aefc87607f2f.jpg",
+    "0c87db55-7884-4ccb-9c4a-609b30bd1e82": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/14c25e693c5d7b59b0df1ad4ce06daaa8bdb8645dd5ac7e977c77d4ed10152d2.jpg",
+    "38929397-4425-4cfa-9859-973175f3a0f3": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/9fdb10b687dc10f1fe1ffd303b4ba8a08c599a567b386dcd9bebaae9696bfc67.jpg",
+    "70784867-fd23-467f-ad20-219a5958ff1f": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/3bb256aa085aa67150473fe21733231cde70e7bb8ed65b31399a74a70b52042d.jpg",
+    "21343f0e-c3d7-460f-b393-32d3e052e605": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/fc6a7b220400c407458bf9fe1328f7158a5a73aa0f85adb625d2df9775c58d95.jpg",
+    "4a9732df-0413-4a08-87f3-6d1d9818762a": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/a25c19d972157cdafcf22c637f687927c7120618ba8970973d6594777e2e0d13.svg",
+    "7a24335f-4c6f-4c28-ae06-f766c19c65b1": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/a862955bbbb10cd0833f47c0a1dc6205ffa7e4f7ae99a56860727697d19adeec.jpg",
+    "0e8cbaae-b218-4dcb-b9c0-2e945dec198a": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/0f7f46c21c25488d4f454768f1763940e6ed08e542663ae9689d99701ac2178c.webp",
+    "2d91a955-019b-4f1f-84f7-17f1cddf6021": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/c7dd10a9c2542b1b1b3f519973225115e026de1308453c183f94a0533e4a8db6.webp",
+    "d75a0b05-8a84-48d2-9c1d-8a9512599238": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/fb84e06a970b9441bc7d9fc72f4461eafe898ad148784e2402a774fd6d51b50a.webp",
+    "aaf172f8-53bb-4c25-8c17-dcfa7756ac96": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/981a0e8c0bc2c3c6c621207ee1e9c4774a8d177a335ac395af2b6dd54b7cbef7.webp",
+    "e8091eb2-3e7e-4766-9fa7-ed200bc3b7b3": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/ee742dced9428dd7fd61f0b39a75b316d7943fd82c390facba639a54e9a29564.webp",
+    "13e60b7a-9677-4aea-a293-35df3b2a5368": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/ba4c5e12ea8e7998bfb64a0d9d30777762b6bc02909f205d533d6db1e91c5c59.webp",
+    "fc11d55f-f472-4c0c-8ad7-c4441ecf9649": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/d958b75f4e627ab5451cb6101fc9a36c90c37aa7a160267b9706312e4303a1f3.webp",
+    "7a285537-0491-4e56-8b1f-40f5adb926f2": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/43af2a8af4ffbabe36137d984cc85eacba97bd97dddf8f8ccbba16093353d082.webp",
+    "1e18af19-0369-4178-ad04-02589c4c1fe6": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/826d87339c25f788bde249018a4e0150f3e9e5d31975acc1140a30614eeb4ca5.webp",
+    "65ab49b7-9b6a-416a-8bfd-fe3c1c690437": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/c96b26dd7695984febd9f94c58978b399e18fe68b9fef3af9497facbdaa9f46f.webp",
+    "8095e716-66ac-4e4d-b6b1-8682b643581f": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/d2de5321cf7aed5b795320effdf341dfe807929e392c8dbbea78a5ff236e2835.svg",
+    "3330c3e4-c419-49ca-b7ed-77d60b90f009": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/64603ee671488ae93b131ead85cf3b0ce28dc43a87ee87a695bcf8229888c5c3.svg",
+    "ff88e6cd-2969-43a6-b133-a8c07ddc7813": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/260a1ec523fa6b849853592a9f4d1e69826778c5ecf23df45350a2f5eecd2b7e.webp",
+    "47ded0d0-00cc-4b6c-8d5d-6cabe7239606": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/8d23d8131191f7bbeb2463d221e9874cb81dcb07801a9eb05d8e1d4ce4b978b0.webp",
+    "7ee3cc78-ee14-4e0d-ba18-2ab8ba9bd459": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/907c04a21d420c8fc67644ce8e21441c3b1f384f70d535cc3e513dba254cce4b.webp",
+    "0ccfd3c6-a80c-4f64-8301-aaa4587b3d34": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/198bbc06cbde3f368b7a42b090f476a1550987eacc46078c59bef356eba1b741.png",
+    "cd53d88e-9fe3-4e1e-93c6-619d707b31fb": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/25d931ce3b449d32adcdc16fa0bed627ac2697bfc88d937f841d4fc5e29048de.jpg",
+    "807804f8-dcb8-4f80-bad7-414e10bf4569": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/2b46ba412a42257ba286c123d3a97f4645ff88c190119495f5298dddaecb8827.jpg",
+    "7e721fae-9b57-46df-96e2-73dbfae0dafd": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/e96c7dc08653e458f91635306588a60e9d5a874ea81b878ee62d59f149eb4cb3.webp",
+    "199b794e-0abf-4865-9c35-7a3bb85c43db": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/397b0dcd1aa69913520480ea8d873940c32d494801a41f49e6929a54637b4509.svg",
+    "49763d39-5e3e-4af6-9077-aae75fc7a381": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/59a4420de233277468bb363d7ddffbb606f9ce1ef0f4443e94dfe34cf8e2dc45.svg",
+    "8258ebb1-26cf-4052-b5db-21011bf82fc1": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/399fbac94053cda13b7f52959763fa048ab59076720b1101a723d561c21ff24b.svg",
+    "9ab9b24c-8c6e-4106-b97c-e0a77f5695c9": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/7af53fe190d4525472ef319745f90cdfe08e9eba14f47dccd9c53565adc3bad9.svg",
+    "8ca4d37a-c1f3-474c-ae79-7b8bfc2623c9": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/fb08a19a51df6e1770f12ab5d9190d6336c8e3bd2689414c671fe2707e81875e.svg",
+    "3a63e046-c5fb-46d2-b434-37b9f663ef59": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/b2664a6e591ff20eee6a23da25b443bb57b491ce72e0354b823eb13ab908c914.svg",
+    "17c92321-a183-4510-a088-695f7dad9682": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/7f6521bb053b0ca35938e39feeaa5d99e7eb1d15aba216ef016942a7ba420749.webp",
+    "77801482-405b-4d46-af01-cbf70ffa01e0": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/b711b8998fe8139933165aa3dc49c7590f73ca2240f335fca7ac63800f46d492.webp",
+    "0ac8ad31-ed6a-47f4-97b2-3b876aadd293": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/9666f4651c2d03448b32b46029eb5f52fb0de09ab7df89f48b20fb91475ea061.svg",
+    "43394e25-a314-407c-8536-84c1538d127f": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/81bfbc5f877a81885a5957f46ecb233c6b9798cdb810b3c84643988be1215199.webp",
+    "f757ec9a-99c4-4d7f-b7f2-7802bf2fe697": "/presentations/decks/2026-11-03-yoon-jaeyoung-graduation-project/assets/2b5a4b7e8c6d04bd2d8ac41746420ec79f25e4ce5db78447306c8642e918c743.svg"
+  },
+  "publishedAt": "2026-11-04T03:35:30.760Z"
 }
